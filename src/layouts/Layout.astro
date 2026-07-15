@@ -1,23 +1,31 @@
-<!doctype html>
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro Basics</title>
-	</head>
-	<body>
-		<slot />
-	</body>
-</html>
+---
+import '../styles/global.css';
 
-<style>
-	html,
-	body {
-		margin: 0;
-		width: 100%;
-		height: 100%;
-	}
-</style>
+interface Props {
+  title: string;
+  description?: string;
+  lang?: string;
+  dir?: 'ltr' | 'rtl';
+}
+
+const { 
+  title, 
+  description = 'Portfolio of Zeeshan Haider - Cybersecurity & Research Support Engineer', 
+  lang = 'en', 
+  dir = 'ltr' 
+} = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang={lang} dir={dir} class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{title}</title>
+  </head>
+  <body class="bg-bg text-text font-sans antialiased">
+    <slot />
+  </body>
+</html>
