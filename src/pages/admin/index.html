@@ -4,9 +4,11 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex, nofollow" />
-  <title>Content Manager</title>
   
-  <!-- Use a specific, stable version of Decap CMS -->
+  <!-- THIS IS THE MAGIC LINE: Forces Decap CMS to look at the root config.yml -->
+  <meta name="decap-cms-config" content="/config.yml" />
+  
+  <title>Content Manager</title>
   <script src="https://unpkg.com/decap-cms@3.1.11/dist/decap-cms.js"></script>
 </head>
 <body>
