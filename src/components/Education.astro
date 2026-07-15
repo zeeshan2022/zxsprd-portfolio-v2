@@ -1,0 +1,41 @@
+---
+import data from '../content/en/data.json';
+const { education, certifications } = data;
+---
+
+<section id="education" class="py-20 px-6">
+  <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-10">
+    <!-- Education -->
+    <div>
+      <h2 class="text-3xl font-bold mb-10 flex items-center gap-3">
+        <span class="w-3 h-3 rounded-full bg-accent shadow-[0_0_10px_#00e0b8]"></span>
+        Education
+      </h2>
+      <div class="space-y-6">
+        {education.map((edu) => (
+          <div class="p-6 rounded-xl bg-card border border-border">
+            <h3 class="text-xl font-bold text-text">{edu.degree}</h3>
+            <p class="text-accent2 font-semibold mt-1">{edu.institution}</p>
+            <p class="text-muted text-sm mb-3">{edu.period}</p>
+            <p class="text-muted text-sm leading-relaxed">{edu.details}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <!-- Certifications -->
+    <div>
+      <h2 class="text-3xl font-bold mb-10 flex items-center gap-3">
+        <span class="w-3 h-3 rounded-full bg-accent shadow-[0_0_10px_#00e0b8]"></span>
+        Certifications
+      </h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {certifications.map((cert) => (
+          <div class="p-4 rounded-lg bg-card border border-border text-center hover:border-accent/50 transition-colors">
+            <p class="text-text font-semibold text-sm">{cert}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+</section>

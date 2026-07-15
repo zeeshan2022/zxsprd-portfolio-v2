@@ -1,0 +1,36 @@
+---
+// Navbar component with language switcher
+const { currentLang = 'en' } = Astro.props;
+
+const languages = [
+  { code: 'en', label: 'EN' },
+  { code: 'ar', label: 'عربى' },
+  { code: 'zh', label: '中国人' },
+  { code: 'fr', label: 'FR' }
+];
+---
+
+<nav class="fixed top-0 left-0 w-full z-50 bg-bg/80 backdrop-blur-md border-b border-border">
+  <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
+    <!-- Logo -->
+    <a href="/" class="text-xl font-bold tracking-wider text-text">
+      Zeeshan<span class="text-accent">.</span>H
+    </a>
+
+    <!-- Language Switcher -->
+    <div class="flex gap-4 text-sm font-medium">
+      {languages.map((lang) => (
+        <a 
+          href={lang.code === 'en' ? '/' : `/${lang.code}/`}
+          class={`transition-colors duration-200 ${
+            currentLang === lang.code 
+              ? 'text-accent' 
+              : 'text-muted hover:text-text'
+          }`}
+        >
+          {lang.label}
+        </a>
+      ))}
+    </div>
+  </div>
+</nav>
