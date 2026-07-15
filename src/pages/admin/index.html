@@ -6,10 +6,26 @@
   <title>Content Manager</title>
 </head>
 <body>
-  <!-- Explicit root element for Decap CMS to attach to -->
+  <!-- This div MUST come before the scripts -->
   <div id="nc-root"></div>
   
-  <!-- Script moved to the bottom of the body to ensure DOM is ready -->
+  <!-- Netlify Identity Widget (for SSO buttons on live site) -->
+  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+  
+  <!-- Decap CMS Script -->
   <script src="https://unpkg.com/decap-cms@3.1.11/dist/decap-cms.js"></script>
+  
+  <!-- Initialize Identity -->
+  <script>
+    if (window.netlifyIdentity) {
+      window.netlifyIdentity.on("init", function(user) {
+        if (!user) {
+          window.netlifyIdentity.on("login", function() {
+            document.location.href = "/admin/";
+          });
+        }
+      });
+    }
+  </script>
 </body>
 </html>
