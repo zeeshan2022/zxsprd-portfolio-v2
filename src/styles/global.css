@@ -1,18 +1,6 @@
-@import "tailwindcss";
-
-@theme {
-  --color-bg: #0b1020;
-  --color-bg-2: #0f1530;
-  --color-card: #121a38;
-  --color-accent: #00e0b8;
-  --color-accent-2: #5b8cff;
-  --color-text: #e6ecff;
-  --color-muted: #9aa6c7;
-  --color-border: rgba(255, 255, 255, 0.08);
-
-  --font-sans: 'Segoe UI', system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: 'Courier New', Courier, monospace;
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
