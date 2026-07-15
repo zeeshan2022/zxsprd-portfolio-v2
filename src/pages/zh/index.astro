@@ -1,0 +1,22 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Navbar from '../../components/Navbar.astro';
+import CVSections from '../../components/CVSections.astro';
+import Skills from '../../components/Skills.astro';
+import Experience from '../../components/Experience.astro';
+import Education from '../../components/Education.astro';
+import Contact from '../../components/Contact.astro';
+import data from '../../content/en/data.json';
+
+const { hero } = data;
+---
+
+<Layout title={`${hero.name} | ${hero.title}`} lang="zh" dir="ltr">
+  <Navbar currentLang="zh" />
+  <CVSections>
+    <Skills />
+    <Experience />
+    <Education />
+    <Contact />
+  </CVSections>
+</Layout>
