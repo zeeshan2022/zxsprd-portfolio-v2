@@ -1,56 +1,60 @@
 ---
-// 1. Import ALL language files
 import enData from '../data/en/data.json';
 import arData from '../data/ar/data.json';
 import zhData from '../data/zh/data.json';
 import frData from '../data/fr/data.json';
-import urData from '../data/ur/data.json'
+import urData from '../data/ur/data.json';
 import psData from '../data/ps/data.json';
 
-
-// 2. Create a map of all supported languages
-const allLanguages = {
-  en: enData,
-  ar: arData,
-  zh: zhData,
-  fr: frData,
-  ur: urData,
-  ps: psData, 
-};
-
-// 3. Detect language from URL (e.g., '/ar/' becomes 'ar', '/zh/' becomes 'zh')
+const allLanguages = { en: enData, ar: arData, zh: zhData, fr: frData, ur: urData, ps: psData };
 const currentLang = Astro.url.pathname.split('/')[1] || 'en';
-
-// 4. Load the correct data, defaulting to English if the language isn't found
 const data = allLanguages[currentLang] || enData;
 
-
-  const { experience, sections } = data;
+const { experience, sections } = data;
 ---
 
-<section id="experience" class="py-20 px-6 bg-bg-2/30">
-  <div class="max-w-4xl mx-auto reveal">
-    <h2 class="text-3xl font-bold mb-10 flex items-center gap-3">
-      <span class="w-3 h-3 rounded-full bg-accent shadow-[0_0_10px_#00e0b8]"></span>
-        {sections.experience}
-    </h2>
-    <div class="relative border-l-2 border-dashed border-border pl-8 space-y-12">
-      {experience.map((job) => (
-        <div class="relative">
-          <div class="absolute -left-[41px] top-1 w-4 h-4 rounded-full bg-accent shadow-[0_0_10px_#00e0b8]"></div>
-          <h3 class="text-xl font-bold text-text">{job.role}</h3>
-          <p class="text-accent2 font-semibold mt-1">{job.company} | {job.location}</p>
-          <p class="text-muted text-sm mb-4">{job.period}</p>
-          <ul class="space-y-2">
-            {job.achievements.map((achievement) => (
-              <li class="text-muted flex items-start gap-2">
-                <span class="text-accent mt-1">▹</span>
-                <span>{achievement}</span>
-              </li>
-            ))}
-          </ul>
+<section id="experience" class="py-20 px-6">
+  <div class="max-w-4xl mx-auto">
+    <!-- Section Title -->
+    <div class="text-center mb-16 reveal">
+      <h2 class="text-3xl md:text-4xl font-bold text-text mb-4">{sections.experience}</h2>
+      <div class="w-20 h-1 bg-accent mx-auto rounded-full"></div>
+    </div>
+
+    <!-- Timeline Container (RTL Safe using border-s) -->
+    <div class="relative border-s-2 border-border/50 ms-4 md:ms-8">
+      
+      {experience.map((job, index) => (
+        <div class="relative mb-12 last:mb-0 reveal">
+          <!-- Timeline Dot (Punches through the border) -->
+          <div class="absolute -start-[9px] top-6 w-4 h-4 rounded-full bg-accent ring-4 ring-bg shadow-lg shadow-accent/20"></div>
+          
+          <!-- Timeline Content Card -->
+          <div class="ms-8 glass-card p-6 md:p-8">
+            <div class="flex flex-wrap items-center gap-3 mb-3">
+              <span class="px-3 py-1 text-xs font-mono bg-accent/10 text-accent border border-accent/20 rounded-full">
+                {job.period}
+              </span>
+              <span class="text-sm text-muted">{job.location}</span>
+            </div>
+            
+            <h3 class="text-xl md:text-2xl font-bold text-text mb-2">{job.role}</h3>
+            <p class="text-accent font-medium mb-4">{job.company}</p>
+            
+            <ul class="space-y-2 text-muted text-sm md:text-base">
+              {job.achievements.map((item) => (
+                <li class="flex items-start gap-2">
+                  <span class="text-accent mt-1.5 text-xs">▹</span>
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       ))}
+      
+      <!-- Glowing End Dot -->
+      <div class="absolute -start-[5px] -bottom-2 w-2 h-2 rounded-full bg-accent/50"></div>
     </div>
   </div>
 </section>

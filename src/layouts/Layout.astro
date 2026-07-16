@@ -1,5 +1,7 @@
 ---
 import '../styles/global.css';
+ import { ViewTransitions } from 'astro:transitions'; 
+ 
 
 interface Props {
   title: string;
@@ -20,10 +22,13 @@ const {
 <html lang={lang} dir={dir} class="scroll-smooth">
   <head>
     <meta charset="UTF-8" />
+	<ViewTransitions />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={description} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <title>{title}</title>
+    <title>
+	{title}</title>
+	
   </head>
   <body class="bg-bg text-text font-sans antialiased">
     <slot />
@@ -37,6 +42,25 @@ const {
   .reveal.visible {
     opacity: 1;
     transform: translateY(0);
+  }
+    /* ========================================== */
+  /* PREMIUM PAGE TRANSITIONS                   */
+  /* ========================================== */
+  @keyframes page-enter {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes page-exit {
+    from { opacity: 1; transform: translateY(0); }
+    to { opacity: 0; transform: translateY(-10px); }
+  }
+
+  /* Apply to the whole page root */
+  ::view-transition-old(root) {
+    animation: 0.2s ease-out both page-exit;
+  }
+  ::view-transition-new(root) {
+    animation: 0.4s cubic-bezier(0.16, 1, 0.3, 1) both page-enter;
   }
 </style>
 
@@ -60,5 +84,231 @@ const {
     document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
   });
 </script>
+
+<!-- ========================================== -->
+<!-- CYBER TERMINAL EASTER EGG (Ctrl+K or ~)    -->
+<!-- ========================================== -->
+<div id="cyber-terminal" class="hidden fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+  <div class="w-full max-w-3xl h-[70vh] bg-[#0d1117] border border-green-500/30 rounded-xl shadow-2xl shadow-green-500/10 flex flex-col font-mono text-green-400 overflow-hidden ring-1 ring-white/5">
+    
+    <!-- Terminal Header (macOS style) -->
+    <div class="flex items-center justify-between px-4 py-3 bg-[#161b22] border-b border-green-500/20">
+      <div class="flex gap-2">
+        <span class="w-3 h-3 rounded-full bg-red-500/80"></span>
+        <span class="w-3 h-3 rounded-full bg-yellow-500/80"></span>
+        <span class="w-3 h-3 rounded-full bg-green-500/80"></span>
+      </div>
+      <span class="text-xs text-gray-400 tracking-wider">zxsprd@secure-shell:~</span>
+      <button id="close-terminal" class="text-gray-400 hover:text-white transition-colors text-lg leading-none">✕</button>
+    </div>
+
+    <!-- Terminal Output Area -->
+    <div id="terminal-output" class="flex-1 p-5 overflow-y-auto text-sm leading-relaxed custom-scrollbar">
+      <!-- JS will inject output lines here -->
+    </div>
+
+    <!-- Terminal Input Area -->
+    <div class="flex items-center px-5 py-4 border-t border-green-500/20 bg-[#161b22]">
+      <span class="text-green-500 mr-2 font-bold">❯</span>
+      <input 
+        id="terminal-input" 
+        type="text" 
+        class="flex-1 bg-transparent outline-none text-green-300 caret-green-400 placeholder-green-800" 
+        placeholder="Type 'help' to get started..." 
+        autocomplete="off" 
+        spellcheck="false"
+      />
+    </div>
+  </div>
+</div>
+
+<style>
+  /* ========================================== */
+  /* PREMIUM MOUSE GLOW SPOTLIGHT               */
+  /* ========================================== */
+  .glow-card {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .glow-card::before {
+    content: '';
+    position: absolute;
+    inset-block-start: var(--mouse-y, 50%);
+    inset-inline-start: var(--mouse-x, 50%);
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%);
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+    z-index: 0;
+  }
+  
+  .glow-card:hover::before {
+    opacity: 1;
+  }
+  
+  /* Ensure text stays above the glow */
+  .glow-card > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Custom scrollbar for the terminal */
+  .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+  .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+  .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(34, 197, 94, 0.3); border-radius: 3px; }
+  
+  /* Fade in animation for the overlay */
+  @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+  .animate-fade-in { animation: fade-in 0.2s ease-out forwards; }
+</style>
+
+<script>
+  // 1. Grab DOM elements
+  const terminal = document.getElementById('cyber-terminal');
+  const output = document.getElementById('terminal-output');
+  const input = document.getElementById('terminal-input') as HTMLInputElement;
+  const closeBtn = document.getElementById('close-terminal');
+
+  // 2. Toggle Terminal Function
+  function toggleTerminal() {
+    const isHidden = terminal.classList.contains('hidden');
+    if (isHidden) {
+      terminal.classList.remove('hidden');
+      input.focus();
+      // Welcome message
+      printLine("<span class='text-cyan-400'>Welcome to zxsprd secure shell.</span>", false);
+      printLine("System initialized. Type <span class='text-white font-bold'>'help'</span> for available commands.", false);
+      printLine("", false); // empty line
+    } else {
+      terminal.classList.add('hidden');
+    }
+  }
+
+  // 3. Keyboard Shortcuts (Ctrl+K, ~, or Esc)
+  document.addEventListener('keydown', (e) => {
+    // Open with Ctrl+K or ~
+    if ((e.ctrlKey && e.key.toLowerCase() === 'k') || e.key === '~') {
+      e.preventDefault();
+      toggleTerminal();
+    }
+    // Close with Esc
+    if (e.key === 'Escape' && !terminal.classList.contains('hidden')) {
+      toggleTerminal();
+    }
+  });
+
+  // Close button click
+  closeBtn?.addEventListener('click', toggleTerminal);
+
+  // 4. Process Commands on 'Enter'
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      const rawCmd = input.value;
+      const cmd = rawCmd.trim().toLowerCase();
+      
+      // Print the user's typed command
+      printLine(`<span class='text-green-500 font-bold'>❯</span> <span class='text-white'>${rawCmd}</span>`, false);
+      
+      // Execute command
+      processCommand(cmd);
+      input.value = '';
+    }
+  });
+
+  // 5. Print Line Helper
+  function printLine(html: string, addMargin = true) {
+    const line = document.createElement('div');
+    line.className = `text-green-400 ${addMargin ? 'mb-1' : ''}`;
+    line.innerHTML = html;
+    output.appendChild(line);
+    output.scrollTop = output.scrollHeight; // Auto-scroll to bottom
+  }
+
+  // 6. Command Router
+  function processCommand(cmd: string) {
+    switch(cmd) {
+      case 'help':
+        printLine("<span class='text-yellow-400 font-bold underline'>Available Commands:</span>");
+        printLine("  <span class='text-white'>about</span>      - Learn about Zeeshan Haider");
+        printLine("  <span class='text-white'>skills</span>     - View technical toolkit & certifications");
+        printLine("  <span class='text-white'>experience</span> - View work history");
+        printLine("  <span class='text-white'>contact</span>    - Get email and social links");
+        printLine("  <span class='text-white'>blog</span>       - Navigate to the blog");
+        printLine("  <span class='text-white'>projects</span>   - View featured projects");
+        printLine("  <span class='text-white'>clear</span>      - Clear terminal screen");
+        printLine("  <span class='text-white'>exit</span>       - Close terminal");
+        break;
+
+      case 'about':
+        printLine("<span class='text-cyan-400 font-bold'>Zeeshan Haider</span> | IT & Security Engineer", false);
+        printLine("Innovative tech mind with 8+ years in IT. Certified Ethical Hacker (CEH).");
+        printLine("Expert in Network Security, Penetration Testing, Digital Forensics, and Cloud Infrastructure.");
+        break;
+
+      case 'skills':
+        printLine("<span class='text-cyan-400'>[+]</span> Cybersecurity: CEH, CHFI, Penetration Testing, SIEM, IDS/IPS");
+        printLine("<span class='text-cyan-400'>[+]</span> Networking: WAN, SDWAN, MPLS, Cisco, Active Directory, DNS/DHCP");
+        printLine("<span class='text-cyan-400'>[+]</span> Infrastructure: VMware ESXi, Hyper-V, Windows/Linux Servers");
+        printLine("<span class='text-cyan-400'>[+]</span> Compliance: NIST CSF, ITIL, PCI-DSS, ISO27001, GDPR");
+        break;
+
+      case 'experience':
+        printLine("<span class='text-white'>2019 - Present:</span> IT & Security Engineer @ Al Zain Oasis Technology");
+        printLine("<span class='text-white'>2017 - 2019 :</span> IT Specialist @ Electritech Technology");
+        printLine("<span class='text-white'>2016 - 2017 :</span> IT Administrator @ ATG World Group");
+        printLine("<span class='text-gray-500'>Type 'contact' for more details or visit the /projects page.</span>");
+        break;
+
+      case 'contact':
+        printLine("<span class='text-cyan-400'>Email:</span> <a href='mailto:zeeshan.haider28@gmail.com' class='text-blue-400 hover:underline'>zeeshan.haider28@gmail.com</a>");
+        printLine("<span class='text-cyan-400'>Phone:</span> (+971) 58 20 35 980");
+        printLine("<span class='text-cyan-400'>LinkedIn:</span> <a href='https://www.linkedin.com/in/zeeshan2022' target='_blank' class='text-blue-400 hover:underline'>linkedin.com/in/zeeshan2022</a>");
+        break;
+
+      case 'blog':
+        printLine("<span class='text-green-500'>Navigating to /blog/...</span>");
+        setTimeout(() => window.location.href = '/blog/', 500);
+        break;
+
+      case 'projects':
+        printLine("<span class='text-green-500'>Navigating to /projects/...</span>");
+        setTimeout(() => window.location.href = '/projects/', 500);
+        break;
+
+      case 'clear':
+        output.innerHTML = '';
+        break;
+
+      case 'exit':
+      case 'quit':
+      case 'logout':
+        toggleTerminal();
+        break;
+
+      case 'sudo':
+      case 'sudo su':
+      case 'root':
+        printLine("<span class='text-red-400'>Access Denied.</span> Nice try! But you don't have root privileges here. 😉");
+        break;
+
+      case 'hack':
+      case 'hack the planet':
+        printLine("<span class='text-yellow-400'>Initiating mainframe bypass... Just kidding. I'm an ethical hacker!</span>");
+        break;
+
+      default:
+        if(cmd !== '') {
+          printLine(`<span class='text-red-400'>Command not found:</span> ${cmd}. Type <span class='text-white'>'help'</span> for options.`);
+        }
+    }
+  }
+</script>
+
+
+
   </body>
 </html>
