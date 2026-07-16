@@ -6,13 +6,13 @@ import Skills from '../../components/Skills.astro';
 import Experience from '../../components/Experience.astro';
 import Education from '../../components/Education.astro';
 import Contact from '../../components/Contact.astro';
-import data from '../../data/ar/data.json';
+import data from '../../data/ps/data.json';
 
 const { hero } = data;
 ---
 
-<Layout title={`${hero.name} | ${hero.title}`} lang="ar" dir="rtl">
-  <Navbar currentLang="ar" />
+<Layout title={`${hero.name} | ${hero.title}`} lang="ps" dir="rtl">
+  <Navbar currentLang="ps" />
   
   <CVSections>
     <Skills />

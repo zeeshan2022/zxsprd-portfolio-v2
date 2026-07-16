@@ -1,0 +1,120 @@
+{
+  "hero": {
+    "name": "ذیشان حیدر",
+    "title": "د آی ټي او امنیت انجینر",
+    "location": "دبۍ، متحده عرب امارات",
+    "email": "zeeshan.haider28@gmail.com",
+    "phone": "(+971) 58 20 35 980",
+    "linkedin": "https://www.linkedin.com/in/zeeshan2022",
+    "cta_primary": "له ما سره اړیکه ونیسئ",
+    "cta_secondary": "سی وي ډاونلوډ کړئ",
+    "cta_secondary_link": "/ZeeshanHaider_CV_SecurityManager.pdf"
+  },
+  "about": {
+    "title": "زما په اړه",
+    "summary": "د آی ټي په صنعت کې د ۸ کلونو تجربې سره یو مخکښ تخنیکي ذهن. د EC Council سره سرټیفایډ ایتیکل هیکر. د شبکو، پنټسټینګ، آی ټي، او ټي، او سایبر امنیت ژوره پوهه. د آی ټي زیربنا او د شبکو د آرکیټیکچر په ډیزاین، پلي کولو او مدیریت کې پراخه تجربه. سربیره پردې، زه یو ملګری او ټولنیز شخص یم. زما شعار دا دی چې کامیابي زما یوازینی انتخاب دی، ناکامي نه."
+  },
+  "skills": [
+    {
+      "category": "مصنوعي هوښارتیا او ماشین زده کړه",
+      "items": "Machine Learning, AI Integration, Data Analytics"
+    },
+    {
+      "category": "سایبر امنیت او ایتیکل هیکنګ",
+      "items": "Ethical Hacking, Penetration Testing, Digital Forensics, SIEM, IDS/IPS"
+    },
+    {
+      "category": "شبکې او سرورونه",
+      "items": "WAN, SDWAN, MPLS, Active Directory, DNS, DHCP, VMware, Hyper-V"
+    },
+    {
+      "category": "شخصي او مدیراتي مهارتونه",
+      "items": "Team Leadership, Project Management, ITIL, Governance & Compliance"
+    }
+  ],
+  "experience": [
+    {
+      "role": "د آی ټي او امنیت انجینر",
+      "company": "Al Zain Oasis Technology",
+      "location": "دبۍ، متحده عرب امارات",
+      "period": "مۍ ۲۰۱۹ - تر اوسه",
+      "achievements": [
+        "د پیرودونکو لپاره د آی ټي زیربنا، ډیزاینونو او هارډویر لپاره د RFP/BOM وړاندیزونه او ځوابونه چمتو کول.",
+        "د امنیت پالیسیو، معیارونو او کړنلارو پلان کول، څیړل او پراختیا.",
+        "د ډیری پلیټ فارمونو او غوښتنلیکونو ملاتړ لپاره د سیسټم اداره کولو مسلکي تجربه."
+      ]
+    },
+    {
+      "role": "د آی ټي متخصص",
+      "company": "Electritech Technology",
+      "location": "دبۍ، متحده عرب امارات",
+      "period": "اپریل ۲۰۱۷ - اپریل ۲۰۱۹",
+      "achievements": [
+        "د سیسټمونو د فعالیت او موثریت بیاکتنه او ارزونه.",
+        "د امنیت تدابیرو پلي کول او د شرکت د مطابقت څارنه.",
+        "د شرکت کارکونکو ته تخنیکي ملاتړ چمتو کول او د کمپیوٹر ستونزې حل کول."
+      ]
+    },
+    {
+      "role": "د آی ټي مدیر",
+      "company": "ATG World Group",
+      "location": "دبۍ، متحده عرب امارات",
+      "period": "اکتوبر ۲۰۱۶ - مارچ ۲۰۱۷",
+      "achievements": [
+        "د کمپیوٹر هارډویر آپریټینګ سیسټمونو او غوښتنلیکونو نصبول او تنظیمول.",
+        "د پیرودونکو یا کارمندانو لخوا د ټولو کمپیوټر او سیسټم اړوند اندیښنو لپاره د لومړني اړیکې ټکي په توګه کار کول.",
+        "د تضمینونو او لارښود لارښودونو پورې اړوند اسناد تنظیمول او فایل کول."
+      ]
+    }
+  ],
+  "education": [
+    {
+      "degree": "په سایبر امنیت کې ماسټر",
+      "institution": "COMSATS University Islamabad",
+      "period": "اسلام آباد، پاکستان",
+      "details": "د عصري وسایلو او تخنیکونو پلي کولو له لارې د پرمختللي سایبر امنیت ستونزو پیژندلو، فورمول کولو او حل کولو وړتیا. د تجربو ډیزاین او ترسره کول، او د مسلکي شرایطو کې د ټیم کار مشري کول."
+    },
+    {
+      "degree": "د مخابراتو او شبکو کې بیچلرز",
+      "institution": "COMSATS Institute Of Information Technology",
+      "period": "ایبټ آباد، پاکستان",
+      "details": "د مخابراتي شبکو او تجهیزاتو پلان کولو، ډیزاین کولو، جوړولو او ساتنې لپاره اړین تخنیکي مهارتونه. د انټرنیټ، براډبینډ ډیجیټل شبکو، او ګرځنده مخابراتي سیسټمونو ژوره پوهه."
+    },
+    {
+      "degree": "د بریښنا (Electrical) کې ډپلوما",
+      "institution": "Govt. College Of Technology",
+      "period": "پیشاور، پاکستان",
+      "details": "د بریښنا انجینرۍ او پلي شوي ټیکنالوژۍ اساسات."
+    }
+  ],
+  "certifications": [
+    "CEH - سرټیفایډ ایتیکل هیکر",
+    "CHFI - سرټیفایډ هیکنګ او فارنسک انویسټیګیټر",
+    "CCNA - د سسکو سرټیفایډ نیټورک اسوسی ایټ",
+    "MCSA - د مایکروسافټ سرټیفایډ سولیوشنز اسوسی ایټ",
+    "CompTIA Security+",
+    "CISSP - روان دی"
+  ],
+  "keywords": [
+    "د شبکو امنیت (Snort, IDS, IPS, MOD SECURITY)",
+    "د شبکو تحلیل وسایل (Wireshark, Netwitness)",
+    "د امنیت معیارونه (NIST CSF, ITIL, PCI-DSS, ISO27001, GDPR)",
+    "د کلاوډ امنیت (SaaS/IaaS) او VMware ESXi / Microsoft Hyper-V",
+    "د سسکو روټینګ او سویچنگ (VLAN, QoS)",
+    "د شبکو پروتوکولونه (TCP/IP, DNS, DHCP, BGP, OSPF, MPLS)"
+  ],
+  "contact": {
+    "title": "اړیکه",
+    "subtitle": "زه د کار لپاره چمتو یم (فریلانس او بشپړ وخت)",
+    "description": "مهرباني وکړئ بې له کوم ځنډه له ما سره اړیکه ونیسئ.",
+    "address": "ټاون سکوائر، القدره روډ، دبۍ، متحده عرب امارات",
+    "email": "zeeshan.haider28@gmail.com",
+    "phone": "(+971) 58 20 35 980"
+  },
+  "sections": {
+    "skills": "تخنیکي مهارتونه",
+    "experience": "د کار تجربه",
+    "education": "زده کړې / تعلیم",
+    "certifications": "سندونه"
+  }
+}

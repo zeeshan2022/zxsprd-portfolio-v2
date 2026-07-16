@@ -86,4 +86,11 @@
     "CompTIA Security+",
     "CISSP (Expected Sep 2026)"
   ]
+    ,
+  "sections": {
+    "skills": "Technical Toolkit",
+    "experience": "Work Experience",
+    "education": "Education",
+    "certifications": "Certifications"
+  }
 }

@@ -1,8 +1,36 @@
 ---
-import data from '../data/en/data.json';
+// 1. Import ALL language files
+import enData from '../data/en/data.json';
+import arData from '../data/ar/data.json';
+import zhData from '../data/zh/data.json';
+import frData from '../data/fr/data.json';
+import urData from '../data/ur/data.json'
+import psData from '../data/ps/data.json';
+
+
+// 2. Create a map of all supported languages
+const allLanguages = {
+  en: enData,
+  ar: arData,
+  zh: zhData,
+  fr: frData,
+   ur: urData,
+   ps: psData, 
+};
+
+// 3. Detect language from URL (e.g., '/ar/' becomes 'ar', '/zh/' becomes 'zh')
+const currentLang = Astro.url.pathname.split('/')[1] || 'en';
+
+// 4. Load the correct data, defaulting to English if the language isn't found
+const data = allLanguages[currentLang] || enData;
+
+
 
 const { hero, about } = data;
 ---
+
+
+
 
 <!-- Hero Section -->
 <header class="min-h-screen flex items-center justify-center pt-20 px-6">
