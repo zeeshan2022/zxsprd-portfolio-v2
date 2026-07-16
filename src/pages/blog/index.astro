@@ -24,24 +24,32 @@ const sortedPosts = posts.sort((a, b) => b.data.date.valueOf() - a.data.date.val
       <!-- Blog Grid -->
       {sortedPosts.length > 0 ? (
         <div class="grid md:grid-cols-2 gap-8">
-          {sortedPosts.map((post) => {
+              {sortedPosts.map((post) => {
             const { data, slug } = post;
             return (
               <a 
                 href={`/blog/${slug}/`} 
-                class="group block p-6 rounded-xl bg-card border border-border hover:border-accent/50 transition-all duration-300 hover:-translate-y-1"
+                class="group block rounded-xl bg-card border border-border hover:border-accent/50 transition-all duration-300 hover:-translate-y-1 overflow-hidden"
               >
-                <time class="text-sm text-accent font-mono mb-2 block">
-                  {new Date(data.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-                </time>
-                <h2 class="text-xl font-bold text-text mb-3 group-hover:text-accent transition-colors">
-                  {data.title}
-                </h2>
-                <p class="text-muted leading-relaxed">
-                  {data.excerpt || 'Read more about this topic...'}
-                </p>
-                <div class="mt-4 text-accent font-semibold text-sm flex items-center gap-2">
-                  Read Article <span class="group-hover:translate-x-1 transition-transform">→</span>
+                {data.image && (
+                  <div class="aspect-video overflow-hidden bg-bg">
+                    <img 
+                      src={data.image} 
+                      alt={data.title}
+                      class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  </div>
+                )}
+                <div class="p-6">
+                  <time class="text-sm text-accent font-mono mb-2 block">
+                    {new Date(data.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                  </time>
+                  <h2 class="text-xl font-bold text-text mb-3 group-hover:text-accent transition-colors">
+                    {data.title}
+                  </h2>
+                  <p class="text-muted leading-relaxed">
+                    {data.excerpt || 'Read more about this topic...'}
+                  </p>
                 </div>
               </a>
             );

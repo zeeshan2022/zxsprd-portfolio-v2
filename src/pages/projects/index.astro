@@ -1,61 +1,77 @@
 ---
-import Layout from '../../../layouts/Layout.astro';
-import Navbar from '../../../components/Navbar.astro';
+import Layout from '../../layouts/Layout.astro';
+import Navbar from '../../components/Navbar.astro';
 import { getCollection } from 'astro:content';
 
-export async function getStaticPaths() {
-  const projects = await getCollection('projects');
-  return projects.map((project) => ({
-    params: { slug: project.slug },
-    props: { project },
-  }));
-}
-
-const { project } = Astro.props;
-const { Content } = await project.render();
+// Fetch all projects, sorted by year (newest first)
+const projects = await getCollection('projects');
+const sortedProjects = projects.sort((a, b) => {
+  const yearA = parseInt(a.data.year) || 0;
+  const yearB = parseInt(b.data.year) || 0;
+  return yearB - yearA;
+});
 ---
 
-<Layout title={`${project.data.title} | Projects`} lang="en" dir="ltr">
+<Layout title="Projects | Zeeshan Haider" lang="en" dir="ltr">
   <Navbar currentLang="en" />
 
   <main class="min-h-screen pt-24 px-6 pb-20">
-    <div class="max-w-4xl mx-auto">
-      <!-- Back Link -->
-      <a href="/projects/" class="inline-flex items-center gap-2 text-accent hover:text-accent2 transition-colors mb-8">
-        <span>←</span> Back to Projects
-      </a>
-
-      <!-- Header -->
-      <header class="mb-12">
-        <div class="flex flex-wrap items-center gap-4 mb-4 text-sm text-muted">
-          <span class="px-3 py-1 bg-card border border-border rounded-full">{project.data.client}</span>
-          <span class="px-3 py-1 bg-card border border-border rounded-full">{project.data.year}</span>
-        </div>
-        <h1 class="text-4xl md:text-5xl font-bold text-text mb-6">
-          {project.data.title}
+    <div class="max-w-6xl mx-auto">
+      <!-- Page Header -->
+      <div class="text-center mb-16">
+        <h1 class="text-4xl md:text-5xl font-bold mb-4 text-text">
+          Featured <span class="text-transparent bg-clip-text bg-gradient-to-r from-accent to-accent2">Projects</span>
         </h1>
-        
-        {project.data.image && (
-          <div class="rounded-xl overflow-hidden border border-border mb-8">
-            <img src={project.data.image} alt={project.data.title} class="w-full h-auto object-cover" />
-          </div>
-        )}
-
-        {project.data.tech && project.data.tech.length > 0 && (
-          <div class="flex flex-wrap gap-2 mb-8">
-            {project.data.tech.map((tech) => (
-              <span class="px-3 py-1 text-sm bg-accent/10 text-accent border border-accent/20 rounded-full">
-                {tech}
-              </span>
-            ))}
-          </div>
-        )}
-      </header>
-
-      <!-- Content -->
-      <div class="prose prose-invert prose-lg max-w-none text-muted leading-relaxed">
-        <Content />
+        <p class="text-muted text-lg">Showcasing my work in cybersecurity, engineering, and technology.</p>
       </div>
+
+      <!-- Projects Grid -->
+      {sortedProjects.length > 0 ? (
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {sortedProjects.map((project) => {
+            const { data, slug } = project;
+            return (
+              <a href={`/projects/${slug}/`} class="group relative overflow-hidden rounded-xl bg-card border border-border hover:border-accent/50 transition-all duration-300 hover:-translate-y-2 block">
+                {data.image && (
+                  <div class="aspect-video overflow-hidden bg-bg">
+                    <img 
+                      src={data.image} 
+                      alt={data.title}
+                      class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    />
+                  </div>
+                )}
+                <div class="p-6">
+                  <div class="flex items-center gap-2 mb-3">
+                    <span class="text-xs text-accent font-mono">{data.year || 'N/A'}</span>
+                    <span class="text-xs text-muted">•</span>
+                    <span class="text-xs text-muted">{data.client || 'Personal'}</span>
+                  </div>
+                  <h3 class="text-xl font-bold text-text mb-3 group-hover:text-accent transition-colors">
+                    {data.title}
+                  </h3>
+                  <p class="text-muted text-sm leading-relaxed mb-4">
+                    {data.excerpt || 'Click to view project details...'}
+                  </p>
+                  {data.tech && data.tech.length > 0 && (
+                    <div class="flex flex-wrap gap-2">
+                      {data.tech.slice(0, 3).map((tech) => (
+                        <span class="px-2 py-1 text-xs bg-bg text-accent rounded border border-border">
+                          {tech}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </a>
+            );
+          })}
+        </div>
+      ) : (
+        <div class="text-center py-20 bg-card rounded-xl border border-border border-dashed">
+          <p class="text-muted text-lg">No projects to showcase yet. Check back soon!</p>
+        </div>
+      )}
     </div>
   </main>
 

@@ -52,10 +52,11 @@ const { Content } = await project.render();
         )}
       </header>
 
-      <!-- Content -->
-      <div class="prose prose-invert prose-lg max-w-none text-muted leading-relaxed">
+      <!-- Content (Renders as styled HTML) -->
+      <div class="prose prose-invert prose-lg max-w-none text-muted leading-relaxed prose-headings:text-accent prose-a:text-accent hover:prose-a:text-accent2 transition-colors">
         <Content />
       </div>
+	  
     </div>
   </main>
 

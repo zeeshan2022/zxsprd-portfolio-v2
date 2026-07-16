@@ -28,6 +28,7 @@ collections:
       - { label: "Client / Company", name: "client", widget: "string" }
       - { label: "Year", name: "year", widget: "string" }
       - { label: "Cover Image", name: "image", widget: "image", required: false }
+      - { label: "Short Excerpt (for card)", name: "excerpt", widget: "text", required: false }
       - label: "Technologies Used"
         name: "tech"
         widget: "list"

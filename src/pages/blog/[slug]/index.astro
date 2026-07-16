@@ -24,7 +24,6 @@ const { Content } = await post.render();
       <a href="/blog/" class="inline-flex items-center gap-2 text-accent hover:text-accent2 transition-colors mb-8">
         <span>←</span> Back to Blog
       </a>
-
       <!-- Header -->
       <header class="mb-12">
         <time class="text-sm text-accent font-mono mb-4 block">
@@ -33,6 +32,13 @@ const { Content } = await post.render();
         <h1 class="text-4xl md:text-5xl font-bold text-text mb-6">
           {post.data.title}
         </h1>
+        
+        {/* ADD THIS IMAGE BLOCK */}
+        {post.data.image && (
+          <div class="rounded-xl overflow-hidden border border-border mb-8">
+            <img src={post.data.image} alt={post.data.title} class="w-full h-auto object-cover" />
+          </div>
+        )}
       </header>
 
       <!-- Content -->
