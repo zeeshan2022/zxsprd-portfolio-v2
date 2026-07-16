@@ -1,0 +1,48 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import Navbar from '../../../components/Navbar.astro';
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog');
+  return posts.map((post) => ({
+    params: { slug: post.slug },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content } = await post.render();
+---
+
+<Layout title={`${post.data.title} | Blog`} lang="en" dir="ltr">
+  <Navbar currentLang="en" />
+
+  <main class="min-h-screen pt-24 px-6 pb-20">
+    <article class="max-w-3xl mx-auto">
+      <!-- Back Link -->
+      <a href="/blog/" class="inline-flex items-center gap-2 text-accent hover:text-accent2 transition-colors mb-8">
+        <span>←</span> Back to Blog
+      </a>
+
+      <!-- Header -->
+      <header class="mb-12">
+        <time class="text-sm text-accent font-mono mb-4 block">
+          {new Date(post.data.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+        </time>
+        <h1 class="text-4xl md:text-5xl font-bold text-text mb-6">
+          {post.data.title}
+        </h1>
+      </header>
+
+      <!-- Content -->
+      <div class="prose prose-invert prose-lg max-w-none text-muted leading-relaxed">
+        <Content />
+      </div>
+    </article>
+  </main>
+
+  <footer class="py-8 text-center text-muted text-sm border-t border-border">
+    <p>&copy; {new Date().getFullYear()} Zeeshan Haider. All rights reserved.</p>
+  </footer>
+</Layout>

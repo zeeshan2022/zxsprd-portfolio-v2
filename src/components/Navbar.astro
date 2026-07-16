@@ -1,36 +1,95 @@
 ---
-// Navbar component with language switcher
-const { currentLang = 'en' } = Astro.props;
+interface Props {
+  currentLang: 'en' | 'ar' | 'zh' | 'fr';
+}
+
+const { currentLang } = Astro.props;
 
 const languages = [
   { code: 'en', label: 'EN' },
-  { code: 'ar', label: 'عربى' },
-  { code: 'zh', label: '中国人' },
-  { code: 'fr', label: 'FR' }
+  { code: 'ar', label: 'AR' },
+  { code: 'zh', label: '中文' },
+  { code: 'fr', label: 'FR' },
 ];
 ---
 
-<nav class="fixed top-0 left-0 w-full z-50 bg-bg/80 backdrop-blur-md border-b border-border">
-  <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-    <!-- Logo -->
-    <a href="/" class="text-xl font-bold tracking-wider text-text">
-      Zeeshan<span class="text-accent">.</span>H
-    </a>
+<nav class="fixed top-0 left-0 right-0 z-50 bg-bg/80 backdrop-blur-md border-b border-border">
+  <div class="max-w-7xl mx-auto px-6 py-4">
+    <div class="flex items-center justify-between">
+      <!-- Logo / Home Link -->
+      <a href="/" class="text-xl font-bold text-text hover:text-accent transition-colors">
+        Zeeshan Haider
+      </a>
 
-    <!-- Language Switcher -->
-    <div class="flex gap-4 text-sm font-medium">
-      {languages.map((lang) => (
-        <a 
-          href={lang.code === 'en' ? '/' : `/${lang.code}/`}
-          class={`transition-colors duration-200 ${
-            currentLang === lang.code 
-              ? 'text-accent' 
-              : 'text-muted hover:text-text'
-          }`}
-        >
-          {lang.label}
-        </a>
-      ))}
+      <!-- Desktop Menu -->
+      <div class="hidden md:flex items-center gap-8">
+        <!-- Main Navigation Links -->
+        <div class="flex gap-6 text-sm font-medium">
+          <a href="/" class="text-muted hover:text-accent transition-colors duration-200">Home</a>
+          <a href="/blog/" class="text-muted hover:text-accent transition-colors duration-200">Blog</a>
+          <a href="/projects/" class="text-muted hover:text-accent transition-colors duration-200">Projects</a>
+          <a href="/#contact" class="text-muted hover:text-accent transition-colors duration-200">Contact</a>
+        </div>
+
+        <!-- Language Switcher -->
+        <div class="flex gap-4 text-sm font-medium border-l border-border pl-6">
+          {languages.map((lang) => (
+            <a 
+              href={lang.code === 'en' ? '/' : `/${lang.code}/`}
+              class={`transition-colors duration-200 ${
+                currentLang === lang.code 
+                  ? 'text-accent font-bold' 
+                  : 'text-muted hover:text-text'
+              }`}
+            >
+              {lang.label}
+            </a>
+          ))}
+        </div>
+      </div>
+
+      <!-- Mobile Menu Button -->
+      <button id="mobile-menu-btn" class="md:hidden text-text hover:text-accent transition-colors">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Mobile Menu (Hidden by default) -->
+    <div id="mobile-menu" class="hidden md:hidden mt-4 pb-4 border-t border-border">
+      <div class="flex flex-col gap-4 pt-4">
+        <a href="/" class="text-muted hover:text-accent transition-colors">Home</a>
+        <a href="/blog/" class="text-muted hover:text-accent transition-colors">Blog</a>
+        <a href="/projects/" class="text-muted hover:text-accent transition-colors">Projects</a>
+        <a href="/#contact" class="text-muted hover:text-accent transition-colors">Contact</a>
+        
+        <!-- Mobile Language Switcher -->
+        <div class="flex gap-4 pt-4 border-t border-border">
+          {languages.map((lang) => (
+            <a 
+              href={lang.code === 'en' ? '/' : `/${lang.code}/`}
+              class={`text-sm transition-colors ${
+                currentLang === lang.code ? 'text-accent font-bold' : 'text-muted'
+              }`}
+            >
+              {lang.label}
+            </a>
+          ))}
+        </div>
+      </div>
     </div>
   </div>
 </nav>
+
+<script>
+  // Mobile menu toggle
+  const menuBtn = document.getElementById('mobile-menu-btn');
+  const mobileMenu = document.getElementById('mobile-menu');
+  
+  if (menuBtn && mobileMenu) {
+    menuBtn.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden');
+    });
+  }
+</script>
