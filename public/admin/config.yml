@@ -18,7 +18,6 @@ collections:
       - { label: "Excerpt", name: "excerpt", widget: "text" }
       - { label: "Body", name: "body", widget: "markdown" }
       - { label: "Language", name: "lang", widget: "select", options: ["en", "ar", "zh", "fr"], default: "en" }
-
   - name: "projects"
     label: "Projects"
     folder: "src/content/projects"
@@ -28,6 +27,9 @@ collections:
       - { label: "Project Name", name: "title", widget: "string" }
       - { label: "Client / Company", name: "client", widget: "string" }
       - { label: "Year", name: "year", widget: "string" }
-      - { label: "Cover Image", name: "image", widget: "image" }
-      - { label: "Description", name: "description", widget: "markdown" }
-      - { label: "Technologies Used", name: "tech", widget: "list" }
+      - { label: "Cover Image", name: "image", widget: "image", required: false }
+      - label: "Technologies Used"
+        name: "tech"
+        widget: "list"
+        field: { label: "Technology", name: "item", widget: "string" }
+      - { label: "Full Description", name: "body", widget: "markdown" }
