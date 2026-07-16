@@ -1,0 +1,35 @@
+[
+  {
+    "category": "Resume",
+    "items": [
+      { "label": "My CV Full 4 pages", "url": "/ZeeshanHaider_CV_SecurityManager.pdf", "type": "download" },
+      { "label": "My Resume Full 2 pages", "url": "/ZeeshanHaider_CV_SecurityManager.pdf", "type": "download" }
+    ]
+  },
+  {
+    "category": "My External Links",
+    "items": [
+      { "label": "My Wix Website (OLD)", "url": "https://zeeshanhaider28.wixsite.com/zeeshanhaider", "type": "external" },
+      { "label": "Public Mega Folder", "url": "https://mega.nz/folder/H1tDDIAA#R8x29R-tbTBWRUG75T8INg", "type": "external" },
+      { "label": "Public DropBox Folder", "url": "https://www.dropbox.com/sh/7jdvr781htferoz/AAAdjD5dG1tp7Ac8R1gTpjk9a?dl=0", "type": "external" },
+      { "label": "Version Control", "url": "https://zxsprd.com/version-control", "type": "external" },
+      { "label": "Upload to my Server", "url": "https://upload.zxsprd.com/", "type": "external" },
+      { "label": "The Online Me (G Sheets)", "url": "https://docs.google.com/spreadsheets/d/1-NDgKi6fAZQlSAHvblJjfqLuEiHWZ-T8LJquRtr9iog/edit?usp=sharing", "type": "external" },
+      { "label": "Voice Search Online", "url": "https://zxsprd.com/business/voicesearch/index.html", "type": "external" }
+    ]
+  },
+  {
+    "category": "Connect With Me",
+    "items": [
+      { "label": "WeChat", "url": "/images/wechat.jpeg", "type": "external" },
+      { "label": "LinkedIn", "url": "https://www.linkedin.com/in/zeeshan2022", "type": "external" },
+      { "label": "Facebook", "url": "https://www.facebook.com/zeeshanhaiderC", "type": "external" },
+      { "label": "Twitter", "url": "https://twitter.com/zeeshan2022", "type": "external" },
+      { "label": "Skype", "url": "https://join.skype.com/invite/dTQrcdTDSUgS", "type": "external" },
+      { "label": "Youtube", "url": "https://www.youtube.com/c/ZeeshanHaider2022", "type": "external" },
+      { "label": "TikTok", "url": "https://vm.tiktok.com/ZSJLHkHrb", "type": "external" },
+      { "label": "Telegram", "url": "http://t.me/zxsprd", "type": "external" },
+      { "label": "Blog", "url": "http://blog.zxsprd.com/", "type": "external" }
+    ]
+  }
+]
