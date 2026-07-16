@@ -33,32 +33,56 @@ const { hero, about } = data;
 
 
 <!-- Hero Section -->
-<header class="min-h-screen flex items-center justify-center pt-20 px-6">
-  <div class="max-w-4xl mx-auto text-center">
-    <div class="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-accent to-accent2 flex items-center justify-center text-bg text-3xl font-extrabold shadow-[0_0_30px_rgba(0,224,184,0.3)]">
-      {hero.name.split(' ').map(n => n[0]).join('')}
+<!-- Hero Section with Continuous Cyber Graphic -->
+<!-- Hero Section with Continuous Cyber Graphic -->
+<header class="relative min-h-screen flex items-center justify-center pt-20 px-6 overflow-hidden">
+  
+  <!-- CONTINUOUS GRAPHIC: Animated Background -->
+  <div class="absolute inset-0 z-0">
+    <!-- Base Gradient -->
+    <div class="absolute inset-0 bg-gradient-to-br from-bg via-bg to-accent/10"></div>
+    
+    <!-- Floating Glowing Orbs (Using standard Tailwind animate-pulse) -->
+    <div class="absolute top-1/4 start-1/4 w-72 h-72 bg-accent/20 rounded-full blur-3xl animate-pulse"></div>
+    <div class="absolute bottom-1/4 end-1/4 w-72 h-72 bg-purple-500/20 rounded-full blur-3xl animate-pulse"></div>
+  </div>
+
+  <!-- Hero Content -->
+  <div class="relative z-10 max-w-4xl mx-auto text-center">
+    <div class="reveal">
+      <p class="text-accent font-mono text-sm md:text-base mb-4 tracking-widest uppercase">
+        {hero.location}
+      </p>
+      <h1 class="text-4xl md:text-6xl lg:text-7xl font-bold text-text mb-6 leading-tight">
+        {hero.name}
+      </h1>
+      <h2 class="text-xl md:text-2xl text-muted mb-8 font-light">
+        {hero.title}
+      </h2>
+      
+      <!-- CTA Buttons -->
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mt-10">
+        <a href="/#contact" class="px-8 py-3 bg-accent text-bg font-bold rounded-lg hover:bg-accent2 transition-all duration-300 hover:scale-105 shadow-lg shadow-accent/20">
+          {hero.cta_primary}
+        </a>
+        <a href={hero.cta_secondary_link || '/ZeeshanHaider_CV_SecurityManager.pdf'} target="_blank" class="px-8 py-3 bg-transparent border border-border text-text font-bold rounded-lg hover:border-accent hover:text-accent transition-all duration-300 hover:scale-105">
+          {hero.cta_secondary}
+        </a>
+      </div>
     </div>
-    <h1 class="text-4xl md:text-6xl font-bold mb-4 text-text">
-      {hero.name.split(' ')[0]} <span class="text-transparent bg-clip-text bg-gradient-to-r from-accent to-accent2">{hero.name.split(' ')[1]}</span>
-    </h1>
-    <p class="text-xl md:text-2xl text-muted mb-2">{hero.title}</p>
-    <p class="text-sm text-muted mb-8 flex items-center justify-center gap-2">
-      <span>📍</span> {hero.location}
-    </p>
-    <div class="flex flex-col sm:flex-row gap-4 justify-center">
-      <a href="#contact" class="px-8 py-3 rounded-lg bg-gradient-to-r from-accent to-accent2 text-bg font-bold hover:shadow-[0_0_20px_rgba(0,224,184,0.4)] transition-all duration-300 hover:-translate-y-1">
-        {hero.cta_primary}
-      </a>
-      <a href="/ZeeshanHaider_CV_SecurityManager.pdf" target="_blank" class="px-8 py-3 rounded-lg border border-border text-text font-semibold hover:border-accent hover:text-accent transition-all duration-300">
-        {hero.cta_secondary}
-      </a>
-    </div>
+  </div>
+
+  <!-- Scroll Down Indicator -->
+  <div class="absolute bottom-10 start-1/2 -translate-x-1/2 animate-bounce text-muted">
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+    </svg>
   </div>
 </header>
 
 <!-- About Section -->
 <section id="about" class="py-20 px-6 bg-bg-2/30">
-  <div class="max-w-4xl mx-auto">
+  <div class="max-w-4xl mx-auto reveal">
     <h2 class="text-3xl font-bold mb-6 flex items-center gap-3">
       <span class="w-3 h-3 rounded-full bg-accent shadow-[0_0_10px_#00e0b8]"></span>
       {about.title}
