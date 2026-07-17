@@ -1,0 +1,244 @@
+---
+---
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+		<title>AV Camera Frequency Mesh</title>
+		<style>
+			:root {
+				--bg-color: #04040a;
+				--accent-color: #00ffcc;
+			}
+			body, html {
+				margin: 0;
+				padding: 0;
+				width: 100%;
+				height: 100%;
+				overflow: hidden;
+				background-color: var(--bg-color);
+				font-family: system-ui, sans-serif;
+				touch-action: none;
+			}
+			canvas {
+				position: absolute;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				display: block;
+			}
+			video {
+				display: none; /* Hidden data feed for canvas pixel processing */
+			}
+			.ui-layer {
+				position: absolute;
+				top: 20px;
+				left: 20px;
+				color: #fff;
+				z-index: 10;
+				pointer-events: none;
+				user-select: none;
+			}
+			h1 {
+				margin: 0 0 5px 0;
+				font-size: 1.6rem;
+				letter-spacing: 1px;
+				color: var(--accent-color);
+				text-shadow: 0 0 10px rgba(0, 255, 204, 0.4);
+			}
+			p {
+				margin: 0;
+				font-size: 0.85rem;
+				color: #a0a0aa;
+			}
+			.start-overlay {
+				position: absolute;
+				inset: 0;
+				background: rgba(4, 4, 10, 0.95);
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				z-index: 100;
+			}
+			.start-btn {
+				background: transparent;
+				border: 1px solid var(--accent-color);
+				color: var(--accent-color);
+				padding: 14px 28px;
+				font-size: 1rem;
+				border-radius: 4px;
+				cursor: pointer;
+				text-transform: uppercase;
+				letter-spacing: 2px;
+				transition: all 0.3s ease;
+				box-shadow: 0 0 15px rgba(0, 255, 204, 0.2);
+			}
+			.start-btn:hover {
+				background: var(--accent-color);
+				color: #000;
+				box-shadow: 0 0 25px rgba(0, 255, 204, 0.6);
+				font-weight: bold;
+			}
+		</style>
+	</head>
+	<body>
+
+		<div class="start-overlay" id="overlay">
+			<button class="start-btn" id="startBtn">Initialize AV Stream</button>
+		</div>
+
+		<div class="ui-layer">
+			<h1>AV Cyber Mesh</h1>
+			<p>Camera pixel tracking running through sound audio vector bins.</p>
+		</div>
+
+		<video id="webcam" autoplay playsinline muted></video>
+		<canvas id="mesh-canvas"></canvas>
+
+		<script>
+			const canvas = document.getElementById('mesh-canvas') as HTMLCanvasElement;
+			const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+			const video = document.getElementById('webcam') as HTMLVideoElement;
+			const startBtn = document.getElementById('startBtn')!;
+			const overlay = document.getElementById('overlay')!;
+
+			let width = canvas.width = window.innerWidth;
+			let height = canvas.height = window.innerHeight;
+
+			let audioContext: AudioContext;
+			let analyser: AnalyserNode;
+			let dataArray: Uint8Array;
+			let isMediaReady = false;
+
+			const pointer = { x: width / 2, y: height / 2 };
+			let timeStep = 0;
+
+			// Define pixel resolution density for camera frame processing grid
+			const rows = 35;
+			const cols = 60;
+
+			async function initAVStreams() {
+				try {
+					// 1. Audio Setup
+					audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+					analyser = audioContext.createAnalyser();
+					analyser.fftSize = 128; // Lower latency focus
+					
+					// 2. Hardware Capture (Mic + Video Camera requested together)
+					const stream = await navigator.mediaDevices.getUserMedia({ 
+						audio: true, 
+						video: { width: { ideal: 640 }, height: { ideal: 480 } } 
+					});
+					
+					// Connect Audio
+					const source = audioContext.createMediaStreamSource(stream);
+					source.connect(analyser);
+					dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+					// Connect Video
+					video.srcObject = stream;
+					video.onloadedmetadata = () => {
+						video.play();
+						isMediaReady = true;
+						overlay.style.display = 'none';
+						animate();
+					};
+				} catch (err) {
+					alert('Camera and microphone permissions are required for this AV simulation.');
+					console.error(err);
+				}
+			}
+
+			startBtn.addEventListener('click', initAVStreams);
+
+			function animate() {
+				// Clear with subtle fade to retain line trails
+				ctx.fillStyle = 'rgba(4, 4, 10, 0.2)';
+				ctx.fillRect(0, 0, width, height);
+
+				if (!isMediaReady) return;
+
+				analyser.getByteFrequencyData(dataArray);
+				timeStep += 0.05;
+
+				// Setup temporary offscreen image sampling data matrix
+				// We project the hidden video element context directly onto canvas geometry dimensions
+				const cellWidth = width / (cols - 1);
+				const cellHeight = height / (rows - 1);
+
+				// Draw horizontal neon contour paths mapped to video pixels
+				for (let r = 0; r < rows; r++) {
+					ctx.beginPath();
+					for (let c = 0; c < cols; c++) {
+						const pos = calculateMeshNode(r, c, cellWidth, cellHeight);
+						if (c === 0) ctx.moveTo(pos.x, pos.y);
+						else ctx.lineTo(pos.x, pos.y);
+					}
+					ctx.lineWidth = 1.5;
+					ctx.strokeStyle = `rgba(0, 255, 204, 0.45)`;
+					ctx.stroke();
+				}
+
+				// Draw vertical accent lines
+				for (let c = 0; c < cols; c++) {
+					ctx.beginPath();
+					for (let r = 0; r < rows; r++) {
+						const pos = calculateMeshNode(r, c, cellWidth, cellHeight);
+						if (r === 0) ctx.moveTo(pos.x, pos.y);
+						else ctx.lineTo(pos.x, pos.y);
+					}
+					ctx.lineWidth = 0.8;
+					ctx.strokeStyle = `rgba(255, 0, 150, 0.25)`;
+					ctx.stroke();
+				}
+
+				requestAnimationFrame(animate);
+			}
+
+			function calculateMeshNode(r: number, c: number, cellW: number, cellH: number) {
+				// Mirror coordinate plotting horizontally so it feels natural like looking into a glass mirror
+				const flippedCol = (cols - 1) - c;
+				const baseX = c * cellW;
+				const baseY = r * cellH;
+
+				// Associate row layers directly into frequency band index channels
+				const freqIndex = Math.floor((r / rows) * (dataArray.length - 1));
+				const soundVolumeNormalized = dataArray[freqIndex] / 255;
+
+				// Calculate relative coordinate tracking relative to mouse interaction vectors
+				const dx = baseX - pointer.x;
+				const dy = baseY - pointer.y;
+				const cursorDistance = Math.hypot(dx, dy);
+				const interactionRadiusInfluence = Math.max(0, (250 - cursorDistance) / 250);
+
+				// Complex multi-layered mathematical formula:
+				// Combines base noise wave parameters, localized cursor tracking vectors, and sound volumes to shift the Y positions
+				const baselineWobbleNoise = Math.sin(c * 0.2 + timeStep) * Math.cos(r * 0.4 + timeStep);
+				const displacementY = (baselineWobbleNoise * (soundVolumeNormalized * 80)) + (interactionRadiusInfluence * -45);
+
+				return {
+					x: baseX,
+					y: baseY + displacementY
+				};
+			}
+
+			function updateInteraction(x: number, y: number) {
+				pointer.x = x;
+				pointer.y = y;
+			}
+
+			window.addEventListener('mousemove', (e) => updateInteraction(e.clientX, e.clientY));
+			window.addEventListener('touchmove', (e) => {
+				if (e.touches.length > 0) {
+					updateInteraction(e.touches[0].clientX, e.touches[0].clientY);
+				}
+			}, { passive: true });
+
+			window.addEventListener('resize', () => {
+				width = canvas.width = window.innerWidth;
+				height = canvas.height = window.innerHeight;
+			});
+		</script>
+	</body>
+</html>

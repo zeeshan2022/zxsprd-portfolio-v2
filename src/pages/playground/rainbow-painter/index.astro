@@ -1,0 +1,260 @@
+---
+---
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+		<title>Magical Rainbow Painter</title>
+		<style>
+			:root {
+				--bg-gradient: linear-gradient(135deg, #0f172a, #1e1b4b);
+			}
+			body, html {
+				margin: 0;
+				padding: 0;
+				width: 100%;
+				height: 100%;
+				overflow: hidden;
+				background: var(--bg-gradient);
+				font-family: system-ui, sans-serif;
+				touch-action: none; /* Block zooming or pulling on mobile devices */
+			}
+			canvas {
+				position: absolute;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				display: block;
+			}
+			.ui-layer {
+				position: absolute;
+				top: 20px;
+				left: 20px;
+				color: #fff;
+				z-index: 10;
+				pointer-events: none;
+				user-select: none;
+			}
+			h1 {
+				margin: 0 0 5px 0;
+				font-size: 2rem;
+				background: linear-gradient(to right, #ff2a85, #ff7300, #f8b500, #38ef7d, #00f2fe, #7928ca);
+				-webkit-background-clip: text;
+				-webkit-text-fill-color: transparent;
+				letter-spacing: 1px;
+				filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5));
+			}
+			p {
+				margin: 0;
+				font-size: 1rem;
+				color: #cbd5e1;
+				font-weight: 500;
+			}
+		</style>
+	</head>
+	<body>
+
+		<div class="ui-layer">
+			<h1>Magical Rainbow Painter</h1>
+			<p>Drag your fingers or mouse to paint glowing bubble magic! 🌟</p>
+		</div>
+
+		<canvas id="paint-canvas"></canvas>
+
+		<script>
+			const canvas = document.getElementById('paint-canvas') as HTMLCanvasElement;
+			const ctx = canvas.getContext('2d')!;
+
+			let width = canvas.width = window.innerWidth;
+			let height = canvas.height = window.innerHeight;
+
+			// Core element tracking arrays
+			const bubbles: Bubble[] = [];
+			const sparkles: Sparkle[] = [];
+			
+			let hue = 0; // Increments globally to cycle through rainbow frequencies smoothly
+
+			// Sparkle pop element generation parameters
+			class Sparkle {
+				x: number;
+				y: number;
+				vx: number;
+				vy: number;
+				size: number;
+				color: string;
+				alpha: number;
+
+				constructor(x: number, y: number, color: string) {
+					this.x = x;
+					this.y = y;
+					// Random direction velocities for radial bursts
+					this.vx = (Math.random() - 0.5) * 8;
+					this.vy = (Math.random() - 0.5) * 8;
+					this.size = Math.random() * 4 + 2;
+					this.color = color;
+					this.alpha = 1;
+				}
+
+				update() {
+					this.x += this.vx;
+					this.y += this.vy;
+					this.vy += 0.05; // Gentle gravity pulls pops downwards
+					this.alpha -= 0.02; // Fade out tracking
+				}
+
+				draw() {
+					ctx.save();
+					ctx.globalAlpha = this.alpha;
+					ctx.fillStyle = this.color;
+					ctx.beginPath();
+					ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+					ctx.fill();
+					ctx.restore();
+				}
+			}
+
+			// Main interactive floating bubble trace system
+			class Bubble {
+				x: number;
+				y: number;
+				vx: number;
+				vy: number;
+				radius: number;
+				maxRadius: number;
+				hue: number;
+				growthSpeed: number;
+				floatSpeed: number;
+				wobbleSpeed: number;
+				wobbleAmount: number;
+
+				constructor(x: number, y: number, hue: number) {
+					this.x = x;
+					this.y = y;
+					this.hue = hue;
+					this.radius = 2;
+					this.maxRadius = Math.random() * 25 + 15;
+					
+					// Slight horizontal scatter drift velocities
+					this.vx = (Math.random() - 0.5) * 2;
+					this.vy = -(Math.random() * 1.5 + 0.5); // Ascend upwards automatically
+					
+					this.growthSpeed = Math.random() * 2 + 1;
+					this.wobbleSpeed = Math.random() * 0.05;
+					this.wobbleAmount = Math.random() * 2;
+				}
+
+				update() {
+					// Grow bubble to target maximum radius structural sizes
+					if (this.radius < this.maxRadius) {
+						this.radius += this.growthSpeed;
+					}
+
+					this.x += this.vx + Math.sin(Date.now() * this.wobbleSpeed) * this.wobbleAmount;
+					this.y += this.vy;
+				}
+
+				draw() {
+					ctx.save();
+					
+					// Create standard neon bubble glossy inner glow effects
+					const gradient = ctx.createRadialGradient(
+						this.x - this.radius * 0.3, this.y - this.radius * 0.3, this.radius * 0.1,
+						this.x, this.y, this.radius
+					);
+					gradient.addColorStop(0, 'white');
+					gradient.addColorStop(0.2, `hsla(${this.hue}, 100%, 70%, 0.8)`);
+					gradient.addColorStop(0.8, `hsla(${this.hue}, 100%, 40%, 0.2)`);
+					gradient.addColorStop(1, `hsla(${this.hue}, 100%, 50%, 0)`);
+
+					// Transparent stroke outline matching outer border definitions
+					ctx.strokeStyle = `hsla(${this.hue}, 100%, 65%, 0.7)`;
+					ctx.lineWidth = 2;
+					
+					ctx.fillStyle = gradient;
+					ctx.beginPath();
+					ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+					ctx.fill();
+					ctx.stroke();
+					
+					ctx.restore();
+				}
+
+				isOutOfBounds() {
+					return (this.y + this.radius < 0 || this.x + this.radius < 0 || this.x - this.radius > width);
+				}
+			}
+
+			function spawnMagicTrail(x: number, y: number) {
+				hue = (hue + 2) % 360; // Advance color scale maps continuously during trace
+				bubbles.push(new Bubble(x, y, hue));
+			}
+
+			function animate() {
+				// Clear viewport cleanly without trailing smear overrides
+				ctx.clearRect(0, 0, width, height);
+
+				// 1. Process active loop states for bubbles
+				for (let i = bubbles.length - 1; i >= 0; i--) {
+					const b = bubbles[i];
+					b.update();
+					b.draw();
+
+					// Pop conditions: Bubble grows fully and randomly bursts, or floats offscreen entirely
+					if (b.isOutOfBounds() || (b.radius >= b.maxRadius && Math.random() < 0.007)) {
+						// Instantiation pop explosion bursts
+						for (let k = 0; k < 12; k++) {
+							sparkles.push(new Sparkle(b.x, b.y, `hsl(${b.hue}, 100%, 60%)`));
+						}
+						bubbles.splice(i, 1);
+					}
+				}
+
+				// 2. Process active loop states for pop explosion fragments
+				for (let j = sparkles.length - 1; j >= 0; j--) {
+					const s = sparkles[j];
+					s.update();
+					s.draw();
+
+					if (s.alpha <= 0) {
+						sparkles.splice(j, 1);
+					}
+				}
+
+				requestAnimationFrame(animate);
+			}
+
+			// Interaction mapping router triggers
+			window.addEventListener('mousemove', (e) => {
+				if (e.buttons === 1) { // Left-click draw constraints
+					spawnMagicTrail(e.clientX, e.clientY);
+				}
+			});
+
+			window.addEventListener('mousedown', (e) => {
+				spawnMagicTrail(e.clientX, e.clientY);
+			});
+
+			// Multi-touch drag tracking matrices natively mapped together
+			window.addEventListener('touchmove', (e) => {
+				e.preventDefault();
+				for (let i = 0; i < e.touches.length; i++) {
+					spawnMagicTrail(e.touches[i].clientX, e.touches[i].clientY);
+				}
+			}, { passive: false });
+
+			window.addEventListener('touchstart', (e) => {
+				for (let i = 0; i < e.touches.length; i++) {
+					spawnMagicTrail(e.touches[i].clientX, e.touches[i].clientY);
+				}
+			}, { passive: true });
+
+			window.addEventListener('resize', () => {
+				width = canvas.width = window.innerWidth;
+				height = canvas.height = window.innerHeight;
+			});
+
+			animate();
+		</script>
+	</body>
+</html>

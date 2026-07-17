@@ -1,0 +1,293 @@
+---
+---
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+		<title>Elastic Face Distorter</title>
+		<style>
+			:root {
+				--bg-color: #0c0a0f;
+				--accent-color: #ec4899;
+			}
+			body, html {
+				margin: 0;
+				padding: 0;
+				width: 100%;
+				height: 100%;
+				overflow: hidden;
+				background-color: var(--bg-color);
+				font-family: system-ui, sans-serif;
+				touch-action: none;
+			}
+			canvas {
+				position: absolute;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				display: block;
+			}
+			video {
+				display: none; /* Hidden camera feed source */
+			}
+			.ui-layer {
+				position: absolute;
+				top: 20px;
+				left: 20px;
+				color: #fff;
+				z-index: 10;
+				pointer-events: none;
+				user-select: none;
+			}
+			h1 {
+				margin: 0 0 5px 0;
+				font-size: 1.8rem;
+				letter-spacing: 1px;
+				background: linear-gradient(to right, #ec4899, #8b5cf6);
+				-webkit-background-clip: text;
+				-webkit-text-fill-color: transparent;
+			}
+			p {
+				margin: 0;
+				font-size: 0.9rem;
+				color: #94a3b8;
+			}
+			.start-overlay {
+				position: absolute;
+				inset: 0;
+				background: rgba(12, 10, 15, 0.95);
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				z-index: 100;
+			}
+			.start-btn {
+				background: transparent;
+				border: 1px solid var(--accent-color);
+				color: var(--accent-color);
+				padding: 14px 28px;
+				font-size: 1rem;
+				border-radius: 6px;
+				cursor: pointer;
+				text-transform: uppercase;
+				letter-spacing: 2px;
+				transition: all 0.3s ease;
+			}
+			.start-btn:hover {
+				background: var(--accent-color);
+				color: #fff;
+				box-shadow: 0 0 25px rgba(236, 72, 153, 0.5);
+			}
+		</style>
+	</head>
+	<body>
+
+		<div class="start-overlay" id="overlay">
+			<button class="start-btn" id="startBtn">Open Funhouse Mirror 👁️</button>
+		</div>
+
+		<div class="ui-layer">
+			<h1>Elastic Face Distorter</h1>
+			<p>Drag your finger or move your cursor to stretch your face like rubber slime!</p>
+		</div>
+
+		<video id="webcam" autoplay playsinline muted></video>
+		<canvas id="distort-canvas"></canvas>
+
+		<script>
+			const canvas = document.getElementById('distort-canvas') as HTMLCanvasElement;
+			const ctx = canvas.getContext('2d')!;
+			const video = document.getElementById('webcam') as HTMLVideoElement;
+			const startBtn = document.getElementById('startBtn')!;
+			const overlay = document.getElementById('overlay')!;
+
+			let width = canvas.width = window.innerWidth;
+			let height = canvas.height = window.innerHeight;
+
+			let isStreamReady = false;
+			const mouse = { x: width / 2, y: height / 2, vx: 0, vy: 0, lastX: width / 2, lastY: height / 2 };
+
+			// Control grid structural density for stretching calculations
+			const rows = 20;
+			const cols = 20;
+			const meshPoints: MeshPoint[][] = [];
+
+			class MeshPoint {
+				x: number;
+				y: number;
+				targetX: number;
+				targetY: number;
+				vx: number;
+				vy: number;
+				u: number; // Texture mapping coordinate X (0 to 1)
+				v: number; // Texture mapping coordinate Y (0 to 1)
+
+				constructor(x: number, y: number, u: number, v: number) {
+					this.x = x;
+					this.y = y;
+					this.targetX = x;
+					this.targetY = y;
+					this.vx = 0;
+					this.vy = 0;
+					this.u = u;
+					this.v = v;
+				}
+
+				update() {
+					// Pull vectors toward cursor if moving fast
+					const dx = this.x - mouse.x;
+					const dy = this.y - mouse.y;
+					const dist = Math.hypot(dx, dy);
+					const influenceRadius = 180;
+
+					if (dist < influenceRadius) {
+						const force = (influenceRadius - dist) / influenceRadius;
+						// Slime stretch effect pulls points along with mouse movement speed vectors
+						this.vx += mouse.vx * force * 0.4;
+						this.vy += mouse.vy * force * 0.4;
+					}
+
+					// Spring force physics returning points back to initial layout structural targets
+					const springX = (this.targetX - this.x) * 0.08;
+					const springY = (this.targetY - this.y) * 0.08;
+
+					this.vx += springX;
+					this.vy += springY;
+
+					// Friction drag damping
+					this.vx *= 0.82;
+					this.vy *= 0.82;
+
+					this.x += this.vx;
+					this.y += this.vy;
+				}
+			}
+
+			async function initMirror() {
+				try {
+					const stream = await navigator.mediaDevices.getUserMedia({
+						audio: false,
+						video: { width: { ideal: 640 }, height: { ideal: 480 } }
+					});
+
+					video.srcObject = stream;
+					video.onloadedmetadata = () => {
+						video.play();
+						buildMeshGrid();
+						isStreamReady = true;
+						overlay.style.display = 'none';
+						animate();
+					};
+				} catch (err) {
+					alert('Webcam feed authorization access is needed for this mirror experience.');
+					console.error(err);
+				}
+			}
+
+			function buildMeshGrid() {
+				const cellW = width / (cols - 1);
+				const cellH = height / (rows - 1);
+
+				for (let r = 0; r < rows; r++) {
+					meshPoints[r] = [];
+					for (let c = 0; c < cols; c++) {
+						const u = c / (cols - 1);
+						const v = r / (rows - 1);
+						meshPoints[r].push(new MeshPoint(c * cellW, r * cellH, u, v));
+					}
+				}
+			}
+
+			startBtn.addEventListener('click', initMirror);
+
+			function animate() {
+				ctx.fillStyle = '#0c0a0f';
+				ctx.fillRect(0, 0, width, height);
+
+				if (!isStreamReady) return;
+
+				// Compute real-time drag speeds for mouse velocity vectors
+				mouse.vx = mouse.x - mouse.lastX;
+				mouse.vy = mouse.y - mouse.lastY;
+				mouse.lastX = mouse.x;
+				mouse.lastY = mouse.y;
+
+				// Update mesh coordinates layout metrics
+				for (let r = 0; r < rows; r++) {
+					for (let c = 0; c < cols; c++) {
+						meshPoints[r][c].update();
+					}
+				}
+
+				// Render deformed surface triangles utilizing canvas image slicing maps
+				for (let r = 0; r < rows - 1; r++) {
+					for (let c = 0; c < cols - 1; c++) {
+						const p0 = meshPoints[r][c];
+						const p1 = meshPoints[r][c + 1];
+						const p2 = meshPoints[r + 1][c];
+						const p3 = meshPoints[r + 1][c + 1];
+
+						// Draw Triangle 1 (Top-Left split block area)
+						drawTexturedTriangle(p0, p1, p2);
+						// Draw Triangle 2 (Bottom-Right split block area)
+						drawTexturedTriangle(p1, p3, p2);
+					}
+				}
+
+				requestAnimationFrame(animate);
+			}
+
+			// Texture mapper mapping slices of hidden video buffer across warped grid indices
+			function drawTexturedTriangle(p0: MeshPoint, p1: MeshPoint, p2: MeshPoint) {
+				ctx.save();
+				ctx.beginPath();
+				ctx.moveTo(p0.x, p0.y);
+				ctx.lineTo(p1.x, p1.y);
+				ctx.lineTo(p2.x, p2.y);
+				ctx.closePath();
+				ctx.clip(); // Mask texture coordinates mapping limits inside paths
+
+				// Mirror webcam mapping coordinates layout horizontally for clean reflection feedback loop
+				const u0 = (1 - p0.u) * video.videoWidth; const v0 = p0.v * video.videoHeight;
+				const u1 = (1 - p1.u) * video.videoWidth; const v1 = p1.v * video.videoHeight;
+				const u2 = (1 - p2.u) * video.videoWidth; const v2 = p2.v * video.videoHeight;
+
+				// Apply affine matrix transformations onto sliced chunks
+				const x0 = p0.x, y0 = p0.y;
+				const x1 = p1.x, y1 = p1.y;
+				const x2 = p2.x, y2 = p2.y;
+
+				const delta = u0*v1 + v0*u2 + u1*v2 - v1*u2 - v0*u1 - u0*v2;
+				const a = -(v0*x1 - v1*x0 - v0*x2 + v2*x0 + v1*x2 - v2*x1) / delta;
+				const b = (u0*x1 - u1*x0 - u0*x2 + u2*x0 + u1*x2 - u2*x1) / delta;
+				const c = (u0*v1*x2 - v0*u1*x2 - u0*v2*x1 + v0*u2*x1 + u1*v2*x0 - v1*u2*x0) / delta;
+				const d = -(v0*y1 - v1*y0 - v0*y2 + v2*y0 + v1*y2 - v2*y1) / delta;
+				const e = (u0*y1 - u1*y0 - u0*y2 + u2*y0 + u1*y2 - u2*y1) / delta;
+				const f = (u0*v1*y2 - v0*u1*y2 - u0*v2*y1 + v0*u2*y1 + u1*v2*y0 - v1*u2*y0) / delta;
+
+				ctx.transform(a, d, b, e, c, f);
+				ctx.drawImage(video, 0, 0);
+				ctx.restore();
+			}
+
+			function updateMouse(x: number, y: number) {
+				mouse.x = x;
+				mouse.y = y;
+			}
+
+			window.addEventListener('mousemove', (e) => updateMouse(e.clientX, e.clientY));
+			window.addEventListener('touchmove', (e) => {
+				if (e.touches.length > 0) {
+					updateMouse(e.touches[0].clientX, e.touches[0].clientY);
+				}
+			}, { passive: true });
+
+			window.addEventListener('resize', () => {
+				width = canvas.width = window.innerWidth;
+				height = canvas.height = window.innerHeight;
+				buildMeshGrid();
+			});
+		</script>
+	</body>
+</html>

@@ -1,0 +1,249 @@
+---
+---
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+		<title>Interactive Studio Clock</title>
+		<style>
+			:root {
+				--bg-color: #08080c;
+				--clock-color: #00ffcc;
+				--glow-intensity: 20px;
+			}
+			body, html {
+				margin: 0;
+				padding: 0;
+				width: 100%;
+				height: 100%;
+				overflow: hidden;
+				background-color: var(--bg-color);
+				font-family: 'Courier New', Courier, monospace;
+				user-select: none;
+				touch-action: none;
+			}
+			
+			/* Full Screen Layout Wrapper */
+			.clock-container {
+				width: 100vw;
+				height: 100vh;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				position: relative;
+			}
+
+			/* Digital Clock Interface Styles */
+			.digital-display {
+				font-size: 14vw;
+				font-weight: bold;
+				color: var(--clock-color);
+				text-shadow: 0 0 var(--glow-intensity) var(--clock-color);
+				letter-spacing: -2px;
+				display: none;
+			}
+			.digital-display.active {
+				display: block;
+			}
+
+			/* Analog Clock Interface Styles */
+			.analog-display {
+				width: 80vmin;
+				height: 80vmin;
+				border: 4px solid var(--clock-color);
+				border-radius: 50%;
+				position: relative;
+				box-shadow: inset 0 0 var(--glow-intensity) var(--clock-color), 0 0 var(--glow-intensity) var(--clock-color);
+				display: none;
+			}
+			.analog-display.active {
+				display: block;
+			}
+			.center-dot {
+				position: absolute;
+				width: 12px;
+				height: 12px;
+				background: var(--clock-color);
+				border-radius: 50%;
+				top: 50%;
+				left: 50%;
+				transform: translate(-50%, -50%);
+				box-shadow: 0 0 10px var(--clock-color);
+			}
+			.hand {
+				position: absolute;
+				bottom: 50%;
+				left: 50%;
+				transform-origin: bottom center;
+				background: var(--clock-color);
+				border-radius: 4px;
+				box-shadow: 0 0 var(--glow-intensity) var(--clock-color);
+			}
+			.hour-hand { width: 6px; height: 25%; }
+			.min-hand { width: 4px; height: 38%; }
+			.sec-hand { width: 2px; height: 44%; background: #ff3366; box-shadow: 0 0 10px #ff3366; }
+
+			/* Minimal Configuration Controls Floating Menu */
+			.settings-toggle {
+				position: absolute;
+				top: 15px;
+				right: 15px;
+				background: rgba(255, 255, 255, 0.05);
+				border: 1px solid rgba(255, 255, 255, 0.1);
+				color: #666;
+				padding: 6px;
+				border-radius: 4px;
+				cursor: pointer;
+				z-index: 100;
+				font-size: 0.75rem;
+				transition: color 0.2s, background 0.2s;
+			}
+			.settings-toggle:hover {
+				color: #fff;
+				background: rgba(255, 255, 255, 0.15);
+			}
+			.settings-panel {
+				position: absolute;
+				top: 50px;
+				right: 15px;
+				background: rgba(12, 12, 18, 0.95);
+				border: 1px solid rgba(255, 255, 255, 0.1);
+				padding: 12px;
+				border-radius: 6px;
+				z-index: 99;
+				display: none;
+				flex-direction: column;
+				gap: 10px;
+				font-size: 0.75rem;
+				color: #aaa;
+				box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+			}
+			.settings-panel.open { display: flex; }
+			.setting-item {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				gap: 20px;
+			}
+			select, input[type="range"] {
+				background: #222;
+				border: 1px solid #44;
+				color: #fff;
+				font-size: 0.7rem;
+				padding: 2px 4px;
+				border-radius: 3px;
+				outline: none;
+			}
+		</style>
+	</head>
+	<body>
+
+		<button class="settings-toggle" id="menuBtn">⚙️ Settings</button>
+
+		<div class="settings-panel" id="panel">
+			<div class="setting-item">
+				<label>Display Mode</label>
+				<select id="modeSelect">
+					<option value="digital">Digital</option>
+					<option value="analog">Analog</option>
+				</select>
+			</div>
+			<div class="setting-item">
+				<label>Neon Spectrum</label>
+				<select id="colorSelect">
+					<option value="#00ffcc">Cyan</option>
+					<option value="#ff00ff">Magenta</option>
+					<option value="#ffff00">Yellow</option>
+					<option value="#33ff33">Lime</option>
+					<option value="#ffffff">White</option>
+				</select>
+			</div>
+			<div class="setting-item">
+				<label>Glow Power</label>
+				<input type="range" id="glowSlider" min="0" max="40" value="20" />
+			</div>
+		</div>
+
+		<div class="clock-container">
+			<!-- Digital Interface Option -->
+			<div class="digital-display active" id="digitalClock">00:00:00</div>
+
+			<!-- Analog Interface Option -->
+			<div class="analog-display" id="analogClock">
+				<div class="center-dot"></div>
+				<div class="hand hour-hand" id="hourHand"></div>
+				<div class="hand min-hand" id="minHand"></div>
+				<div class="hand sec-hand" id="secHand"></div>
+			</div>
+		</div>
+
+		<script>
+			// Elements selection
+			const menuBtn = document.getElementById('menuBtn')!;
+			const panel = document.getElementById('panel')!;
+			const modeSelect = document.getElementById('modeSelect') as HTMLSelectElement;
+			const colorSelect = document.getElementById('colorSelect') as HTMLSelectElement;
+			const glowSlider = document.getElementById('glowSlider') as HTMLInputElement;
+
+			const digitalClock = document.getElementById('digitalClock')!;
+			const analogClock = document.getElementById('analogClock')!;
+			const hourHand = document.getElementById('hourHand')!;
+			const minHand = document.getElementById('minHand')!;
+			const secHand = document.getElementById('secHand')!;
+
+			// Toggle Settings UI Overlay visibility
+			menuBtn.addEventListener('click', () => panel.classList.toggle('open'));
+
+			// Setting Update Pipeline Listeners
+			modeSelect.addEventListener('change', (e) => {
+				const val = (e.target as HTMLSelectElement).value;
+				if (val === 'digital') {
+					digitalClock.classList.add('active');
+					analogClock.classList.remove('active');
+				} else {
+					analogClock.classList.add('active');
+					digitalClock.classList.remove('active');
+				}
+			});
+
+			colorSelect.addEventListener('change', (e) => {
+				const color = (e.target as HTMLSelectElement).value;
+				document.documentElement.style.setProperty('--clock-color', color);
+			});
+
+			glowSlider.addEventListener('input', (e) => {
+				const glow = (e.target as HTMLInputElement).value + 'px';
+				document.documentElement.style.setProperty('--glow-intensity', glow);
+			});
+
+			// Master Loop Clock Core Engine Simulation
+			function updateTime() {
+				const now = new Date();
+				
+				// 1. Core Digital Calculations
+				const hrs = String(now.getHours()).padStart(2, '0');
+				const mins = String(now.getMinutes()).padStart(2, '0');
+				const secs = String(now.getSeconds()).padStart(2, '0');
+				digitalClock.textContent = `${hrs}:${mins}:${secs}`;
+
+				// 2. Core Analog Vector Calculations
+				const s = now.getSeconds();
+				const m = now.getMinutes();
+				const h = now.getHours();
+
+				const sDeg = (s / 60) * 360;
+				const mDeg = ((m / 60) * 360) + ((s / 60) * 6);
+				const hDeg = ((h % 12) / 12) * 360 + ((m / 60) * 30);
+
+				hourHand.style.transform = `translateX(-50%) rotate(${hDeg}deg)`;
+				minHand.style.transform = `translateX(-50%) rotate(${mDeg}deg)`;
+				secHand.style.transform = `translateX(-50%) rotate(${sDeg}deg)`;
+
+				requestAnimationFrame(updateTime);
+			}
+
+			// Initialize
+			updateTime();
+		</script>
+	</body>
+</html>

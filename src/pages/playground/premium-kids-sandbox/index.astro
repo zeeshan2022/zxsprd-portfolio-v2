@@ -1,0 +1,335 @@
+---
+---
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+		<title>Premium Magic Sensory Sandbox</title>
+		<style>
+			:root {
+				--panel-bg: rgba(255, 255, 255, 0.08);
+				--panel-border: rgba(255, 255, 255, 0.15);
+			}
+			body, html {
+				margin: 0;
+				padding: 0;
+				width: 100%;
+				height: 100%;
+				overflow: hidden;
+				background-color: #040209;
+				font-family: system-ui, -apple-system, sans-serif;
+				touch-action: none;
+				user-select: none;
+				-webkit-user-select: none;
+			}
+			canvas {
+				position: absolute;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				display: block;
+				z-index: 1;
+			}
+			.dashboard {
+				position: absolute;
+				bottom: 24px;
+				left: 50%;
+				transform: translateX(-50%);
+				background: var(--panel-bg);
+				backdrop-filter: blur(20px);
+				-webkit-backdrop-filter: blur(20px);
+				border: 1px solid var(--panel-border);
+				padding: 12px 24px;
+				border-radius: 40px;
+				display: flex;
+				align-items: center;
+				gap: 16px;
+				z-index: 10;
+				box-shadow: 0 20px 40px rgba(0,0,0,0.6), inset 0 1px 2px rgba(255,255,255,0.2);
+			}
+			.tool-btn {
+				background: rgba(255, 255, 255, 0.1);
+				border: none;
+				outline: none;
+				width: 56px;
+				height: 56px;
+				border-radius: 50%;
+				font-size: 1.6rem;
+				cursor: pointer;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), background 0.2s;
+			}
+			.tool-btn:active {
+				transform: scale(0.85);
+			}
+			.tool-btn.active {
+				background: linear-gradient(135deg, #00f2fe, #4facfe);
+				box-shadow: 0 0 20px rgba(79, 172, 254, 0.6);
+				transform: scale(1.1);
+			}
+			.clear-btn {
+				background: rgba(239, 68, 68, 0.2);
+				border: 1px solid rgba(239, 68, 68, 0.4);
+				color: #fca5a5;
+			}
+			.clear-btn:active {
+				background: rgba(239, 68, 68, 0.5);
+			}
+			.audio-status {
+				position: absolute;
+				top: 20px;
+				right: 20px;
+				color: rgba(255,255,255,0.4);
+				font-size: 0.75rem;
+				letter-spacing: 1px;
+				z-index: 10;
+				background: rgba(0,0,0,0.3);
+				padding: 6px 12px;
+				border-radius: 20px;
+				pointer-events: none;
+			}
+		</style>
+	</head>
+	<body>
+
+		<div class="audio-status" id="audioIndicator">🔊 AUDIO SYNTH READY</div>
+
+		<div class="dashboard">
+			<button class="tool-btn active" data-mode="slime" title="Neon Slime">💧</button>
+			<button class="tool-btn" data-mode="candy" title="Candy Drop">🍬</button>
+			<button class="tool-btn" data-mode="blade" title="Magic Blade">⚔️</button>
+			<div style="width: 1px; height: 32px; background: rgba(255,255,255,0.2); margin: 0 4px;"></div>
+			<button class="tool-btn clear-btn" id="clearBtn" title="Clear Canvas">🧹</button>
+		</div>
+
+		<canvas id="premium-sandbox"></canvas>
+
+		<script>
+			const canvas = document.getElementById('premium-sandbox') as HTMLCanvasElement;
+			const ctx = canvas.getContext('2d', { alpha: false })!;
+			
+			let width = canvas.width = window.innerWidth;
+			let height = canvas.height = window.innerHeight;
+
+			let activeMode = 'slime'; 
+			let globalHue = 0;
+			let audioCtx: AudioContext | null = null;
+
+			function initAudio() {
+				if (!audioCtx) {
+					audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+					document.getElementById('audioIndicator')!.style.color = '#00ffcc';
+				}
+			}
+
+			function playTone(frequency: number, type: 'sine' | 'triangle' = 'sine', duration = 0.3) {
+				if (!audioCtx) return;
+				try {
+					const osc = audioCtx.createOscillator();
+					const gainNode = audioCtx.createGain();
+					
+					osc.type = type;
+					osc.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+					
+					gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
+					gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+					
+					osc.connect(gainNode);
+					gainNode.connect(audioCtx.destination);
+					
+					osc.start();
+					osc.stop(audioCtx.currentTime + duration);
+				} catch (e) {}
+			}
+
+			interface SlimeParticle { x: number; y: number; vx: number; vy: number; radius: number; hue: number; alpha: number; }
+			interface CandyBall { x: number; y: number; vx: number; vy: number; radius: number; hue: number; bounciness: number; mass: number; }
+			interface Pin { x: number; y: number; radius: number; pulse: number; }
+			interface BladeTrack { x: number; y: number; maxLife: number; life: number; }
+
+			let slimeArray: SlimeParticle[] = [];
+			let candyArray: CandyBall[] = [];
+			const pinballPegs: Pin[] = [];
+			let bladeSegments: BladeTrack[] = [];
+
+			function generateEnvironment() {
+				pinballPegs.length = 0;
+				const rows = 4;
+				const baseSpacing = Math.min(width, height) / 5;
+				for (let r = 0; r < rows; r++) {
+					const cols = r % 2 === 0 ? 5 : 6;
+					const offsetX = (width - (cols - 1) * baseSpacing) / 2;
+					for (let c = 0; c < cols; c++) {
+						pinballPegs.push({
+							x: offsetX + c * baseSpacing,
+							y: height * 0.25 + r * (baseSpacing * 0.7),
+							radius: 14,
+							pulse: 0
+						});
+					}
+				}
+			}
+
+			function runSlimePhysics() {
+				for (let i = slimeArray.length - 1; i >= 0; i--) {
+					const p = slimeArray[i];
+					p.x += p.vx;
+					p.y += p.vy;
+					p.vy += 0.15; 
+					p.radius *= 0.985; 
+					p.alpha -= 0.005;
+
+					if (p.radius < 1 || p.alpha <= 0 || p.y > height) {
+						slimeArray.splice(i, 1);
+					}
+				}
+			}
+
+			function runCandyPhysics() {
+				const gravity = 0.35;
+				for (let i = candyArray.length - 1; i >= 0; i--) {
+					const b = candyArray[i];
+					b.vy += gravity;
+					b.x += b.vx;
+					b.y += b.vy;
+
+					if (b.x + b.radius > width) { b.x = width - b.radius; b.vx *= -b.bounciness; playTone(200, 'triangle', 0.1); }
+					if (b.x - b.radius < 0) { b.x = b.radius; b.vx *= -b.bounciness; playTone(200, 'triangle', 0.1); }
+					if (b.y + b.radius > height) {
+						b.y = -b.radius;
+						b.vy = 0;
+						b.x = Math.random() * width;
+					}
+
+					pinballPegs.forEach(peg => {
+						const dx = b.x - peg.x;
+						const dy = b.y - peg.y;
+						const distance = Math.hypot(dx, dy);
+						const minDist = b.radius + peg.radius;
+
+						if (distance < minDist) {
+							const overlap = minDist - distance;
+							const normalX = dx / distance;
+							const normalY = dy / distance;
+
+							b.x += normalX * overlap;
+							b.y += normalY * overlap;
+
+							const dotProduct = b.vx * normalX + b.vy * normalY;
+							b.vx = (b.vx - 2 * dotProduct * normalX) * b.bounciness;
+							b.vy = (b.vy - 2 * dotProduct * normalY) * b.bounciness;
+							b.vx += (Math.random() - 0.5) * 2;
+
+							peg.pulse = 12;
+							const calculatedFreq = 300 + (1 - peg.y / height) * 600;
+							playTone(calculatedFreq, 'sine', 0.25);
+						}
+					});
+
+					if (activeMode === 'blade' && bladeSegments.length > 1) {
+						for (let j = 0; j < bladeSegments.length; j++) {
+							const seg = bladeSegments[j];
+							if (Math.hypot(b.x - seg.x, b.y - seg.y) < b.radius + 15) {
+								for (let k = 0; k < 15; k++) {
+									slimeArray.push({
+										x: b.x, y: b.y,
+										vx: (Math.random() - 0.5) * 12,
+										vy: (Math.random() - 0.5) * 12,
+										radius: b.radius * 0.4,
+										hue: b.hue, alpha: 1
+									});
+								}
+								playTone(880, 'triangle', 0.05);
+								candyArray.splice(i, 1);
+								break;
+							}
+						}
+					}
+				}
+			}
+
+			function drawFrame() {
+				ctx.fillStyle = 'rgba(4, 2, 9, 0.25)';
+				ctx.fillRect(0, 0, width, height);
+
+				pinballPegs.forEach(peg => {
+					if (peg.pulse > 0) peg.pulse *= 0.9;
+					ctx.beginPath();
+					ctx.arc(peg.x, peg.y, peg.radius + peg.pulse, 0, Math.PI * 2);
+					ctx.fillStyle = peg.pulse > 1 ? `hsla(${(globalHue + 120) % 360}, 100%, 70%, 1)` : '#1e1b4b';
+					ctx.strokeStyle = `hsla(${globalHue}, 100%, 60%, 0.8)`;
+					ctx.lineWidth = 3;
+					ctx.fill();
+					ctx.stroke();
+					
+					ctx.beginPath();
+					ctx.arc(peg.x, peg.y, 4, 0, Math.PI * 2);
+					ctx.fillStyle = '#fff';
+					ctx.fill();
+				});
+
+				slimeArray.forEach(p => {
+					ctx.beginPath();
+					ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+					ctx.fillStyle = `hsla(${p.hue}, 100%, 55%, ${p.alpha})`;
+					ctx.fill();
+				});
+
+				candyArray.forEach(b => {
+					ctx.save();
+					const gradient = ctx.createRadialGradient(b.x - b.radius*0.3, b.y - b.radius*0.3, b.radius*0.1, b.x, b.y, b.radius);
+					gradient.addColorStop(0, '#ffffff');
+					gradient.addColorStop(0.3, `hsl(${b.hue}, 100%, 65%)`);
+					gradient.addColorStop(1, `hsl(${b.hue}, 100%, 30%)`);
+					
+					ctx.beginPath();
+					ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
+					ctx.fillStyle = gradient;
+					ctx.shadowBlur = 15;
+					ctx.shadowColor = `hsl(${b.hue}, 100%, 50%)`;
+					ctx.fill();
+					ctx.restore();
+				});
+
+				// Fixed: Fully mapped blade drawing loop
+				if (bladeSegments.length > 1) {
+					ctx.save();
+					ctx.beginPath();
+					ctx.moveTo(bladeSegments[0].x, bladeSegments[0].y);
+					for (let i = 1; i < bladeSegments.length; i++) {
+						ctx.lineTo(bladeSegments[i].x, bladeSegments[i].y);
+					}
+					ctx.strokeStyle = '#ffffff';
+					ctx.lineWidth = 6;
+					ctx.lineCap = 'round';
+					ctx.lineJoin = 'round';
+					ctx.shadowBlur = 20;
+					ctx.shadowColor = '#00f2fe';
+					ctx.stroke();
+					ctx.restore();
+				}
+
+				bladeSegments.forEach(seg => seg.life--);
+				bladeSegments = bladeSegments.filter(seg => seg.life > 0);
+
+				runSlimePhysics();
+				runCandyPhysics();
+				globalHue = (globalHue + 0.5) % 360;
+
+				requestAnimationFrame(drawFrame);
+			}
+
+			function handleTouchAction(x: number, y: number) {
+				initAudio();
+				if (activeMode === 'slime') {
+					for (let i = 0; i < 4; i++) {
+						slimeArray.push({
+							x: x + (Math.random() - 0.5) * 15,
+							y: y + (Math.random() - 0.5) * 15,
+							vx: (Math.random() - 0.5) * 4,
+							vy: (Math.random() - 0.5) * 4,
+
+radius: Math.random() * 20 + 15,hue: globalHue,alpha: 1});}if (Math.random() < 0.15) playTone(400 + Math.random() * 300, 'sine', 0.05);} else if (activeMode === 'candy') {if (candyArray.length < 40) {candyArray.push({x: x, y: y,vx: (Math.random() - 0.5) * 8,vy: -5 - Math.random() * 5,radius: Math.random() * 10 + 14,hue: Math.random() * 360,bounciness: 0.75,mass: 1});playTone(523.25, 'triangle', 0.15);}} else if (activeMode === 'blade') {bladeSegments.push({ x, y, maxLife: 12, life: 12 });}}window.addEventListener('mousemove', (e) => {if (e.buttons === 1 || activeMode === 'blade') {handleTouchAction(e.clientX, e.clientY);}});window.addEventListener('mousedown', (e) => handleTouchAction(e.clientX, e.clientY));window.addEventListener('touchmove', (e) => {e.preventDefault();for (let i = 0; i < e.touches.length; i++) {handleTouchAction(e.touches[i].clientX, e.touches[i].clientY);}}, { passive: false });window.addEventListener('touchstart', (e) => {initAudio();for (let i = 0; i < e.touches.length; i++) {handleTouchAction(e.touches[i].clientX, e.touches[i].clientY);}}, { passive: true });document.querySelectorAll('.tool-btn[data-mode]').forEach(btn => {btn.addEventListener('click', (e) => {initAudio();document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));const target = e.currentTarget as HTMLButtonElement;target.classList.add('active');activeMode = target.getAttribute('data-mode')!;playTone(600, 'sine', 0.08);});});document.getElementById('clearBtn')!.addEventListener('click', () => {slimeArray = [];candyArray = [];bladeSegments = [];playTone(150, 'triangle', 0.2);});window.addEventListener('resize', () => {width = canvas.width = window.innerWidth;height = canvas.height = window.innerHeight;generateEnvironment();});generateEnvironment();drawFrame();

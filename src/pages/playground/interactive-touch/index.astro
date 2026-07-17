@@ -1,0 +1,225 @@
+---
+---
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+		<title>Interactive Touch Fabric</title>
+		<style>
+			:root {
+				--bg-color: #050508;
+				--accent-color: #ff3366;
+			}
+			body, html {
+				margin: 0;
+				padding: 0;
+				width: 100%;
+				height: 100%;
+				overflow: hidden;
+				background-color: var(--bg-color);
+				font-family: system-ui, sans-serif;
+				touch-action: none; /* Prevents mobile pull-to-refresh and zooming */
+			}
+			canvas {
+				position: absolute;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				display: block;
+			}
+			.ui-layer {
+				position: absolute;
+				top: 20px;
+				left: 20px;
+				color: #fff;
+				z-index: 10;
+				pointer-events: none;
+				user-select: none;
+			}
+			h1 {
+				margin: 0 0 5px 0;
+				font-size: 1.6rem;
+				letter-spacing: 1px;
+				color: var(--accent-color);
+			}
+			p {
+				margin: 0;
+				font-size: 0.85rem;
+				color: #a0a0aa;
+			}
+		</style>
+	</head>
+	<body>
+
+		<div class="ui-layer">
+			<h1>Touch Mesh</h1>
+			<p>Drag one or more fingers to distort the neon grid field.</p>
+		</div>
+
+		<canvas id="touch-canvas"></canvas>
+
+		<script>
+			const canvas = document.getElementById('touch-canvas') as HTMLCanvasElement;
+			const ctx = canvas.getContext('2d')!;
+
+			let width = canvas.width = window.innerWidth;
+			let height = canvas.height = window.innerHeight;
+
+			// Support multi-touch tracking arrays
+			let activeTouches: Array<{ id: number; x: number; y: number }> = [];
+
+			class Node {
+				x: number;
+				y: number;
+				baseX: number;
+				baseY: number;
+				vx: number;
+				vy: number;
+
+				constructor(x: number, y: number) {
+					this.x = x;
+					this.y = y;
+					this.baseX = x;
+					this.baseY = y;
+					this.vx = 0;
+					this.vy = 0;
+				}
+
+				update() {
+					// Multi-touch attraction/repulsion loop
+					activeTouches.forEach(touch => {
+						const dx = this.x - touch.x;
+						const dy = this.y - touch.y;
+						const dist = Math.hypot(dx, dy);
+						const maxDist = 120;
+
+						if (dist < maxDist) {
+							const force = (maxDist - dist) / maxDist;
+							const angle = Math.atan2(dy, dx);
+							// Distort points outwards away from touch pressures
+							this.vx += Math.cos(angle) * force * 4;
+							this.vy += Math.sin(angle) * force * 4;
+						}
+					});
+
+					// Spring back to original grid positions
+					const homeDx = this.baseX - this.x;
+					const homeDy = this.baseY - this.y;
+					this.vx += homeDx * 0.07; 
+					this.vy += homeDy * 0.07;
+
+					// Friction damping
+					this.vx *= 0.82;
+					this.vy *= 0.82;
+
+					this.x += this.vx;
+					this.y += this.vy;
+				}
+			}
+
+			let nodes: Node[][] = [];
+			const spacing = 35; // Grid point density
+
+			function initGrid() {
+				nodes = [];
+				const cols = Math.ceil(width / spacing) + 1;
+				const rows = Math.ceil(height / spacing) + 1;
+
+				for (let y = 0; y < rows; y++) {
+					const row: Node[] = [];
+					for (let x = 0; x < cols; x++) {
+						row.push(new Node(x * spacing, y * spacing));
+					}
+					nodes.push(row);
+				}
+			}
+
+			function animate() {
+				ctx.clearRect(0, 0, width, height);
+				
+				// Background tint
+				ctx.fillStyle = '#050508';
+				ctx.fillRect(0, 0, width, height);
+
+				// Update logic
+				for (let y = 0; y < nodes.length; y++) {
+					for (let x = 0; x < nodes[y].length; x++) {
+						nodes[y][x].update();
+					}
+				}
+
+				// Render interconnected grid lines
+				ctx.lineWidth = 1;
+				for (let y = 0; y < nodes.length; y++) {
+					for (let x = 0; x < nodes[y].length; x++) {
+						// Horizontal connection
+						if (x < nodes[y].length - 1) {
+							drawGridLine(nodes[y][x], nodes[y][x + 1]);
+						}
+						// Vertical connection
+						if (y < nodes.length - 1) {
+							drawGridLine(nodes[y][x], nodes[y + 1][x]);
+						}
+					}
+				}
+
+				requestAnimationFrame(animate);
+			}
+
+			function drawGridLine(n1: Node, n2: Node) {
+				const currentDist = Math.hypot(n1.x - n2.x, n1.y - n2.y);
+				// Dynamically change color/brightness based on touch stress stretch
+				const stretch = Math.min(255, Math.abs(currentDist - spacing) * 12);
+				
+				ctx.beginPath();
+				ctx.moveTo(n1.x, n1.y);
+				ctx.lineTo(n2.x, n2.y);
+				ctx.strokeStyle = `rgb(${100 + stretch}, 40, ${200 - stretch})`;
+				ctx.stroke();
+			}
+
+			// Touch Event Handlers (Handles single & multiple fingers natively)
+			function updateTouches(e: TouchEvent) {
+				activeTouches = [];
+				for (let i = 0; i < e.touches.length; i++) {
+					const touch = e.touches[i];
+					activeTouches.push({
+						id: touch.identifier,
+						x: touch.clientX,
+						y: touch.clientY
+					});
+				}
+			}
+
+			window.addEventListener('touchstart', updateTouches, { passive: false });
+			window.addEventListener('touchmove', (e) => {
+				e.preventDefault(); // Lock mobile screen bouncing
+				updateTouches(e);
+			}, { passive: false });
+			window.addEventListener('touchend', updateTouches);
+			window.addEventListener('touchcancel', updateTouches);
+
+			// Fallback Desktop Mouse support
+			window.addEventListener('mousemove', (e) => {
+				if (e.buttons === 1) { // Only triggers if dragging/clicking mouse down
+					activeTouches = [{ id: -1, x: e.clientX, y: e.clientY }];
+				}
+			});
+			window.addEventListener('mousedown', (e) => {
+				activeTouches = [{ id: -1, x: e.clientX, y: e.clientY }];
+			});
+			window.addEventListener('mouseup', () => activeTouches = []);
+
+			// Adaptive layouts
+			window.addEventListener('resize', () => {
+				width = canvas.width = window.innerWidth;
+				height = canvas.height = window.innerHeight;
+				initGrid();
+			});
+
+			initGrid();
+			animate();
+		</script>
+	</body>
+</html>

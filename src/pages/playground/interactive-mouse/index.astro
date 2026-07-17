@@ -1,0 +1,189 @@
+---
+---
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width" />
+		<title>Interactive Physics Arena</title>
+		<style>
+			:root {
+				--bg-color: #0b0c10;
+				--accent-color: #66fcf1;
+			}
+			body, html {
+				margin: 0;
+				padding: 0;
+				width: 100%;
+				height: 100%;
+				overflow: hidden;
+				background-color: var(--bg-color);
+				font-family: system-ui, sans-serif;
+			}
+			canvas {
+				position: absolute;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				display: block;
+			}
+			.ui-layer {
+				position: absolute;
+				top: 20px;
+				left: 20px;
+				color: #fff;
+				z-index: 10;
+				pointer-events: none;
+			}
+			h1 {
+				margin: 0 0 5px 0;
+				font-size: 1.8rem;
+				letter-spacing: 1px;
+				color: var(--accent-color);
+			}
+			p {
+				margin: 0;
+				font-size: 0.9rem;
+				color: #c5c6c7;
+			}
+		</style>
+	</head>
+	<body>
+
+		<div class="ui-layer">
+			<h1>Physics Sandbox</h1>
+			<p>Move mouse to push balls. Click to blast them away.</p>
+		</div>
+
+		<canvas id="physics-canvas"></canvas>
+
+		<script>
+			const canvas = document.getElementById('physics-canvas') as HTMLCanvasElement;
+			const ctx = canvas.getContext('2d')!;
+
+			let width = canvas.width = window.innerWidth;
+			let height = canvas.height = window.innerHeight;
+
+			const mouse = { x: -1000, y: -1000, radius: 150, active: false };
+			const balls: Ball[] = [];
+			const ballCount = 120; 
+
+			class Ball {
+				x: number;
+				y: number;
+				vx: number;
+				vy: number;
+				radius: number;
+				baseColor: string;
+				color: string;
+				friction: number;
+
+				constructor() {
+					this.radius = Math.random() * 15 + 8;
+					this.x = Math.random() * (width - this.radius * 2) + this.radius;
+					this.y = Math.random() * (height - this.radius * 2) + this.radius;
+					this.vx = (Math.random() - 0.5) * 4;
+					this.vy = (Math.random() - 0.5) * 4;
+					
+					// Fixed: complete neon hue values array
+					const hues = [180, 260, 300, 340];
+					const randomHue = hues[Math.floor(Math.random() * hues.length)];
+					this.baseColor = `hsl(${randomHue}, 100%, 60%)`;
+					this.color = this.baseColor;
+					this.friction = 0.98; 
+				}
+
+				update() {
+					this.vx *= this.friction;
+					this.vy *= this.friction;
+					this.x += this.vx;
+					this.y += this.vy;
+
+					if (this.x + this.radius > width) { this.x = width - this.radius; this.vx *= -1; }
+					if (this.x - this.radius < 0) { this.x = this.radius; this.vx *= -1; }
+					if (this.y + this.radius > height) { this.y = height - this.radius; this.vy *= -1; }
+					if (this.y - this.radius < 0) { this.y = this.radius; this.vy *= -1; }
+
+					if (mouse.active) {
+						const dx = this.x - mouse.x;
+						const dy = this.y - mouse.y;
+						const distance = Math.hypot(dx, dy);
+
+						if (distance < mouse.radius) {
+							const force = (mouse.radius - distance) / mouse.radius;
+							const angle = Math.atan2(dy, dx);
+							
+							this.vx += Math.cos(angle) * force * 1.5;
+							this.vy += Math.sin(angle) * force * 1.5;
+							
+							this.color = '#ffffff';
+						} else {
+							this.color = this.baseColor;
+						}
+					} else {
+						this.color = this.baseColor;
+					}
+				}
+
+				draw() {
+					ctx.beginPath();
+					ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+					ctx.fillStyle = this.color;
+					ctx.shadowBlur = this.color === '#ffffff' ? 20 : 0;
+					ctx.shadowColor = this.baseColor;
+					ctx.fill();
+					ctx.closePath();
+					ctx.shadowBlur = 0;
+				}
+			}
+
+			for (let i = 0; i < ballCount; i++) {
+				balls.push(new Ball());
+			}
+
+			function animate() {
+				ctx.fillStyle = 'rgba(11, 12, 16, 0.3)';
+				ctx.fillRect(0, 0, width, height);
+
+				balls.forEach(ball => {
+					ball.update();
+					ball.draw();
+				});
+
+				requestAnimationFrame(animate);
+			}
+
+			window.addEventListener('mousemove', (e) => {
+				mouse.x = e.clientX;
+				mouse.y = e.clientY;
+				mouse.active = true;
+			});
+
+			window.addEventListener('mouseleave', () => {
+				mouse.active = false;
+			});
+
+			window.addEventListener('click', (e) => {
+				balls.forEach(ball => {
+					const dx = ball.x - e.clientX;
+					const dy = ball.y - e.clientY;
+					const distance = Math.hypot(dx, dy);
+					
+					if (distance < 300) {
+						const force = (300 - distance) / 20;
+						const angle = Math.atan2(dy, dx);
+						ball.vx += Math.cos(angle) * force;
+						ball.vy += Math.sin(angle) * force;
+					}
+				});
+			});
+
+			window.addEventListener('resize', () => {
+				width = canvas.width = window.innerWidth;
+				height = canvas.height = window.innerHeight;
+			});
+
+			animate();
+		</script>
+	</body>
+</html>
