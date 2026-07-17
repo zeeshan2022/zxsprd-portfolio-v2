@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interactive IT DevOps Toolkit</title>
+  <meta name="description" content="Zero-dependency, production-ready DevOps diagnostic toolkit">
+  
+  <!-- Modern Monospace Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* --- Reset & Base --- */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: #0b0f19;
+      color: #e2e8f0;
+      font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+      font-size: 14px;
+      line-height: 1.6;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* --- Layout --- */
+    .devops-toolkit {
+      display: flex;
+      height: 100vh;
+      width: 100vw;
+      background-color: #0b0f19;
+    }
+
+    /* --- Sidebar --- */
+    .sidebar {
+      width: 280px;
+      background-color: #111827;
+      border-right: 1px solid #1e293b;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      transition: transform 0.3s ease;
+    }
+
+    .brand {
+      padding: 24px;
+      border-bottom: 1px solid #1e293b;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      color: #38bdf8;
+      font-size: 24px;
+      filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.4));
+    }
+
+    .brand h1 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #f8fafc;
+      letter-spacing: -0.5px;
+    }
+
+    .nav-menu {
+      flex: 1;
+      padding: 16px 0;
+      overflow-y: auto;
+    }
+
+    .nav-btn {
+      width: 100%;
+      text-align: left;
+      padding: 14px 24px;
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      font-family: inherit;
+      font-size: 14px;
+      cursor: pointer;
+      border-left: 3px solid transparent;
+      transition: all 0.2s ease;
+    }
+
+    .nav-btn:hover {
+      background-color: rgba(56, 189, 248, 0.05);
+      color: #e2e8f0;
+    }
+
+    .nav-btn.active {
+      color: #38bdf8;
+      background-color: rgba(56, 189, 248, 0.1);
+      border-left-color: #38bdf8;
+      font-weight: 600;
+    }
+
+    .sidebar-footer {
+      padding: 16px 24px;
+      border-top: 1px solid #1e293b;
+      font-size: 12px;
+      color: #64748b;
+    }
+
+    /* --- Main Console --- */
+    .console-panel {
+      flex: 1;
+      padding: 32px;
+      overflow-y: auto;
+      background-color: #0b0f19;
+      position: relative;
+    }
+
+    .tool-section {
+      display: none;
+      animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      max-width: 900px;
+    }
+
+    .tool-section.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .section-title {
+      margin: 0 0 8px 0;
+      font-size: 26px;
+      color: #f8fafc;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .section-desc {
+      margin: 0 0 24px 0;
+      color: #94a3b8;
+      font-size: 14px;
+    }
+
+    /* --- Inputs & Buttons --- */
+    .input-group {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    input, textarea {
+      flex: 1;
+      min-width: 250px;
+      background-color: #1e293b;
+      border: 1px solid #334155;
+      color: #f8fafc;
+      padding: 12px 16px;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    input:focus, textarea:focus {
+      border-color: #38bdf8;
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.1);
+    }
+
+    .action-btn {
+      background-color: #38bdf8;
+      color: #0b0f19;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .action-btn:hover {
+      background-color: #7dd3fc;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(56, 189, 248, 0.25);
+    }
+
+    .action-btn:active {
+      transform: translateY(0);
+    }
+
+    .action-btn:disabled {
+      background-color: #475569;
+      color: #94a3b8;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    /* --- Output & Error States --- */
+    .output-box {
+      background-color: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      padding: 20px;
+      min-height: 120px;
+      white-space: pre-wrap;
+      word-break: break-all;
+      font-size: 13px;
+      line-height: 1.6;
+      color: #e2e8f0;
+      position: relative;
+    }
+
+    .output-box pre {
+      margin: 0;
+      color: #a5f3fc;
+    }
+
+    .error-panel {
+      background-color: #fca5a5;
+      color: #7f1d1d;
+      border: 1px solid #ef4444;
+      padding: 16px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .success-panel {
+      background-color: rgba(34, 197, 94, 0.1);
+      color: #4ade80;
+      border: 1px solid #22c55e;
+      padding: 16px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 14px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .loading {
+      color: #38bdf8;
+      font-style: italic;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .loading::before {
+      content: '';
+      width: 16px;
+      height: 16px;
+      border: 2px solid #334155;
+      border-top-color: #38bdf8;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    h3 {
+      color: #38bdf8;
+      font-size: 13px;
+      margin-top: 20px;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 700;
+    }
+
+    h3:first-child {
+      margin-top: 0;
+    }
+
+    /* --- Responsive Design --- */
+    @media (max-width: 768px) {
+      .devops-toolkit {
+        flex-direction: column;
+      }
+      .sidebar {
+        width: 100%;
+        height: auto;
+        max-height: 40vh;
+        border-right: none;
+        border-bottom: 1px solid #1e293b;
+      }
+      .console-panel {
+        padding: 20px;
+      }
+      .input-group {
+        flex-direction: column;
+      }
+      input, textarea, .action-btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="devops-toolkit">
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="brand-icon">⬢</span>
+      <h1>DevOps Toolkit</h1>
+    </div>
+    <nav class="nav-menu">
+      <button class="nav-btn active" data-target="tool-ip">IP Geolocation</button>
+      <button class="nav-btn" data-target="tool-dns">DNS & DMARC</button>
+      <button class="nav-btn" data-target="tool-ping">Latency Ping</button>
+      <button class="nav-btn" data-target="tool-ssl">SSL Transparency</button>
+      <button class="nav-btn" data-target="tool-env">Client Environment</button>
+      <button class="nav-btn" data-target="tool-json">JSON Validator</button>
+    </nav>
+    <div class="sidebar-footer">
+      <p>v2.0.0 &bull; Standalone &bull; Zero-Auth API</p>
+    </div>
+  </aside>
+
+  <main class="console-panel">
+    <!-- Tool 1: IP Geolocation Engine -->
+    <section id="tool-ip" class="tool-section active">
+      <h2 class="section-title">IP Geolocation Engine</h2>
+      <p class="section-desc">Query IP metadata, subnet boundaries, ISP ownership, and precise geographical coordinates.</p>
+      <div class="input-group">
+        <input type="text" id="ip-input" placeholder="Enter IP address (leave empty for client IP)" />
+        <button class="action-btn" id="ip-btn">Execute Query</button>
+      </div>
+      <div id="ip-output" class="output-box">Awaiting input...</div>
+    </section>
+
+    <!-- Tool 2: DNS-over-HTTPS & DMARC Analyzer -->
+    <section id="tool-dns" class="tool-section">
+      <h2 class="section-title">DNS-over-HTTPS & DMARC Analyzer</h2>
+      <p class="section-desc">Concurrent resolution of MX, TXT (SPF), and _dmarc records via Google Public DoH.</p>
+      <div class="input-group">
+        <input type="text" id="dns-input" placeholder="Enter domain (e.g., google.com)" />
+        <button class="action-btn" id="dns-btn">Analyze Records</button>
+      </div>
+      <div id="dns-output" class="output-box">Awaiting input...</div>
+    </section>
+
+    <!-- Tool 3: HTTP Local Latency Ping Simulator -->
+    <section id="tool-ping" class="tool-section">
+      <h2 class="section-title">HTTP Local Latency Ping Simulator</h2>
+      <p class="section-desc">4-packet localized diagnostic tracking with high-resolution timestamps and loss metrics.</p>
+      <div class="input-group">
+        <input type="text" id="ping-input" placeholder="Enter target URL (e.g., https://example.com)" />
+        <button class="action-btn" id="ping-btn">Initiate Ping Sequence</button>
+      </div>
+      <div id="ping-output" class="output-box">Awaiting input...</div>
+    </section>
+
+    <!-- Tool 4: SSL/TLS Certificate Transparency -->
+    <section id="tool-ssl" class="tool-section">
+      <h2 class="section-title">SSL Transparency Log Checker</h2>
+      <p class="section-desc">Query public Certificate Transparency logs to verify domain certification history.</p>
+      <div class="input-group">
+        <input type="text" id="ssl-input" placeholder="Enter domain (e.g., github.com)" />
+        <button class="action-btn" id="ssl-btn">Fetch Certificates</button>
+      </div>
+      <div id="ssl-output" class="output-box">Awaiting input...</div>
+    </section>
+
+    <!-- Tool 5: Client Environment Analyzer -->
+    <section id="tool-env" class="tool-section">
+      <h2 class="section-title">Client Environment Analyzer</h2>
+      <p class="section-desc">Pure client-side telemetry extraction for browser capabilities and hardware metrics.</p>
+      <div class="input-group">
+        <button class="action-btn" id="env-btn">Scan Environment</button>
+      </div>
+      <div id="env-output" class="output-box">Awaiting execution...</div>
+    </section>
+
+    <!-- Tool 6: JSON Validator & Formatter -->
+    <section id="tool-json" class="tool-section">
+      <h2 class="section-title">JSON Validator & Formatter</h2>
+      <p class="section-desc">Strict syntax validation and structured formatting for payload debugging.</p>
+      <div class="input-group">
+        <textarea id="json-input" rows="6" placeholder="Paste raw JSON here..."></textarea>
+        <button class="action-btn" id="json-btn">Validate & Format</button>
+      </div>
+      <div id="json-output" class="output-box">Awaiting input...</div>
+    </section>
+  </main>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // --- Multi-Step State Routing ---
+    const navButtons = document.querySelectorAll('.nav-btn');
+    const toolSections = document.querySelectorAll('.tool-section');
+
+    navButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        navButtons.forEach(b => b.classList.remove('active'));
+        toolSections.forEach(s => s.classList.remove('active'));
+        
+        btn.classList.add('active');
+        const targetId = btn.getAttribute('data-target');
+        const targetSection = document.getElementById(targetId);
+        if (targetSection) {
+          targetSection.classList.add('active');
+        }
+      });
+    });
+
+    // --- Error Containment Matrix Helpers ---
+    const renderError = (elementId, message) => {
+      const el = document.getElementById(elementId);
+      if (el) {
+        el.innerHTML = `<div class="error-panel">⚠️ Execution Failed: ${message}</div>`;
+      }
+    };
+
+    const renderSuccess = (elementId, htmlContent) => {
+      const el = document.getElementById(elementId);
+      if (el) {
+        el.innerHTML = htmlContent;
+      }
+    };
+
+    const setLoading = (elementId, isLoading) => {
+      const el = document.getElementById(elementId);
+      const btn = document.querySelector(`[data-target="${elementId.replace('tool-', 'tool-')}"]`) || 
+                  document.querySelector(`#${elementId.replace('-output', '-btn')}`);
+      
+      if (isLoading) {
+        if (el) el.innerHTML = '<div class="loading">Processing request...</div>';
+        if (btn) btn.disabled = true;
+      } else {
+        if (btn) btn.disabled = false;
+      }
+    };
+
+    // --- Tool 1: IP Geolocation Engine ---
+    document.getElementById('ip-btn').addEventListener('click', async () => {
+      const ipInput = document.getElementById('ip-input').value.trim();
+      setLoading('ip-output', true);
+      
+      try {
+        const url = ipInput ? `https://ipapi.co/${ipInput}/json/` : 'https://ipapi.co/json/';
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP Status ${res.status}: ${res.statusText}`);
+        const data = await res.json();
+        
+        if (data.error) throw new Error(data.reason || 'API returned an error');
+        
+        const formatted = {
+          ip_address: data.ip,
+          network: data.network,
+          isp: data.org,
+          city: data.city,
+          country: data.country_name,
+          latitude: data.latitude,
+          longitude: data.longitude,
+          timezone: data.timezone
+        };
+        renderSuccess('ip-output', `<pre>${JSON.stringify(formatted, null, 2)}</pre>`);
+      } catch (err) {
+        renderError('ip-output', err.message);
+      } finally {
+        setLoading('ip-output', false);
+      }
+    });
+
+    // --- Tool 2: DNS-over-HTTPS & DMARC Analyzer ---
+    document.getElementById('dns-btn').addEventListener('click', async () => {
+      const domain = document.getElementById('dns-input').value.trim();
+      const outputEl = document.getElementById('dns-output');
+      
+      if (!domain) {
+        renderError('dns-output', 'Domain input is required.');
+        return;
+      }
+      
+      setLoading('dns-output', true);
+      
+      try {
+        const [mxRes, txtRes, dmarcRes] = await Promise.all([
+          fetch(`https://dns.google/resolve?name=${domain}&type=MX`),
+          fetch(`https://dns.google/resolve?name=${domain}&type=TXT`),
+          fetch(`https://dns.google/resolve?name=_dmarc.${domain}&type=TXT`)
+        ]);
+
+        if (!mxRes.ok || !txtRes.ok || !dmarcRes.ok) {
+          throw new Error('One or more DNS queries failed.');
+        }
+
+        const mxData = await mxRes.json();
+        const txtData = await txtRes.json();
+        const dmarcData = await dmarcRes.json();
+
+        let html = `<h3>MX Records</h3><pre>${JSON.stringify(mxData, null, 2)}</pre>`;
+        html += `<h3>TXT Records (SPF)</h3><pre>${JSON.stringify(txtData, null, 2)}</pre>`;
+        html += `<h3>DMARC Compliance</h3><pre>${JSON.stringify(dmarcData, null, 2)}</pre>`;
+        
+        renderSuccess('dns-output', html);
+      } catch (err) {
+        renderError('dns-output', `DNS Resolution Error: ${err.message}`);
+      } finally {
+        setLoading('dns-output', false);
+      }
+    });
+
+    // --- Tool 3: HTTP Local Latency Ping Simulator ---
+    document.getElementById('ping-btn').addEventListener('click', async () => {
+      const urlInput = document.getElementById('ping-input').value.trim();
+      const outputEl = document.getElementById('ping-output');
+      
+      if (!urlInput) {
+        renderError('ping-output', 'Target URL is required.');
+        return;
+      }
+
+      setLoading('ping-output', true);
+      
+      const results = [];
+      let successCount = 0;
+      const totalPackets = 4;
+
+      for (let i = 1; i <= totalPackets; i++) {
+        const cacheBuster = `ping_token=${Date.now()}_${i}`;
+        const separator = urlInput.includes('?') ? '&' : '?';
+        const targetUrl = `${urlInput}${separator}${cacheBuster}`;
+        
+        const start = performance.now();
+        try {
+          await fetch(targetUrl, {
+            mode: 'no-cors',
+            cache: 'no-store'
+          });
+          const end = performance.now();
+          const rtt = (end - start).toFixed(2);
+          results.push(`<span style="color:#4ade80">[Packet ${i}] SUCCESS</span> | RTT: ${rtt} ms`);
+          successCount++;
+        } catch (err) {
+          const end = performance.now();
+          const rtt = (end - start).toFixed(2);
+          results.push(`<span style="color:#f87171">[Packet ${i}] FAILED</span> | Time: ${rtt} ms | Reason: Network Reject`);
+        }
+        await new Promise(resolve => setTimeout(resolve, 250));
+      }
+
+      const lossRate = ((totalPackets - successCount) / totalPackets) * 100;
+      let html = `<div class="success-panel">✓ Diagnostic Complete: ${successCount}/${totalPackets} packets received. Loss: ${lossRate}%</div>`;
+      html += `<div class="output-box" style="margin-top:0; border:none; background:transparent; padding:0;">${results.join('<br>')}</div>`;
+      
+      renderSuccess('ping-output', html);
+      setLoading('ping-output', false);
+    });
+
+    // --- Tool 4: SSL Transparency Log Checker ---
+    document.getElementById('ssl-btn').addEventListener('click', async () => {
+      const domain = document.getElementById('ssl-input').value.trim();
+      
+      if (!domain) {
+        renderError('ssl-output', 'Domain input is required.');
+        return;
+      }
+      
+      setLoading('ssl-output', true);
+      
+      try {
+        const res = await fetch(`https://crt.sh/?q=${domain}&output=json`);
+        if (!res.ok) throw new Error(`HTTP Status ${res.status}`);
+        
+        const data = await res.json();
+        if (!Array.isArray(data) || data.length === 0) {
+          throw new Error('No certificate transparency logs found for this domain.');
+        }
+
+        const recentCerts = data.slice(0, 5).map(cert => ({
+          common_name: cert.name_value,
+          issuer: cert.issuer_name.split('=')[1] || cert.issuer_name,
+          not_before: cert.not_before,
+          not_after: cert.not_after,
+          serial_number: cert.serial_number
+        }));
+        
+        renderSuccess('ssl-output', `<pre>${JSON.stringify(recentCerts, null, 2)}</pre>`);
+      } catch (err) {
+        renderError('ssl-output', `SSL Check Error: ${err.message}`);
+      } finally {
+        setLoading('ssl-output', false);
+      }
+    });
+
+    // --- Tool 5: Client Environment Analyzer ---
+    document.getElementById('env-btn').addEventListener('click', () => {
+      const envData = {
+        userAgent: navigator.userAgent,
+        platform: navigator.platform,
+        language: navigator.language,
+        hardwareConcurrency: navigator.hardwareConcurrency || 'Unknown',
+        deviceMemory: navigator.deviceMemory ? `${navigator.deviceMemory} GB` : 'Unknown',
+        screenResolution: `${window.screen.width}x${window.screen.height}`,
+        colorDepth: `${window.screen.colorDepth}-bit`,
+        isOnline: navigator.onLine,
+        cookieEnabled: navigator.cookieEnabled,
+        pdfViewerEnabled: navigator.pdfViewerEnabled
+      };
+      renderSuccess('env-output', `<pre>${JSON.stringify(envData, null, 2)}</pre>`);
+    });
+
+    // --- Tool 6: JSON Validator & Formatter ---
+    document.getElementById('json-btn').addEventListener('click', () => {
+      const input = document.getElementById('json-input').value;
+      
+      if (!input.trim()) {
+        renderError('json-output', 'Input payload is empty.');
+        return;
+      }
+      
+      try {
+        const parsed = JSON.parse(input);
+        renderSuccess('json-output', `<pre>${JSON.stringify(parsed, null, 2)}</pre>`);
+      } catch (err) {
+        renderError('json-output', `Syntax Error: ${err.message}`);
+      }
+    });
+  });
+</script>
+
+</body>
+</html>
