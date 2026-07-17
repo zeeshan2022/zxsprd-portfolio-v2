@@ -1,0 +1,211 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import Navbar from '../../../components/Navbar.astro';
+---
+
+<Layout title="IP Subnet Calculator | ZX Labs" lang="en" dir="ltr">
+  <Navbar currentLang="en" />
+
+  <main class="min-h-screen pt-24 px-6 pb-20">
+    <div class="max-w-4xl mx-auto">
+      
+      <!-- Header -->
+      <div class="text-center mb-12 reveal">
+        <h1 class="text-3xl md:text-4xl font-bold text-text mb-4">
+          IP <span class="text-accent">Subnet Calculator</span>
+        </h1>
+        <p class="text-muted">Calculate network details for IPv4 CIDR blocks</p>
+      </div>
+
+      <!-- Calculator Card -->
+      <div class="glass-card rounded-2xl p-8 border border-border reveal">
+        
+        <!-- Input Section -->
+        <div class="mb-8">
+          <label class="block text-sm font-medium text-text mb-3">
+            Enter IP Address with CIDR (e.g., 192.168.1.0/24)
+          </label>
+          <div class="flex gap-4">
+            <input 
+              id="cidrInput" 
+              type="text" 
+              placeholder="192.168.1.0/24"
+              class="flex-1 px-4 py-3 bg-bg border border-border rounded-lg text-text placeholder-muted focus:outline-none focus:border-accent transition-colors font-mono"
+            />
+            <button 
+              onclick="calculateSubnet()"
+              class="px-8 py-3 bg-accent text-bg font-bold rounded-lg hover:bg-accent2 transition-all duration-300 hover:scale-105"
+            >
+              Calculate
+            </button>
+          </div>
+        </div>
+
+        <!-- Results Section (Hidden by default) -->
+        <div id="results" class="hidden">
+          <div class="grid md:grid-cols-2 gap-6">
+            
+            <div class="bg-bg/50 rounded-xl p-6 border border-border">
+              <h3 class="text-sm font-semibold text-muted mb-4 uppercase tracking-wider">Network Info</h3>
+              <div class="space-y-3 font-mono text-sm">
+                <div class="flex justify-between">
+                  <span class="text-muted">Network Address:</span>
+                  <span id="networkAddr" class="text-accent font-bold"></span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-muted">Broadcast Address:</span>
+                  <span id="broadcastAddr" class="text-accent font-bold"></span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-muted">Subnet Mask:</span>
+                  <span id="subnetMask" class="text-white"></span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-muted">Wildcard Mask:</span>
+                  <span id="wildcardMask" class="text-white"></span>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-bg/50 rounded-xl p-6 border border-border">
+              <h3 class="text-sm font-semibold text-muted mb-4 uppercase tracking-wider">Host Info</h3>
+              <div class="space-y-3 font-mono text-sm">
+                <div class="flex justify-between">
+                  <span class="text-muted">Total Hosts:</span>
+                  <span id="totalHosts" class="text-accent font-bold"></span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-muted">Usable Hosts:</span>
+                  <span id="usableHosts" class="text-white"></span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-muted">First Host:</span>
+                  <span id="firstHost" class="text-white"></span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-muted">Last Host:</span>
+                  <span id="lastHost" class="text-white"></span>
+                </div>
+              </div>
+            </div>
+
+            <div class="md:col-span-2 bg-bg/50 rounded-xl p-6 border border-border">
+              <h3 class="text-sm font-semibold text-muted mb-4 uppercase tracking-wider">Binary Representation</h3>
+              <div class="space-y-2 font-mono text-xs md:text-sm">
+                <div class="flex flex-col md:flex-row md:items-center gap-2">
+                  <span class="text-muted w-32">Network:</span>
+                  <span id="binaryNetwork" class="text-green-400"></span>
+                </div>
+                <div class="flex flex-col md:flex-row md:items-center gap-2">
+                  <span class="text-muted w-32">Broadcast:</span>
+                  <span id="binaryBroadcast" class="text-red-400"></span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Error Message -->
+        <div id="errorMsg" class="hidden mt-4 p-4 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm"></div>
+
+      </div>
+
+      <!-- Quick Reference -->
+      <div class="mt-8 glass-card rounded-xl p-6 border border-border reveal">
+        <h3 class="text-lg font-bold text-text mb-4">Common CIDR Blocks</h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm font-mono">
+          <button onclick="setCIDR('10.0.0.0/8')" class="px-3 py-2 bg-bg border border-border rounded hover:border-accent hover:text-accent transition-colors text-left">10.0.0.0/8</button>
+          <button onclick="setCIDR('172.16.0.0/12')" class="px-3 py-2 bg-bg border border-border rounded hover:border-accent hover:text-accent transition-colors text-left">172.16.0.0/12</button>
+          <button onclick="setCIDR('192.168.0.0/16')" class="px-3 py-2 bg-bg border border-border rounded hover:border-accent hover:text-accent transition-colors text-left">192.168.0.0/16</button>
+          <button onclick="setCIDR('192.168.1.0/24')" class="px-3 py-2 bg-bg border border-border rounded hover:border-accent hover:text-accent transition-colors text-left">192.168.1.0/24</button>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    function setCIDR(value) {
+      document.getElementById('cidrInput').value = value;
+      calculateSubnet();
+    }
+
+    function calculateSubnet() {
+      const input = document.getElementById('cidrInput').value.trim();
+      const results = document.getElementById('results');
+      const errorMsg = document.getElementById('errorMsg');
+      
+      // Reset
+      results.classList.add('hidden');
+      errorMsg.classList.add('hidden');
+
+      // Validate CIDR format
+      const cidrRegex = /^(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\/(\d{1,2})$/;
+      const match = input.match(cidrRegex);
+
+      if (!match) {
+        errorMsg.textContent = 'Invalid format. Please use CIDR notation (e.g., 192.168.1.0/24)';
+        errorMsg.classList.remove('hidden');
+        return;
+      }
+
+      const ip = match[1];
+      const cidr = parseInt(match[2]);
+
+      if (cidr < 0 || cidr > 32) {
+        errorMsg.textContent = 'CIDR must be between 0 and 32';
+        errorMsg.classList.remove('hidden');
+        return;
+      }
+
+      // Parse IP
+      const octets = ip.split('.').map(Number);
+      if (octets.some(o => o < 0 || o > 255)) {
+        errorMsg.textContent = 'Invalid IP address. Octets must be 0-255';
+        errorMsg.classList.remove('hidden');
+        return;
+      }
+
+      // Calculate
+      const ipInt = (octets[0] << 24) + (octets[1] << 16) + (octets[2] << 8) + octets[3];
+      const mask = cidr === 0 ? 0 : (~0 << (32 - cidr)) >>> 0;
+      const wildcard = ~mask >>> 0;
+      const network = ipInt & mask;
+      const broadcast = network | wildcard;
+
+      // Convert back to dotted decimal
+      const intToIp = (int) => {
+        return `${(int >>> 24) & 255}.${(int >>> 16) & 255}.${(int >>> 8) & 255}.${int & 255}`;
+      };
+
+      const totalHosts = Math.pow(2, 32 - cidr);
+      const usableHosts = cidr > 30 ? 0 : totalHosts - 2;
+
+      // Display results
+      document.getElementById('networkAddr').textContent = intToIp(network);
+      document.getElementById('broadcastAddr').textContent = intToIp(broadcast);
+      document.getElementById('subnetMask').textContent = intToIp(mask);
+      document.getElementById('wildcardMask').textContent = intToIp(wildcard);
+      document.getElementById('totalHosts').textContent = totalHosts.toLocaleString();
+      document.getElementById('usableHosts').textContent = usableHosts.toLocaleString();
+      document.getElementById('firstHost').textContent = cidr > 30 ? 'N/A' : intToIp(network + 1);
+      document.getElementById('lastHost').textContent = cidr > 30 ? 'N/A' : intToIp(broadcast - 1);
+
+      // Binary representation
+      const toBinary = (int) => {
+        return int.toString(2).padStart(32, '0').match(/.{8}/g).join('.');
+      };
+
+      document.getElementById('binaryNetwork').textContent = toBinary(network);
+      document.getElementById('binaryBroadcast').textContent = toBinary(broadcast);
+
+      results.classList.remove('hidden');
+    }
+
+    // Allow Enter key to calculate
+    document.getElementById('cidrInput')?.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') calculateSubnet();
+    });
+  </script>
+</Layout>

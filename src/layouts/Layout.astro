@@ -370,6 +370,62 @@ const {
         printLine(`\n--- ${args} ping statistics ---`);
         printLine(`4 packets transmitted, 4 received, 0% packet loss`);
       }
+	        // --- NEW WORKING UTILITIES ---
+
+      else if (action === 'ip') {
+        printLine(`<span class='text-yellow-400'>Fetching public IP...</span>`);
+        try {
+          const res = await fetch('https://api.ipify.org?format=json');
+          const data = await res.json();
+          printLine(`<span class='text-cyan-400'>Public IP:</span> <span class='text-white font-bold'>${data.ip}</span>`);
+        } catch {
+          printLine(`<span class='text-red-400'>[ERROR]</span> Could not reach IP service. Check your connection.`);
+        }
+      } 
+      else if (action === 'sysinfo') {
+        printLine(`<span class='text-cyan-400'>User Agent:</span> <span class='text-white text-xs'>${navigator.userAgent}</span>`);
+        printLine(`<span class='text-cyan-400'>Platform:</span> <span class='text-white'>${navigator.platform || 'Unknown'}</span>`);
+        printLine(`<span class='text-cyan-400'>Language:</span> <span class='text-white'>${navigator.language}</span>`);
+        printLine(`<span class='text-cyan-400'>Screen:</span> <span class='text-white'>${window.screen.width} x ${window.screen.height}</span>`);
+        printLine(`<span class='text-cyan-400'>Window:</span> <span class='text-white'>${window.innerWidth} x ${window.innerHeight}</span>`);
+        printLine(`<span class='text-cyan-400'>Cores:</span> <span class='text-white'>${navigator.hardwareConcurrency || 'Unknown'}</span>`);
+        printLine(`<span class='text-cyan-400'>Memory:</span> <span class='text-white'>${navigator.deviceMemory ? navigator.deviceMemory + ' GB' : 'Restricted'}</span>`);
+      } 
+      else if (action === 'time') {
+        const now = new Date();
+        printLine(`<span class='text-cyan-400'>Local Time:</span> <span class='text-white'>${now.toLocaleString()}</span>`);
+        printLine(`<span class='text-cyan-400'>UTC Time:</span> <span class='text-white'>${now.toUTCString()}</span>`);
+        printLine(`<span class='text-cyan-400'>Unix Epoch:</span> <span class='text-white font-bold'>${Math.floor(now.getTime() / 1000)}</span>`);
+      } 
+      else if (action === 'hex') {
+        const hexStr = Array.from(args).map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join(' ');
+        printLine(`<span class='text-cyan-400'>Hex:</span> <span class='text-white'>${hexStr}</span>`);
+      } 
+      else if (action === 'unhex') {
+        const cleanHex = args.replace(/\s+/g, '');
+        let str = '';
+        for (let i = 0; i < cleanHex.length; i += 2) {
+          str += String.fromCharCode(parseInt(cleanHex.substr(i, 2), 16));
+        }
+        printLine(`<span class='text-cyan-400'>Text:</span> <span class='text-white'>${str}</span>`);
+      } 
+      else if (action === 'b64dec') {
+        const decoded = atob(args);
+        printLine(`<span class='text-cyan-400'>Decoded:</span> <span class='text-white'>${decoded}</span>`);
+      } 
+      else if (action === 'urldec') {
+        const decoded = decodeURIComponent(args);
+        printLine(`<span class='text-cyan-400'>Decoded:</span> <span class='text-white'>${decoded}</span>`);
+      } 
+      else if (action === 'json') {
+        const parsed = JSON.parse(args);
+        const pretty = JSON.stringify(parsed, null, 2);
+        // Split by new line to print nicely in terminal
+        pretty.split('\n').forEach(line => {
+          printLine(`<span class='text-white'>${line.replace(/"/g, "<span class='text-green-400'>\"</span>").replace(/:/g, "<span class='text-green-400'>:</span>")}</span>`);
+        });
+      }
+	  
     } catch (err) {
       printLine(`<span class='text-red-400'>[ERROR]</span> ${err.message}`);
     }

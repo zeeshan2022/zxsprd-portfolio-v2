@@ -1,0 +1,84 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Navbar from '../../components/Navbar.astro';
+
+const tools = [
+  {
+    name: "IP Subnet Calculator",
+    icon: "",
+    desc: "Calculate network ranges, broadcast addresses, and usable hosts for IPv4 CIDR blocks.",
+    href: "/playground/subnet-calculator/",
+    tags: ["Networking", "IPv4", "CIDR"]
+  },
+  {
+    name: "Calculator & Unit Converter",
+    icon: "",
+    desc: "Perform calculations and convert between IT units (Bytes, KB, MB, GB, TB) and more.",
+    href: "/playground/calculator/",
+    tags: ["Utility", "Conversion", "Math"]
+  }
+];
+---
+
+<Layout title="ZX Labs | Interactive Tools" lang="en" dir="ltr">
+  <Navbar currentLang="en" />
+
+  <main class="min-h-screen pt-24 px-6 pb-20">
+    <div class="max-w-6xl mx-auto">
+      
+      <!-- Header -->
+      <div class="text-center mb-16 reveal">
+        <h1 class="text-4xl md:text-6xl font-bold text-text mb-6">
+          ZX <span class="text-transparent bg-clip-text bg-gradient-to-r from-accent to-accent2">Labs</span>
+        </h1>
+        <p class="text-muted text-xl max-w-2xl mx-auto">
+          A collection of interactive tools and experiments built for the curious mind. 
+          Explore, calculate, and discover.
+        </p>
+        <div class="w-32 h-1 bg-gradient-to-r from-accent to-accent2 mx-auto mt-8 rounded-full"></div>
+      </div>
+
+      <!-- Tools Grid -->
+      <div class="grid md:grid-cols-2 gap-8">
+        {tools.map((tool) => (
+          <a 
+            href={tool.href}
+            class="group glass-card glow-card rounded-2xl p-8 border border-border hover:border-accent/50 transition-all duration-300 block reveal"
+          >
+            <div class="text-5xl mb-6">{tool.icon}</div>
+            <h2 class="text-2xl font-bold text-text mb-3 group-hover:text-accent transition-colors">
+              {tool.name}
+            </h2>
+            <p class="text-muted mb-6 leading-relaxed">
+              {tool.desc}
+            </p>
+            <div class="flex flex-wrap gap-2 mb-6">
+              {tool.tags.map((tag) => (
+                <span class="px-3 py-1 text-xs bg-accent/10 text-accent border border-accent/20 rounded-full">
+                  {tag}
+                </span>
+              ))}
+            </div>
+            <div class="flex items-center gap-2 text-accent font-semibold group-hover:gap-4 transition-all">
+              Launch Tool 
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+              </svg>
+            </div>
+          </a>
+        ))}
+      </div>
+
+      <!-- Coming Soon Section -->
+      <div class="mt-16 text-center reveal">
+        <p class="text-muted text-sm mb-4">More tools coming soon...</p>
+        <div class="flex justify-center gap-2">
+          <span class="w-2 h-2 bg-accent rounded-full animate-pulse"></span>
+          <span class="w-2 h-2 bg-accent rounded-full animate-pulse animation-delay-100"></span>
+          <span class="w-2 h-2 bg-accent rounded-full animate-pulse animation-delay-200"></span>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</Layout>

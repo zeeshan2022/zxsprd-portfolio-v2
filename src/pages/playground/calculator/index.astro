@@ -1,0 +1,257 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import Navbar from '../../../components/Navbar.astro';
+---
+
+<Layout title="Calculator & Unit Converter | ZX Labs" lang="en" dir="ltr">
+  <Navbar currentLang="en" />
+
+  <main class="min-h-screen pt-24 px-6 pb-20">
+    <div class="max-w-4xl mx-auto">
+      
+      <!-- Header -->
+      <div class="text-center mb-12 reveal">
+        <h1 class="text-3xl md:text-4xl font-bold text-text mb-4">
+          Calculator & <span class="text-accent">Unit Converter</span>
+        </h1>
+        <p class="text-muted">Perform calculations and convert between IT units</p>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-8">
+        
+        <!-- Standard Calculator -->
+        <div class="glass-card rounded-2xl p-6 border border-border reveal">
+          <h2 class="text-xl font-bold text-text mb-6 flex items-center gap-2">
+            <span>🧮</span> Calculator
+          </h2>
+          
+          <div class="bg-bg rounded-xl p-4 mb-4">
+            <input 
+              id="calcDisplay" 
+              type="text" 
+              readonly 
+              class="w-full bg-transparent text-right text-3xl font-mono text-text outline-none"
+              placeholder="0"
+            />
+          </div>
+
+          <div class="grid grid-cols-4 gap-2">
+            <button onclick="calcClear()" class="p-4 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-colors font-bold">C</button>
+            <button onclick="calcAppend('(')" class="p-4 bg-bg border border-border text-text rounded-lg hover:border-accent transition-colors font-bold">(</button>
+            <button onclick="calcAppend(')')" class="p-4 bg-bg border border-border text-text rounded-lg hover:border-accent transition-colors font-bold">)</button>
+            <button onclick="calcAppend('/')" class="p-4 bg-accent/20 text-accent rounded-lg hover:bg-accent/30 transition-colors font-bold">÷</button>
+            
+            <button onclick="calcAppend('7')" class="p-4 bg-bg border border-border text-text rounded-lg hover:border-accent transition-colors font-bold">7</button>
+            <button onclick="calcAppend('8')" class="p-4 bg-bg border border-border text-text rounded-lg hover:border-accent transition-colors font-bold">8</button>
+            <button onclick="calcAppend('9')" class="p-4 bg-bg border border-border text-text rounded-lg hover:border-accent transition-colors font-bold">9</button>
+            <button onclick="calcAppend('*')" class="p-4 bg-accent/20 text-accent rounded-lg hover:bg-accent/30 transition-colors font-bold">×</button>
+            
+            <button onclick="calcAppend('4')" class="p-4 bg-bg border border-border text-text rounded-lg hover:border-accent transition-colors font-bold">4</button>
+            <button onclick="calcAppend('5')" class="p-4 bg-bg border border-border text-text rounded-lg hover:border-accent transition-colors font-bold">5</button>
+            <button onclick="calcAppend('6')" class="p-4 bg-bg border border-border text-text rounded-lg hover:border-accent transition-colors font-bold">6</button>
+            <button onclick="calcAppend('-')" class="p-4 bg-accent/20 text-accent rounded-lg hover:bg-accent/30 transition-colors font-bold">−</button>
+            
+            <button onclick="calcAppend('1')" class="p-4 bg-bg border border-border text-text rounded-lg hover:border-accent transition-colors font-bold">1</button>
+            <button onclick="calcAppend('2')" class="p-4 bg-bg border border-border text-text rounded-lg hover:border-accent transition-colors font-bold">2</button>
+            <button onclick="calcAppend('3')" class="p-4 bg-bg border border-border text-text rounded-lg hover:border-accent transition-colors font-bold">3</button>
+            <button onclick="calcAppend('+')" class="p-4 bg-accent/20 text-accent rounded-lg hover:bg-accent/30 transition-colors font-bold">+</button>
+            
+            <button onclick="calcAppend('0')" class="p-4 bg-bg border border-border text-text rounded-lg hover:border-accent transition-colors font-bold col-span-2">0</button>
+            <button onclick="calcAppend('.')" class="p-4 bg-bg border border-border text-text rounded-lg hover:border-accent transition-colors font-bold">.</button>
+            <button onclick="calcEquals()" class="p-4 bg-accent text-bg rounded-lg hover:bg-accent2 transition-colors font-bold">=</button>
+          </div>
+        </div>
+
+        <!-- Unit Converter -->
+        <div class="glass-card rounded-2xl p-6 border border-border reveal">
+          <h2 class="text-xl font-bold text-text mb-6 flex items-center gap-2">
+            <span></span> Unit Converter
+          </h2>
+
+          <!-- Category Selector -->
+          <div class="mb-6">
+            <label class="block text-sm font-medium text-muted mb-2">Category</label>
+            <select id="unitCategory" onchange="updateUnitOptions()" class="w-full px-4 py-3 bg-bg border border-border rounded-lg text-text focus:outline-none focus:border-accent transition-colors">
+              <option value="data">Data Storage</option>
+              <option value="speed">Data Transfer Speed</option>
+              <option value="time">Time</option>
+              <option value="frequency">Frequency</option>
+            </select>
+          </div>
+
+          <!-- From -->
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-muted mb-2">From</label>
+            <div class="flex gap-2">
+              <input 
+                id="convertFrom" 
+                type="number" 
+                placeholder="Enter value"
+                oninput="convertUnits()"
+                class="flex-1 px-4 py-3 bg-bg border border-border rounded-lg text-text focus:outline-none focus:border-accent transition-colors"
+              />
+              <select id="unitFrom" onchange="convertUnits()" class="px-4 py-3 bg-bg border border-border rounded-lg text-text focus:outline-none focus:border-accent transition-colors">
+                <!-- Populated by JS -->
+              </select>
+            </div>
+          </div>
+
+          <!-- To -->
+          <div class="mb-6">
+            <label class="block text-sm font-medium text-muted mb-2">To</label>
+            <div class="flex gap-2">
+              <input 
+                id="convertTo" 
+                type="text" 
+                readonly
+                class="flex-1 px-4 py-3 bg-bg border border-border rounded-lg text-accent font-bold focus:outline-none"
+                placeholder="Result"
+              />
+              <select id="unitTo" onchange="convertUnits()" class="px-4 py-3 bg-bg border border-border rounded-lg text-text focus:outline-none focus:border-accent transition-colors">
+                <!-- Populated by JS -->
+              </select>
+            </div>
+          </div>
+
+          <!-- Quick Conversions -->
+          <div class="pt-6 border-t border-border">
+            <h3 class="text-sm font-semibold text-muted mb-3 uppercase tracking-wider">Quick Reference</h3>
+            <div class="space-y-2 text-sm font-mono">
+              <div class="flex justify-between text-muted">
+                <span>1 KB</span>
+                <span class="text-accent">= 1,024 Bytes</span>
+              </div>
+              <div class="flex justify-between text-muted">
+                <span>1 MB</span>
+                <span class="text-accent">= 1,024 KB</span>
+              </div>
+              <div class="flex justify-between text-muted">
+                <span>1 GB</span>
+                <span class="text-accent">= 1,024 MB</span>
+              </div>
+              <div class="flex justify-between text-muted">
+                <span>1 TB</span>
+                <span class="text-accent">= 1,024 GB</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    // ========== CALCULATOR LOGIC ==========
+    let calcExpression = '';
+
+    function calcAppend(val) {
+      calcExpression += val;
+      document.getElementById('calcDisplay').value = calcExpression;
+    }
+
+    function calcClear() {
+      calcExpression = '';
+      document.getElementById('calcDisplay').value = '';
+    }
+
+    function calcEquals() {
+      try {
+        const result = eval(calcExpression);
+        document.getElementById('calcDisplay').value = result;
+        calcExpression = result.toString();
+      } catch {
+        document.getElementById('calcDisplay').value = 'Error';
+        calcExpression = '';
+      }
+    }
+
+    // ========== UNIT CONVERTER LOGIC ==========
+    const unitData = {
+      data: {
+        'B': 1,
+        'KB': 1024,
+        'MB': 1024 ** 2,
+        'GB': 1024 ** 3,
+        'TB': 1024 ** 4,
+        'PB': 1024 ** 5
+      },
+      speed: {
+        'bps': 1,
+        'Kbps': 1000,
+        'Mbps': 1000 ** 2,
+        'Gbps': 1000 ** 3,
+        'Tbps': 1000 ** 4
+      },
+      time: {
+        'ms': 0.001,
+        's': 1,
+        'min': 60,
+        'h': 3600,
+        'd': 86400,
+        'wk': 604800
+      },
+      frequency: {
+        'Hz': 1,
+        'KHz': 1000,
+        'MHz': 1000 ** 2,
+        'GHz': 1000 ** 3,
+        'THz': 1000 ** 4
+      }
+    };
+
+    function updateUnitOptions() {
+      const category = document.getElementById('unitCategory').value;
+      const units = Object.keys(unitData[category]);
+      
+      const fromSelect = document.getElementById('unitFrom');
+      const toSelect = document.getElementById('unitTo');
+      
+      fromSelect.innerHTML = '';
+      toSelect.innerHTML = '';
+      
+      units.forEach((unit, index) => {
+        fromSelect.add(new Option(unit, unit));
+        toSelect.add(new Option(unit, unit));
+      });
+      
+      // Set default "to" to second option if available
+      if (units.length > 1) {
+        toSelect.selectedIndex = 1;
+      }
+      
+      convertUnits();
+    }
+
+    function convertUnits() {
+      const category = document.getElementById('unitCategory').value;
+      const fromUnit = document.getElementById('unitFrom').value;
+      const toUnit = document.getElementById('unitTo').value;
+      const fromValue = parseFloat(document.getElementById('convertFrom').value);
+      
+      if (isNaN(fromValue)) {
+        document.getElementById('convertTo').value = '';
+        return;
+      }
+      
+      const units = unitData[category];
+      const baseValue = fromValue * units[fromUnit];
+      const result = baseValue / units[toUnit];
+      
+      // Format result nicely
+      let formattedResult;
+      if (result < 0.001 || result > 1000000) {
+        formattedResult = result.toExponential(4);
+      } else {
+        formattedResult = result.toLocaleString('en-US', { maximumFractionDigits: 6 });
+      }
+      
+      document.getElementById('convertTo').value = `${formattedResult} ${toUnit}`;
+    }
+
+    // Initialize
+    updateUnitOptions();
+  </script>
+</Layout>

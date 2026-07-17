@@ -30,5 +30,13 @@
   { "cmd": "matrix", "desc": "Enter the Matrix", "type": "system", "action": "matrix" },
 
   { "cmd": "sudo", "desc": "Attempt to gain root access", "type": "easter_egg", "output": ["<span class='text-red-400'>[ERROR]</span> Access Denied. Nice try, but you don't have root privileges here. 😉"] },
-  { "cmd": "hack", "desc": "Initiate mainframe bypass", "type": "easter_egg", "output": ["<span class='text-yellow-400'>[WARNING]</span> Initiating mainframe bypass... Just kidding. I'm an ethical hacker!"] }
+  { "cmd": "hack", "desc": "Initiate mainframe bypass", "type": "easter_egg", "output": ["<span class='text-yellow-400'>[WARNING]</span> Initiating mainframe bypass... Just kidding. I'm an ethical hacker!"] },
+  { "cmd": "ip", "desc": "Show your public IP address", "type": "utility", "action": "ip" },
+  { "cmd": "sysinfo", "desc": "Show browser and system information", "type": "utility", "action": "sysinfo" },
+  { "cmd": "time", "desc": "Show current time and Unix epoch", "type": "utility", "action": "time" },
+  { "cmd": "hex", "desc": "Convert text to Hex (Usage: hex <text>)", "type": "utility", "action": "hex" },
+  { "cmd": "unhex", "desc": "Convert Hex to text (Usage: unhex <hex>)", "type": "utility", "action": "unhex" },
+  { "cmd": "b64dec", "desc": "Decode Base64 (Usage: b64dec <text>)", "type": "utility", "action": "b64dec" },
+  { "cmd": "urldec", "desc": "Decode URL text (Usage: urldec <text>)", "type": "utility", "action": "urldec" },
+  { "cmd": "json", "desc": "Format/Validate JSON (Usage: json <json_string>)", "type": "utility", "action": "json" }
 ]
