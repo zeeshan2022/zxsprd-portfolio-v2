@@ -118,4 +118,14 @@
     "education": "Éducation",
     "certifications": "Certifications"
   }
+    ,
+  "footer": {
+    "brand_desc": "Innovative tech mind securing the digital frontier. Based in Dubai, UAE.",
+    "quick_links": "Quick Links",
+    "utility": "Utility",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service",
+    "contact_action": "Save Contact (vCard)",
+    "copyright": "© {year} Zeeshan Haider. All rights reserved."
+  }
 }
