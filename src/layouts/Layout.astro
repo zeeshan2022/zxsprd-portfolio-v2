@@ -2,7 +2,8 @@
    import Footer from '../components/Footer.astro';
 import '../styles/global.css';
  import { ViewTransitions } from 'astro:transitions'; 
- 
+   import terminalCommands from '../data/terminal-commands.json';
+   const commandsJSON = JSON.stringify(terminalCommands);
 
 interface Props {
   title: string;
@@ -167,148 +168,213 @@ const {
   .animate-fade-in { animation: fade-in 0.2s ease-out forwards; }
 </style>
 
-<script>
-  // 1. Grab DOM elements
+<script define:vars={{ commandsJSON }}>
+  // 1. Parse the JSON commands
+  const commands = JSON.parse(commandsJSON);
+  
+  // 2. DOM Elements
   const terminal = document.getElementById('cyber-terminal');
   const output = document.getElementById('terminal-output');
-  const input = document.getElementById('terminal-input') as HTMLInputElement;
+  const input = document.getElementById('terminal-input');
   const closeBtn = document.getElementById('close-terminal');
 
-  // 2. Toggle Terminal Function
+  // 3. State Variables
+  let history = [];
+  let historyIndex = -1;
+
+  // 4. Toggle Terminal
   function toggleTerminal() {
     const isHidden = terminal.classList.contains('hidden');
     if (isHidden) {
       terminal.classList.remove('hidden');
       input.focus();
-      // Welcome message
       printLine("<span class='text-cyan-400'>Welcome to zxsprd secure shell.</span>", false);
-      printLine("System initialized. Type <span class='text-white font-bold'>'help'</span> for available commands.", false);
-      printLine("", false); // empty line
+      printLine("System initialized. Type <span class='text-white font-bold'>'help'</span> for commands, or press <span class='text-white font-bold'>[TAB]</span> for autocomplete.", false);
+      printLine("", false);
     } else {
       terminal.classList.add('hidden');
     }
   }
+  window.openTerminal = toggleTerminal;
 
-  // 3. Keyboard Shortcuts (Ctrl+K, ~, or Esc)
+  // 5. Keyboard Shortcuts
   document.addEventListener('keydown', (e) => {
-    // Open with Ctrl+K or ~
     if ((e.ctrlKey && e.key.toLowerCase() === 'k') || e.key === '~') {
       e.preventDefault();
       toggleTerminal();
     }
-    // Close with Esc
     if (e.key === 'Escape' && !terminal.classList.contains('hidden')) {
       toggleTerminal();
     }
   });
-
-  // Close button click
   closeBtn?.addEventListener('click', toggleTerminal);
 
-  // 4. Process Commands on 'Enter'
-  input.addEventListener('keydown', (e) => {
+  // 6. Input Event Listeners (Enter, Tab, Arrows)
+  input.addEventListener('keydown', async (e) => {
+    // ENTER: Execute Command
     if (e.key === 'Enter') {
       const rawCmd = input.value;
-      const cmd = rawCmd.trim().toLowerCase();
-      
-      // Print the user's typed command
+      if (rawCmd.trim() !== '') {
+        history.push(rawCmd);
+        historyIndex = history.length;
+      }
       printLine(`<span class='text-green-500 font-bold'>❯</span> <span class='text-white'>${rawCmd}</span>`, false);
-      
-      // Execute command
-      processCommand(cmd);
+      await processCommand(rawCmd);
       input.value = '';
+    } 
+    // TAB: Autocomplete
+    else if (e.key === 'Tab') {
+      e.preventDefault();
+      const val = input.value.trim();
+      if (val) {
+        const matches = commands.filter(c => c.cmd.startsWith(val));
+        if (matches.length === 1) {
+          input.value = matches[0].cmd + ' ';
+        } else if (matches.length > 1) {
+          printLine(matches.map(m => `<span class='text-white'>${m.cmd}</span>`).join('  '), false);
+        }
+      }
+    } 
+    // ARROW UP/DOWN: History
+    else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (historyIndex > 0) {
+        historyIndex--;
+        input.value = history[historyIndex];
+      }
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (historyIndex < history.length - 1) {
+        historyIndex++;
+        input.value = history[historyIndex];
+      } else {
+        historyIndex = history.length;
+        input.value = '';
+      }
     }
   });
 
-  // 5. Print Line Helper
-  function printLine(html: string, addMargin = true) {
+  // 7. Print Line Helper
+  function printLine(html, addMargin = true) {
     const line = document.createElement('div');
     line.className = `text-green-400 ${addMargin ? 'mb-1' : ''}`;
     line.innerHTML = html;
     output.appendChild(line);
-    output.scrollTop = output.scrollHeight; // Auto-scroll to bottom
+    output.scrollTop = output.scrollHeight;
   }
 
-  // 6. Command Router
-  function processCommand(cmd: string) {
-    switch(cmd) {
-      case 'help':
+  // 8. Command Router (The Brain)
+  async function processCommand(rawInput) {
+    const parts = rawInput.trim().split(' ');
+    const cmdStr = parts[0].toLowerCase();
+    const args = parts.slice(1).join(' ');
+
+    const cmdObj = commands.find(c => c.cmd === cmdStr);
+
+    if (!cmdObj) {
+      if (cmdStr !== '') printLine(`<span class='text-red-400'>Command not found:</span> ${cmdStr}. Type 'help' for options.`);
+      return;
+    }
+
+    // Handle System Commands
+    if (cmdObj.type === 'system') {
+      if (cmdObj.action === 'clear') output.innerHTML = '';
+      else if (cmdObj.action === 'exit') toggleTerminal();
+      else if (cmdObj.action === 'help') {
         printLine("<span class='text-yellow-400 font-bold underline'>Available Commands:</span>");
-        printLine("  <span class='text-white'>about</span>      - Learn about Zeeshan Haider");
-        printLine("  <span class='text-white'>skills</span>     - View technical toolkit & certifications");
-        printLine("  <span class='text-white'>experience</span> - View work history");
-        printLine("  <span class='text-white'>contact</span>    - Get email and social links");
-        printLine("  <span class='text-white'>blog</span>       - Navigate to the blog");
-        printLine("  <span class='text-white'>projects</span>   - View featured projects");
-        printLine("  <span class='text-white'>clear</span>      - Clear terminal screen");
-        printLine("  <span class='text-white'>exit</span>       - Close terminal");
-        break;
+        commands.forEach(c => {
+          printLine(`  <span class='text-white w-24 inline-block'>${c.cmd}</span> - ${c.desc}`);
+        });
+      }
+      else if (cmdObj.action === 'matrix') {
+        printLine("<span class='text-green-500'>Wake up, Neo... The Matrix has you...</span>");
+      }
+      return;
+    }
 
-      case 'about':
-        printLine("<span class='text-cyan-400 font-bold'>Zeeshan Haider</span> | IT & Security Engineer", false);
-        printLine("Innovative tech mind with 8+ years in IT. Certified Ethical Hacker (CEH).");
-        printLine("Expert in Network Security, Penetration Testing, Digital Forensics, and Cloud Infrastructure.");
-        break;
+    // Handle Info & Easter Eggs
+    if (cmdObj.type === 'info' || cmdObj.type === 'easter_egg') {
+      cmdObj.output.forEach(line => printLine(line));
+      return;
+    }
 
-      case 'skills':
-        printLine("<span class='text-cyan-400'>[+]</span> Cybersecurity: CEH, CHFI, Penetration Testing, SIEM, IDS/IPS");
-        printLine("<span class='text-cyan-400'>[+]</span> Networking: WAN, SDWAN, MPLS, Cisco, Active Directory, DNS/DHCP");
-        printLine("<span class='text-cyan-400'>[+]</span> Infrastructure: VMware ESXi, Hyper-V, Windows/Linux Servers");
-        printLine("<span class='text-cyan-400'>[+]</span> Compliance: NIST CSF, ITIL, PCI-DSS, ISO27001, GDPR");
-        break;
+    // Handle Navigation & Links
+    if (cmdObj.type === 'navigate') {
+      printLine(`<span class='text-green-500'>Navigating to ${cmdObj.url}...</span>`);
+      setTimeout(() => window.location.href = cmdObj.url, 500);
+      return;
+    }
+    if (cmdObj.type === 'link') {
+      printLine(`<span class='text-green-500'>Opening ${cmdObj.url} in new tab...</span>`);
+      window.open(cmdObj.url, '_blank');
+      return;
+    }
 
-      case 'experience':
-        printLine("<span class='text-white'>2019 - Present:</span> IT & Security Engineer @ Al Zain Oasis Technology");
-        printLine("<span class='text-white'>2017 - 2019 :</span> IT Specialist @ Electritech Technology");
-        printLine("<span class='text-white'>2016 - 2017 :</span> IT Administrator @ ATG World Group");
-        printLine("<span class='text-gray-500'>Type 'contact' for more details or visit the /projects page.</span>");
-        break;
+    // Handle Utilities (Requires Arguments)
+    if (cmdObj.type === 'utility') {
+      if (!args) {
+        printLine(`<span class='text-red-400'>Error:</span> Missing arguments. Usage: ${cmdObj.desc}`);
+        return;
+      }
+      await runUtility(cmdObj.action, args);
+    }
+  }
 
-      case 'contact':
-        printLine("<span class='text-cyan-400'>Email:</span> <a href='mailto:zeeshan.haider28@gmail.com' class='text-blue-400 hover:underline'>zeeshan.haider28@gmail.com</a>");
-        printLine("<span class='text-cyan-400'>Phone:</span> (+971) 58 20 35 980");
-        printLine("<span class='text-cyan-400'>LinkedIn:</span> <a href='https://www.linkedin.com/in/zeeshan2022' target='_blank' class='text-blue-400 hover:underline'>linkedin.com/in/zeeshan2022</a>");
-        break;
-
-      case 'blog':
-        printLine("<span class='text-green-500'>Navigating to /blog/...</span>");
-        setTimeout(() => window.location.href = '/blog/', 500);
-        break;
-
-      case 'projects':
-        printLine("<span class='text-green-500'>Navigating to /projects/...</span>");
-        setTimeout(() => window.location.href = '/projects/', 500);
-        break;
-
-      case 'clear':
-        output.innerHTML = '';
-        break;
-
-      case 'exit':
-      case 'quit':
-      case 'logout':
-        toggleTerminal();
-        break;
-
-      case 'sudo':
-      case 'sudo su':
-      case 'root':
-        printLine("<span class='text-red-400'>Access Denied.</span> Nice try! But you don't have root privileges here. 😉");
-        break;
-
-      case 'hack':
-      case 'hack the planet':
-        printLine("<span class='text-yellow-400'>Initiating mainframe bypass... Just kidding. I'm an ethical hacker!</span>");
-        break;
-
-      default:
-        if(cmd !== '') {
-          printLine(`<span class='text-red-400'>Command not found:</span> ${cmd}. Type <span class='text-white'>'help'</span> for options.`);
+  // 9. Utility Functions (The Swiss Army Knife)
+  async function runUtility(action, args) {
+    try {
+      if (action === 'sha256') {
+        const msgUint8 = new TextEncoder().encode(args);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        printLine(`<span class='text-cyan-400'>SHA-256:</span> <span class='text-white'>${hashHex}</span>`);
+      } 
+      else if (action === 'base64') {
+        const encoded = btoa(args);
+        printLine(`<span class='text-cyan-400'>Base64:</span> <span class='text-white'>${encoded}</span>`);
+      } 
+      else if (action === 'genpass') {
+        const len = parseInt(args) || 16;
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+        let pass = '';
+        const arr = new Uint8Array(len);
+        crypto.getRandomValues(arr);
+        arr.forEach(val => pass += chars[val % chars.length]);
+        printLine(`<span class='text-cyan-400'>Password (${len}):</span> <span class='text-white'>${pass}</span>`);
+      } 
+      else if (action === 'jwt') {
+        const parts = args.split('.');
+        if (parts.length !== 3) throw new Error('Invalid JWT format');
+        const header = JSON.parse(atob(parts[0].replace(/-/g, '+').replace(/_/g, '/')));
+        const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+        printLine(`<span class='text-cyan-400'>Header:</span> <span class='text-white'>${JSON.stringify(header)}</span>`);
+        printLine(`<span class='text-cyan-400'>Payload:</span> <span class='text-white'>${JSON.stringify(payload)}</span>`);
+      } 
+      else if (action === 'urlencode') {
+        printLine(`<span class='text-cyan-400'>URL Encoded:</span> <span class='text-white'>${encodeURIComponent(args)}</span>`);
+      } 
+      else if (action === 'whois') {
+        printLine(`<span class='text-yellow-400'>[MOCK]</span> Fetching WHOIS data for ${args}...`);
+        printLine(`Domain: ${args}`);
+        printLine(`Registrar: GoDaddy`);
+        printLine(`Creation Date: 2021-01-01`);
+        printLine(`Status: clientTransferProhibited`);
+      } 
+      else if (action === 'ping') {
+        printLine(`PING ${args} (93.184.216.34) 56(84) bytes of data.`);
+        for(let i=1; i<=4; i++) {
+          await new Promise(r => setTimeout(r, 300));
+          printLine(`64 bytes from ${args}: icmp_seq=${i} ttl=56 time=${(Math.random() * 50 + 10).toFixed(1)} ms`);
         }
+        printLine(`\n--- ${args} ping statistics ---`);
+        printLine(`4 packets transmitted, 4 received, 0% packet loss`);
+      }
+    } catch (err) {
+      printLine(`<span class='text-red-400'>[ERROR]</span> ${err.message}`);
     }
   }
 </script>
-
 
    <Footer />
   </body>

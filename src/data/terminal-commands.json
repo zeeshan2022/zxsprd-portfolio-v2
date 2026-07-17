@@ -1,0 +1,34 @@
+[
+  { "cmd": "help", "desc": "Show all available commands", "type": "system", "action": "help" },
+  { "cmd": "clear", "desc": "Clear the terminal screen", "type": "system", "action": "clear" },
+  { "cmd": "exit", "desc": "Close the terminal", "type": "system", "action": "exit" },
+  
+  { "cmd": "about", "desc": "Learn about Zeeshan Haider", "type": "info", "output": ["<span class='text-cyan-400 font-bold'>Zeeshan Haider</span> | IT & Security Engineer", "Innovative tech mind with 8+ years in IT. Certified Ethical Hacker (CEH).", "Expert in Network Security, Penetration Testing, Digital Forensics, and Cloud Infrastructure."] },
+  { "cmd": "skills", "desc": "View technical toolkit & certifications", "type": "info", "output": ["<span class='text-cyan-400'>[+]</span> Cybersecurity: CEH, CHFI, Penetration Testing, SIEM, IDS/IPS", "<span class='text-cyan-400'>[+]</span> Networking: WAN, SDWAN, MPLS, Cisco, Active Directory", "<span class='text-cyan-400'>[+]</span> Infrastructure: VMware ESXi, Hyper-V, Windows/Linux Servers"] },
+  { "cmd": "experience", "desc": "View work history", "type": "info", "output": ["<span class='text-white'>2019 - Present:</span> IT & Security Engineer @ Al Zain Oasis Technology", "<span class='text-white'>2017 - 2019 :</span> IT Specialist @ Electritech Technology", "<span class='text-white'>2016 - 2017 :</span> IT Administrator @ ATG World Group"] },
+  { "cmd": "contact", "desc": "Get email and social links", "type": "info", "output": ["<span class='text-cyan-400'>Email:</span> zeeshan.haider28@gmail.com", "<span class='text-cyan-400'>Phone:</span> (+971) 58 20 35 980", "<span class='text-cyan-400'>Location:</span> Dubai, UAE"] },
+
+  { "cmd": "home", "desc": "Navigate to the homepage", "type": "navigate", "url": "/" },
+  { "cmd": "blog", "desc": "Navigate to the blog", "type": "navigate", "url": "/blog/" },
+  { "cmd": "projects", "desc": "View featured projects", "type": "navigate", "url": "/projects/" },
+  { "cmd": "links", "desc": "View quick links & resources", "type": "navigate", "url": "/links/" },
+  { "cmd": "cv", "desc": "Download my CV / Resume", "type": "link", "url": "/ZeeshanHaider_CV_SecurityManager.pdf" },
+
+  { "cmd": "linkedin", "desc": "Open my LinkedIn profile", "type": "link", "url": "https://www.linkedin.com/in/zeeshan2022" },
+  { "cmd": "github", "desc": "Open my GitHub repository", "type": "link", "url": "https://github.com/zeeshan2022" },
+  { "cmd": "email", "desc": "Open default email client", "type": "link", "url": "mailto:zeeshan.haider28@gmail.com" },
+  { "cmd": "wix", "desc": "Visit my old Wix website", "type": "link", "url": "https://zeeshanhaider28.wixsite.com/zeeshanhaider" },
+
+  { "cmd": "hash", "desc": "Generate SHA-256 hash (Usage: hash <text>)", "type": "utility", "action": "sha256" },
+  { "cmd": "base64", "desc": "Encode/Decode Base64 (Usage: base64 <text>)", "type": "utility", "action": "base64" },
+  { "cmd": "genpass", "desc": "Generate secure password (Usage: genpass <length>)", "type": "utility", "action": "genpass" },
+  { "cmd": "jwt", "desc": "Decode JWT token (Usage: jwt <token>)", "type": "utility", "action": "jwt" },
+  { "cmd": "url", "desc": "URL Encode text (Usage: url <text>)", "type": "utility", "action": "urlencode" },
+  
+  { "cmd": "whois", "desc": "Lookup domain info (Usage: whois <domain>)", "type": "utility", "action": "whois" },
+  { "cmd": "ping", "desc": "Ping a server (Usage: ping <host>)", "type": "utility", "action": "ping" },
+  { "cmd": "matrix", "desc": "Enter the Matrix", "type": "system", "action": "matrix" },
+
+  { "cmd": "sudo", "desc": "Attempt to gain root access", "type": "easter_egg", "output": ["<span class='text-red-400'>[ERROR]</span> Access Denied. Nice try, but you don't have root privileges here. 😉"] },
+  { "cmd": "hack", "desc": "Initiate mainframe bypass", "type": "easter_egg", "output": ["<span class='text-yellow-400'>[WARNING]</span> Initiating mainframe bypass... Just kidding. I'm an ethical hacker!"] }
+]

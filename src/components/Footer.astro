@@ -78,6 +78,15 @@ const quickLinks = [
           <li>
             <a href="/terms" class="text-muted text-sm hover:text-accent transition-colors">{footer.terms}</a>
           </li>
+		            <li>
+            <button 
+              onclick="window.openTerminal()" 
+              class="text-muted text-sm hover:text-accent transition-colors flex items-center gap-2 group bg-transparent border-none p-0 cursor-pointer font-normal"
+            >
+              <span class="w-1.5 h-1.5 rounded-full bg-border group-hover:bg-accent transition-colors"></span>
+              Launch Terminal
+            </button>
+          </li>
         </ul>
         
         <!-- vCard Download Button -->
