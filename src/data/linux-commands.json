@@ -1,0 +1,230 @@
+[
+  {
+    "id": "ls",
+    "name": "ls",
+    "category": "File Management",
+    "description": "List directory contents.",
+    "usage": "ls [OPTION]... [FILE]...",
+    "example": "ls -la /var/log",
+    "os_support": ["all"],
+    "flags": [
+      { "flag": "-l", "desc": "Use long listing format." },
+      { "flag": "-a", "desc": "Include hidden files (dot files)." },
+      { "flag": "-h", "desc": "Print sizes in human readable format." },
+      { "flag": "-R", "desc": "List subdirectories recursively." }
+    ]
+  },
+  {
+    "id": "cd",
+    "name": "cd",
+    "category": "File Management",
+    "description": "Change the current directory.",
+    "usage": "cd [directory]",
+    "example": "cd /etc/nginx",
+    "os_support": ["all"],
+    "flags": []
+  },
+  {
+    "id": "grep",
+    "name": "grep",
+    "category": "Text Processing",
+    "description": "Search text patterns in files.",
+    "usage": "grep [OPTION] PATTERN [FILE...]",
+    "example": "grep -i 'error' /var/log/syslog",
+    "os_support": ["all"],
+    "flags": [
+      { "flag": "-i", "desc": "Ignore case distinctions." },
+      { "flag": "-r", "desc": "Read all files under each directory recursively." },
+      { "flag": "-n", "desc": "Prefix each line with its line number." },
+      { "flag": "-v", "desc": "Invert match (select non-matching lines)." }
+    ]
+  },
+  {
+    "id": "chmod",
+    "name": "chmod",
+    "category": "Permissions",
+    "description": "Change file mode bits (permissions).",
+    "usage": "chmod [OPTION] MODE FILE...",
+    "example": "chmod 755 script.sh",
+    "os_support": ["all"],
+    "flags": [
+      { "flag": "-R", "desc": "Change files and directories recursively." },
+      { "flag": "+x", "desc": "Add execute permission." }
+    ]
+  },
+  {
+    "id": "chown",
+    "name": "chown",
+    "category": "Permissions",
+    "description": "Change file owner and group.",
+    "usage": "chown [OPTION] OWNER[:GROUP] FILE...",
+    "example": "chown -R www-data:www-data /var/www/html",
+    "os_support": ["all"],
+    "flags": [
+      { "flag": "-R", "desc": "Operate on files and directories recursively." }
+    ]
+  },
+  {
+    "id": "apt-install",
+    "name": "apt install",
+    "category": "Package Management",
+    "description": "Install a package.",
+    "usage": "sudo apt install [package_name]",
+    "example": "sudo apt install nginx",
+    "os_support": ["ubuntu", "debian"],
+    "alt_os": { "oracle": "sudo yum install", "centos": "sudo dnf install" },
+    "flags": [
+      { "flag": "-y", "desc": "Assume yes to all prompts." }
+    ]
+  },
+  {
+    "id": "yum-install",
+    "name": "yum install",
+    "category": "Package Management",
+    "description": "Install a package (Oracle/CentOS).",
+    "usage": "sudo yum install [package_name]",
+    "example": "sudo yum install httpd",
+    "os_support": ["oracle", "centos"],
+    "alt_os": { "ubuntu": "sudo apt install", "debian": "sudo apt install" },
+    "flags": [
+      { "flag": "-y", "desc": "Assume yes to all prompts." }
+    ]
+  },
+  {
+    "id": "systemctl",
+    "name": "systemctl",
+    "category": "Process Management",
+    "description": "Control the systemd system and service manager.",
+    "usage": "systemctl [command] [service_name]",
+    "example": "systemctl restart nginx",
+    "os_support": ["all"],
+    "flags": [
+      { "flag": "start", "desc": "Start the service." },
+      { "flag": "stop", "desc": "Stop the service." },
+      { "flag": "restart", "desc": "Restart the service." },
+      { "flag": "status", "desc": "Show service status." },
+      { "flag": "enable", "desc": "Enable service to start on boot." }
+    ]
+  },
+  {
+    "id": "top",
+    "name": "top",
+    "category": "Process Management",
+    "description": "Display Linux processes (real-time).",
+    "usage": "top",
+    "example": "top",
+    "os_support": ["all"],
+    "flags": []
+  },
+  {
+    "id": "ps",
+    "name": "ps",
+    "category": "Process Management",
+    "description": "Report a snapshot of current processes.",
+    "usage": "ps [OPTION]",
+    "example": "ps aux | grep nginx",
+    "os_support": ["all"],
+    "flags": [
+      { "flag": "aux", "desc": "Show all processes for all users." },
+      { "flag": "-ef", "desc": "Show full-format listing." }
+    ]
+  },
+  {
+    "id": "ss",
+    "name": "ss",
+    "category": "Networking",
+    "description": "Another utility to investigate sockets (replaces netstat).",
+    "usage": "ss [OPTION]",
+    "example": "ss -tulpn",
+    "os_support": ["all"],
+    "flags": [
+      { "flag": "-t", "desc": "Display TCP sockets." },
+      { "flag": "-u", "desc": "Display UDP sockets." },
+      { "flag": "-l", "desc": "Display listening sockets." },
+      { "flag": "-p", "desc": "Show process using socket." },
+      { "flag": "-n", "desc": "Do not resolve service names." }
+    ]
+  },
+  {
+    "id": "ip-addr",
+    "name": "ip addr",
+    "category": "Networking",
+    "description": "Show IP addresses and network interfaces.",
+    "usage": "ip addr",
+    "example": "ip addr show",
+    "os_support": ["all"],
+    "flags": []
+  },
+  {
+    "id": "tar",
+    "name": "tar",
+    "category": "File Management",
+    "description": "Archive utility (create/extract archives).",
+    "usage": "tar [OPTION] [archive_file] [file/directory]",
+    "example": "tar -czvf backup.tar.gz /var/www",
+    "os_support": ["all"],
+    "flags": [
+      { "flag": "-c", "desc": "Create a new archive." },
+      { "flag": "-x", "desc": "Extract files from an archive." },
+      { "flag": "-z", "desc": "Filter through gzip." },
+      { "flag": "-v", "desc": "Verbosely list files processed." },
+      { "flag": "-f", "desc": "Use archive file." }
+    ]
+  },
+  {
+    "id": "find",
+    "name": "find",
+    "category": "File Management",
+    "description": "Search for files in a directory hierarchy.",
+    "usage": "find [path] [expression]",
+    "example": "find /var/log -name '*.log' -mtime +30",
+    "os_support": ["all"],
+    "flags": [
+      { "flag": "-name", "desc": "Base of file name matches pattern." },
+      { "flag": "-type", "desc": "File is of type (f=file, d=directory)." },
+      { "flag": "-mtime", "desc": "File's data was last modified n*24 hours ago." },
+      { "flag": "-exec", "desc": "Execute command on found files." }
+    ]
+  },
+  {
+    "id": "df",
+    "name": "df",
+    "category": "System",
+    "description": "Report file system disk space usage.",
+    "usage": "df [OPTION]",
+    "example": "df -h",
+    "os_support": ["all"],
+    "flags": [
+      { "flag": "-h", "desc": "Print sizes in human readable format." },
+      { "flag": "-T", "desc": "Print file system type." }
+    ]
+  },
+  {
+    "id": "free",
+    "name": "free",
+    "category": "System",
+    "description": "Display amount of free and used memory.",
+    "usage": "free [OPTION]",
+    "example": "free -m",
+    "os_support": ["all"],
+    "flags": [
+      { "flag": "-h", "desc": "Show output in human readable format." },
+      { "flag": "-m", "desc": "Display amount of memory in megabytes." },
+      { "flag": "-g", "desc": "Display amount of memory in gigabytes." }
+    ]
+  },
+  {
+    "id": "journalctl",
+    "name": "journalctl",
+    "category": "Text Processing",
+    "description": "Query the systemd journal (logs).",
+    "usage": "journalctl [OPTION]",
+    "example": "journalctl -u nginx -f",
+    "os_support": ["all"],
+    "flags": [
+      { "flag": "-u", "desc": "Show messages for the specified unit." },
+      { "flag": "-f", "desc": "Follow the journal (like tail -f)." },
+      { "flag": "-n", "desc": "Number of recent entries to show." }
+    ]
+  }
+]

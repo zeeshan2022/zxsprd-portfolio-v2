@@ -1,0 +1,334 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import Navbar from '../../../components/Navbar.astro';
+import commandsData from '../../../data/linux-commands.json';
+
+// Convert JSON to string to pass to client-side script
+const commandsJSON = JSON.stringify(commandsData);
+
+// Get unique categories and OS options
+const categories = [...new Set(commandsData.map(c => c.category))];
+const osOptions = [
+  { id: 'oracle', label: 'Oracle Linux', default: true },
+  { id: 'ubuntu', label: 'Ubuntu/Debian' },
+  { id: 'centos', label: 'CentOS/RHEL' }
+];
+---
+
+<Layout title="Linux Command Studio | ZX Labs" lang="en" dir="ltr">
+  <Navbar currentLang="en" />
+
+  <main class="min-h-screen pt-24 px-6 pb-20">
+    <div class="max-w-7xl mx-auto">
+      
+      <!-- Header & OS Selector -->
+      <div class="flex flex-col md:flex-row justify-between items-center mb-12 gap-6 reveal">
+        <div>
+          <h1 class="text-3xl md:text-4xl font-bold text-text mb-2">
+            Linux <span class="text-accent">Command Studio</span>
+          </h1>
+          <p class="text-muted">Interactive builder and reference for IT Administrators.</p>
+        </div>
+        
+        <div class="flex items-center gap-3 bg-bg/50 border border-border rounded-xl p-2">
+          <span class="text-sm text-muted px-3">Target OS:</span>
+          <select id="os-selector" class="bg-bg border border-border rounded-lg px-4 py-2 text-text text-sm font-bold focus:outline-none focus:border-accent">
+            {osOptions.map(os => (
+              <option value={os.id} selected={os.default}>{os.label}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <!-- SECTION 1: Command Maker -->
+      <div class="glass-card rounded-2xl p-6 md:p-8 border border-border mb-8 reveal">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-xl font-bold text-text flex items-center gap-2">
+            <span class="text-accent">⚙️</span> Command Maker
+          </h2>
+          <button id="toggle-full-list" class="px-4 py-2 bg-accent/10 text-accent border border-accent/30 rounded-lg text-sm font-semibold hover:bg-accent hover:text-bg transition-all">
+            List All Commands
+          </button>
+        </div>
+
+        <div class="grid md:grid-cols-4 gap-4 mb-6">
+          <div>
+            <label class="block text-xs font-bold text-muted uppercase mb-2">Category</label>
+            <select id="maker-category" class="w-full px-4 py-3 bg-bg border border-border rounded-lg text-text focus:outline-none focus:border-accent">
+              <option value="all">All Categories</option>
+              {categories.map(cat => <option value={cat}>{cat}</option>)}
+            </select>
+          </div>
+          <div class="md:col-span-3">
+            <label class="block text-xs font-bold text-muted uppercase mb-2">Command</label>
+            <select id="maker-command" class="w-full px-4 py-3 bg-bg border border-border rounded-lg text-text focus:outline-none focus:border-accent">
+              <option value="">Select a command...</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Dynamic Flags Area -->
+        <div id="flags-container" class="hidden mb-6">
+          <label class="block text-xs font-bold text-muted uppercase mb-3">Select Flags / Options</label>
+          <div id="flags-grid" class="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <!-- Checkboxes injected here -->
+          </div>
+        </div>
+
+        <!-- Arguments Area -->
+        <div id="args-container" class="hidden mb-6">
+          <label class="block text-xs font-bold text-muted uppercase mb-2">Arguments (e.g., file path, IP, service name)</label>
+          <input id="maker-args" type="text" placeholder="e.g., /var/log/nginx/error.log" class="w-full px-4 py-3 bg-bg border border-border rounded-lg text-text font-mono focus:outline-none focus:border-accent" />
+        </div>
+
+        <!-- Output Terminal -->
+        <div class="relative">
+          <label class="block text-xs font-bold text-muted uppercase mb-2">Generated Command</label>
+          <div class="bg-[#0d1117] border border-green-500/30 rounded-xl p-5 font-mono text-green-400 text-lg flex items-center justify-between">
+            <span id="command-output" class="break-all">Select a command to begin...</span>
+            <button id="copy-cmd" class="ml-4 px-3 py-1 bg-green-500/20 text-green-400 rounded text-xs font-bold hover:bg-green-500/30 transition-colors whitespace-nowrap">COPY</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 2: Top 10 Essential Commands -->
+      <div id="top-10-section" class="mb-8 reveal">
+        <h2 class="text-xl font-bold text-text mb-6 flex items-center gap-2">
+          <span class="text-accent">🔥</span> Top 10 Essential Commands
+        </h2>
+        <div class="grid md:grid-cols-2 lg:grid-cols-5 gap-4" id="top-10-grid">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+
+      <!-- SECTION 3: Full Command Library (Hidden by default) -->
+      <div id="full-library-section" class="hidden reveal">
+        <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+          <h2 class="text-xl font-bold text-text flex items-center gap-2">
+            <span class="text-accent">📚</span> Full Command Library
+          </h2>
+          <div class="flex gap-3 w-full md:w-auto">
+            <select id="filter-category" class="px-4 py-2 bg-bg border border-border rounded-lg text-text text-sm focus:outline-none focus:border-accent">
+              <option value="all">All Categories</option>
+              {categories.map(cat => <option value={cat}>{cat}</option>)}
+            </select>
+            <input id="search-cmd" type="text" placeholder="Search commands..." class="px-4 py-2 bg-bg border border-border rounded-lg text-text text-sm focus:outline-none focus:border-accent w-full md:w-64" />
+          </div>
+        </div>
+        
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4" id="full-library-grid">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script define:vars={{ commandsJSON }}>
+    const allCommands = JSON.parse(commandsJSON);
+    let currentOS = 'oracle';
+    let selectedCmdObj = null;
+    let selectedFlags = new Set();
+
+    // DOM Elements
+    const osSelector = document.getElementById('os-selector');
+    const makerCategory = document.getElementById('maker-category');
+    const makerCommand = document.getElementById('maker-command');
+    const flagsContainer = document.getElementById('flags-container');
+    const flagsGrid = document.getElementById('flags-grid');
+    const argsContainer = document.getElementById('args-container');
+    const makerArgs = document.getElementById('maker-args');
+    const commandOutput = document.getElementById('command-output');
+    const copyBtn = document.getElementById('copy-cmd');
+    const toggleFullListBtn = document.getElementById('toggle-full-list');
+    const top10Section = document.getElementById('top-10-section');
+    const fullLibrarySection = document.getElementById('full-library-section');
+    const top10Grid = document.getElementById('top-10-grid');
+    const fullLibraryGrid = document.getElementById('full-library-grid');
+    const filterCategory = document.getElementById('filter-category');
+    const searchCmd = document.getElementById('search-cmd');
+
+    // 1. Initialize Top 10
+    const top10Ids = ['ls', 'cd', 'grep', 'chmod', 'systemctl', 'ss', 'tar', 'find', 'df', 'free'];
+    function renderTop10() {
+      top10Grid.innerHTML = '';
+      top10Ids.forEach(id => {
+        const cmd = allCommands.find(c => c.id === id);
+        if(cmd) top10Grid.appendChild(createCommandCard(cmd, false));
+      });
+    }
+
+    // 2. Initialize Full Library
+    function renderFullLibrary() {
+      const cat = filterCategory.value;
+      const search = searchCmd.value.toLowerCase();
+      
+      const filtered = allCommands.filter(c => {
+        const matchCat = cat === 'all' || c.category === cat;
+        const matchSearch = c.name.toLowerCase().includes(search) || c.description.toLowerCase().includes(search);
+        return matchCat && matchSearch;
+      });
+
+      fullLibraryGrid.innerHTML = '';
+      filtered.forEach(cmd => fullLibraryGrid.appendChild(createCommandCard(cmd, true)));
+    }
+
+    // 3. Create Command Card HTML
+    function createCommandCard(cmd, showExpand) {
+      const div = document.createElement('div');
+      div.className = 'glass-card rounded-xl p-5 border border-border hover:border-accent/50 transition-all cursor-pointer group';
+      
+      // Check OS compatibility
+      let isCompatible = cmd.os_support.includes('all') || cmd.os_support.includes(currentOS);
+      let displayName = cmd.name;
+      if (!isCompatible && cmd.alt_os && cmd.alt_os[currentOS]) {
+        displayName = cmd.alt_os[currentOS];
+      }
+
+      div.innerHTML = `
+        <div class="flex justify-between items-start mb-2">
+          <h3 class="text-lg font-bold text-accent font-mono">${displayName}</h3>
+          ${!isCompatible ? '<span class="text-[10px] bg-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded">Mapped</span>' : ''}
+        </div>
+        <p class="text-xs text-muted mb-3">${cmd.description}</p>
+        <div class="expanded-content hidden mt-3 pt-3 border-t border-border text-xs font-mono space-y-2">
+          <div><span class="text-green-400">Usage:</span> <span class="text-white">${cmd.usage}</span></div>
+          <div><span class="text-green-400">Example:</span> <span class="text-white">${cmd.example}</span></div>
+          ${cmd.flags.length > 0 ? `
+            <div class="pt-2">
+              <span class="text-green-400 block mb-1">Flags:</span>
+              <ul class="space-y-1 text-muted">
+                ${cmd.flags.map(f => `<li><span class="text-white">${f.flag}</span>: ${f.desc}</li>`).join('')}
+              </ul>
+            </div>
+          ` : ''}
+        </div>
+      `;
+
+      if (showExpand) {
+        div.addEventListener('click', () => {
+          const content = div.querySelector('.expanded-content');
+          content.classList.toggle('hidden');
+        });
+      } else {
+        // Top 10 cards just copy the command on click
+        div.addEventListener('click', () => {
+          navigator.clipboard.writeText(displayName);
+          const original = div.querySelector('h3').innerText;
+          div.querySelector('h3').innerText = 'Copied!';
+          setTimeout(() => div.querySelector('h3').innerText = original, 1000);
+        });
+      }
+
+      return div;
+    }
+
+    // 4. Command Maker Logic
+    function populateMakerCommands() {
+      const cat = makerCategory.value;
+      makerCommand.innerHTML = '<option value="">Select a command...</option>';
+      
+      const filtered = cat === 'all' ? allCommands : allCommands.filter(c => c.category === cat);
+      filtered.forEach(cmd => {
+        const opt = document.createElement('option');
+        opt.value = cmd.id;
+        opt.innerText = cmd.name;
+        makerCommand.appendChild(opt);
+      });
+    }
+
+    function updateMakerFlags() {
+      const cmdId = makerCommand.value;
+      selectedCmdObj = allCommands.find(c => c.id === cmdId);
+      selectedFlags.clear();
+      flagsGrid.innerHTML = '';
+      makerArgs.value = '';
+
+      if (!selectedCmdObj) {
+        flagsContainer.classList.add('hidden');
+        argsContainer.classList.add('hidden');
+        commandOutput.innerText = 'Select a command to begin...';
+        return;
+      }
+
+      if (selectedCmdObj.flags.length > 0) {
+        flagsContainer.classList.remove('hidden');
+        selectedCmdObj.flags.forEach((flag, idx) => {
+          const label = document.createElement('label');
+          label.className = 'flex items-center gap-2 p-3 bg-bg border border-border rounded-lg cursor-pointer hover:border-accent transition-colors';
+          label.innerHTML = `
+            <input type="checkbox" value="${flag.flag}" class="flag-checkbox w-4 h-4 text-accent bg-bg border-border rounded focus:ring-accent">
+            <div>
+              <span class="text-sm font-mono text-accent font-bold">${flag.flag}</span>
+              <p class="text-[10px] text-muted leading-tight">${flag.desc}</p>
+            </div>
+          `;
+          label.querySelector('input').addEventListener('change', (e) => {
+            if(e.target.checked) selectedFlags.add(flag.flag);
+            else selectedFlags.delete(flag.flag);
+            updateCommandOutput();
+          });
+          flagsGrid.appendChild(label);
+        });
+      } else {
+        flagsContainer.classList.add('hidden');
+      }
+
+      argsContainer.classList.remove('hidden');
+      updateCommandOutput();
+    }
+
+    function updateCommandOutput() {
+      if (!selectedCmdObj) return;
+      
+      let baseCmd = selectedCmdObj.name;
+      if (!selectedCmdObj.os_support.includes('all') && !selectedCmdObj.os_support.includes(currentOS)) {
+        if (selectedCmdObj.alt_os && selectedCmdObj.alt_os[currentOS]) {
+          baseCmd = selectedCmdObj.alt_os[currentOS];
+        }
+      }
+
+      const flagsStr = Array.from(selectedFlags).join(' ');
+      const argsStr = makerArgs.value.trim();
+      
+      let finalCmd = baseCmd;
+      if (flagsStr) finalCmd += ' ' + flagsStr;
+      if (argsStr) finalCmd += ' ' + argsStr;
+
+      commandOutput.innerText = finalCmd;
+    }
+
+    // 5. Event Listeners
+    osSelector.addEventListener('change', (e) => {
+      currentOS = e.target.value;
+      renderTop10();
+      renderFullLibrary();
+      updateCommandOutput();
+    });
+
+    makerCategory.addEventListener('change', populateMakerCommands);
+    makerCommand.addEventListener('change', updateMakerFlags);
+    makerArgs.addEventListener('input', updateCommandOutput);
+
+    copyBtn.addEventListener('click', () => {
+      navigator.clipboard.writeText(commandOutput.innerText);
+      copyBtn.innerText = 'COPIED!';
+      setTimeout(() => copyBtn.innerText = 'COPY', 1500);
+    });
+
+    toggleFullListBtn.addEventListener('click', () => {
+      const isHidden = fullLibrarySection.classList.contains('hidden');
+      fullLibrarySection.classList.toggle('hidden');
+      top10Section.classList.toggle('hidden');
+      toggleFullListBtn.innerText = isHidden ? 'Show Top 10' : 'List All Commands';
+      if(isHidden) renderFullLibrary();
+    });
+
+    filterCategory.addEventListener('change', renderFullLibrary);
+    searchCmd.addEventListener('input', renderFullLibrary);
+
+    // Init
+    populateMakerCommands();
+    renderTop10();
+  </script>
+</Layout>
