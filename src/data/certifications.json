@@ -94,5 +94,13 @@
     "date": "13-11-2025",
     "credentialId": "VM Core",
     "category": "Vulnerability Mgmt"
+  },
+    {
+    "filename": "13-ECC-CEH-Certificate.jpg",
+    "title": "Certified Ethical Hacker",
+    "issuer": "EC-Council",
+    "date": "14-09-2022",
+    "credentialId": "ECC9106437588",
+    "category": "Hacking"
   }
 ]
