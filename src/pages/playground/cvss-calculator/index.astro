@@ -1,0 +1,310 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import Navbar from '../../../components/Navbar.astro';
+---
+
+<Layout title="CVSS v3.1 Calculator | ZX Labs" lang="en" dir="ltr">
+  <Navbar currentLang="en" />
+
+  <main class="min-h-screen pt-24 px-6 pb-20">
+    <div class="max-w-7xl mx-auto">
+      
+      <!-- Header -->
+      <div class="text-center mb-12 reveal">
+        <h1 class="text-3xl md:text-4xl font-bold text-text mb-4">
+          CVSS v3.1 <span class="text-accent">Vulnerability Calculator</span>
+        </h1>
+        <p class="text-muted max-w-2xl mx-auto">
+          Calculate the Base Score and generate the official Vector String for Common Vulnerability Scoring System (CVSS) v3.1.
+        </p>
+      </div>
+
+      <div class="grid lg:grid-cols-3 gap-8">
+        
+        <!-- Left Column: Metrics Controls (2/3 width) -->
+        <div class="lg:col-span-2 glass-card rounded-2xl p-6 md:p-8 border border-border reveal">
+          <div class="flex justify-between items-center mb-8">
+            <h2 class="text-xl font-bold text-text flex items-center gap-2">
+              <span class="text-accent">⚙️</span> Base Metrics
+            </h2>
+            <button id="reset-btn" class="px-4 py-2 text-xs font-bold text-muted hover:text-accent border border-border hover:border-accent rounded-lg transition-all">
+              Reset to Worst Case
+            </button>
+          </div>
+
+          <div class="space-y-6" id="metrics-container">
+            <!-- Metrics will be injected here by JS -->
+          </div>
+        </div>
+
+        <!-- Right Column: Score & Vector (1/3 width) -->
+        <div class="lg:col-span-1 space-y-6">
+          
+          <!-- Score Gauge -->
+          <div class="glass-card rounded-2xl p-6 md:p-8 border border-border reveal sticky top-24">
+            <h2 class="text-sm font-bold text-muted uppercase tracking-widest text-center mb-6">Base Score</h2>
+            
+            <div class="relative flex flex-col items-center justify-center mb-8">
+              <div class="text-7xl font-bold font-mono transition-colors duration-500" id="score-display">0.0</div>
+              <div class="mt-2 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-colors duration-500" id="severity-badge">
+                None
+              </div>
+            </div>
+
+            <!-- Progress Bar Gauge -->
+            <div class="w-full bg-bg rounded-full h-3 overflow-hidden mb-2">
+              <div id="score-bar" class="h-3 rounded-full transition-all duration-500 ease-out" style="width: 0%"></div>
+            </div>
+            <div class="flex justify-between text-[10px] text-muted font-mono">
+              <span>0.0</span>
+              <span>3.9</span>
+              <span>6.9</span>
+              <span>8.9</span>
+              <span>10.0</span>
+            </div>
+          </div>
+
+          <!-- Vector String -->
+          <div class="glass-card rounded-2xl p-6 border border-border reveal">
+            <h2 class="text-sm font-bold text-muted uppercase tracking-widest mb-4 flex items-center justify-between">
+              <span>Vector String</span>
+              <button id="copy-vector" class="text-xs text-accent hover:underline flex items-center gap-1">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                Copy
+              </button>
+            </h2>
+            <div class="bg-[#0d1117] border border-green-500/30 rounded-lg p-4 font-mono text-green-400 text-xs break-all leading-relaxed" id="vector-display">
+              CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:N
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // 1. CVSS v3.1 Metric Definitions & Values
+    const cvssMetrics = [
+      {
+        id: 'AV', name: 'Attack Vector', 
+        options: [
+          { val: 'N', label: 'Network', desc: 'Vulnerable component bound to network stack.' },
+          { val: 'A', label: 'Adjacent', desc: 'Vulnerable component bound to shared physical/logical network.' },
+          { val: 'L', label: 'Local', desc: 'Vulnerable component not bound to network stack.' },
+          { val: 'P', label: 'Physical', desc: 'Attacker must physically touch or manipulate.' }
+        ]
+      },
+      {
+        id: 'AC', name: 'Attack Complexity', 
+        options: [
+          { val: 'L', label: 'Low', desc: 'Specialized access conditions or extenuating circumstances do not exist.' },
+          { val: 'H', label: 'High', desc: 'Successful attack depends on conditions beyond attacker\'s control.' }
+        ]
+      },
+      {
+        id: 'PR', name: 'Privileges Required', 
+        options: [
+          { val: 'N', label: 'None', desc: 'Attacker is unauthorized prior to attack.' },
+          { val: 'L', label: 'Low', desc: 'Attacker requires privileges that provide basic user capabilities.' },
+          { val: 'H', label: 'High', desc: 'Attacker requires privileges that provide significant control.' }
+        ]
+      },
+      {
+        id: 'UI', name: 'User Interaction', 
+        options: [
+          { val: 'N', label: 'None', desc: 'Vulnerable system can be exploited without interaction.' },
+          { val: 'R', label: 'Required', desc: 'Successful exploitation requires user interaction.' }
+        ]
+      },
+      {
+        id: 'S', name: 'Scope', 
+        options: [
+          { val: 'U', label: 'Unchanged', desc: 'Exploited component cannot affect resources beyond its security scope.' },
+          { val: 'C', label: 'Changed', desc: 'Exploited component can affect resources beyond its security scope.' }
+        ]
+      },
+      {
+        id: 'C', name: 'Confidentiality', 
+        options: [
+          { val: 'H', label: 'High', desc: 'Total loss of confidentiality.' },
+          { val: 'L', label: 'Low', desc: 'Some loss of confidentiality.' },
+          { val: 'N', label: 'None', desc: 'No loss of confidentiality.' }
+        ]
+      },
+      {
+        id: 'I', name: 'Integrity', 
+        options: [
+          { val: 'H', label: 'High', desc: 'Total compromise of system integrity.' },
+          { val: 'L', label: 'Low', desc: 'Modification of data is possible, but attacker lacks control.' },
+          { val: 'N', label: 'None', desc: 'No loss of integrity.' }
+        ]
+      },
+      {
+        id: 'A', name: 'Availability', 
+        options: [
+          { val: 'H', label: 'High', desc: 'Total shutdown of affected resource.' },
+          { val: 'L', label: 'Low', desc: 'Performance is reduced or resources are intermittent.' },
+          { val: 'N', label: 'None', desc: 'No impact to availability.' }
+        ]
+      }
+    ];
+
+    // 2. CVSS v3.1 Math Constants
+    const metricValues = {
+      AV: { N: 0.85, A: 0.62, L: 0.55, P: 0.20 },
+      AC: { L: 0.77, H: 0.44 },
+      PR: { U: { N: 0.85, L: 0.62, H: 0.27 }, C: { N: 0.85, L: 0.68, H: 0.50 } },
+      UI: { N: 0.85, R: 0.62 },
+      C: { H: 0.56, L: 0.22, N: 0.00 },
+      I: { H: 0.56, L: 0.22, N: 0.00 },
+      A: { H: 0.56, L: 0.22, N: 0.00 }
+    };
+
+    // 3. State Management
+    let state = { AV: 'N', AC: 'L', PR: 'N', UI: 'N', S: 'U', C: 'N', I: 'N', A: 'N' };
+
+    // DOM Elements
+    const container = document.getElementById('metrics-container');
+    const scoreDisplay = document.getElementById('score-display');
+    const severityBadge = document.getElementById('severity-badge');
+    const scoreBar = document.getElementById('score-bar');
+    const vectorDisplay = document.getElementById('vector-display');
+    const copyBtn = document.getElementById('copy-vector');
+    const resetBtn = document.getElementById('reset-btn');
+
+    // 4. Render UI
+    function renderMetrics() {
+      container.innerHTML = '';
+      cvssMetrics.forEach(metric => {
+        const div = document.createElement('div');
+        div.className = 'border-b border-border/50 pb-6 last:border-0 last:pb-0';
+        
+        let buttonsHTML = metric.options.map(opt => `
+          <button 
+            data-metric="${metric.id}" 
+            data-val="${opt.val}" 
+            class="metric-btn flex-1 px-3 py-2.5 rounded-lg text-xs font-bold transition-all border ${state[metric.id] === opt.val ? 'bg-accent text-bg border-accent shadow-lg shadow-accent/20' : 'bg-bg text-muted border-border hover:border-accent/50 hover:text-text'}"
+          >
+            <div class="text-sm mb-1">${opt.label}</div>
+            <div class="text-[10px] font-normal opacity-70 leading-tight hidden md:block">${opt.desc}</div>
+          </button>
+        `).join('');
+
+        div.innerHTML = `
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-sm font-bold text-text">${metric.name} <span class="text-accent font-mono ml-1">(${metric.id})</span></h3>
+          </div>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+            ${buttonsHTML}
+          </div>
+        `;
+        container.appendChild(div);
+      });
+
+      // Attach listeners
+      document.querySelectorAll('.metric-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const metric = e.currentTarget.dataset.metric;
+          const val = e.currentTarget.dataset.val;
+          state[metric] = val;
+          updateUI();
+        });
+      });
+    }
+
+    // 5. Calculate CVSS v3.1 Score
+    function calculateScore() {
+      const iss = 1 - ((1 - metricValues.C[state.C]) * (1 - metricValues.I[state.I]) * (1 - metricValues.A[state.A]));
+      let impact, exploitability, baseScore;
+
+      const av = metricValues.AV[state.AV];
+      const ac = metricValues.AC[state.AC];
+      const pr = metricValues.PR[state.S][state.PR];
+      const ui = metricValues.UI[state.UI];
+
+      exploitability = 8.22 * av * ac * pr * ui;
+
+      if (state.S === 'U') {
+        impact = 6.42 * iss;
+        baseScore = roundUp(Math.min(impact + exploitability, 10));
+      } else {
+        impact = 7.52 * (iss - 0.029) - 3.25 * Math.pow(Math.max(iss - 0.02, 0), 15);
+        baseScore = roundUp(Math.min(1.08 * (impact + exploitability), 10));
+      }
+
+      return Math.max(0, baseScore);
+    }
+
+    function roundUp(val) {
+      let intVal = Math.round(val * 100000);
+      return (intVal % 10000 === 0) ? intVal / 100000 : Math.floor(intVal / 10000) / 10 + 0.1;
+    }
+
+    // 6. Update UI & Colors
+    function updateUI() {
+      // Update Buttons
+      document.querySelectorAll('.metric-btn').forEach(btn => {
+        const metric = btn.dataset.metric;
+        const val = btn.dataset.val;
+        if (state[metric] === val) {
+          btn.className = 'metric-btn flex-1 px-3 py-2.5 rounded-lg text-xs font-bold transition-all border bg-accent text-bg border-accent shadow-lg shadow-accent/20';
+        } else {
+          btn.className = 'metric-btn flex-1 px-3 py-2.5 rounded-lg text-xs font-bold transition-all border bg-bg text-muted border-border hover:border-accent/50 hover:text-text';
+        }
+      });
+
+      // Calculate
+      const score = calculateScore();
+      
+      // Update Score Text
+      scoreDisplay.innerText = score.toFixed(1);
+
+      // Update Severity & Colors
+      let severity = 'None';
+      let colorClass = 'text-muted';
+      let bgClass = 'bg-muted';
+      let barColor = 'bg-gray-500';
+      let width = '0%';
+
+      if (score === 0.0) {
+        severity = 'None'; colorClass = 'text-muted'; bgClass = 'bg-muted/20 text-muted'; barColor = 'bg-gray-500'; width = '0%';
+      } else if (score <= 3.9) {
+        severity = 'Low'; colorClass = 'text-green-400'; bgClass = 'bg-green-500/20 text-green-400'; barColor = 'bg-green-500'; width = `${(score / 3.9) * 39}%`;
+      } else if (score <= 6.9) {
+        severity = 'Medium'; colorClass = 'text-yellow-400'; bgClass = 'bg-yellow-500/20 text-yellow-400'; barColor = 'bg-yellow-500'; width = `${39 + ((score - 4.0) / 2.9) * 30}%`;
+      } else if (score <= 8.9) {
+        severity = 'High'; colorClass = 'text-orange-400'; bgClass = 'bg-orange-500/20 text-orange-400'; barColor = 'bg-orange-500'; width = `${69 + ((score - 7.0) / 1.9) * 20}%`;
+      } else {
+        severity = 'Critical'; colorClass = 'text-red-400'; bgClass = 'bg-red-500/20 text-red-400'; barColor = 'bg-red-500'; width = `${89 + ((score - 9.0) / 1.0) * 11}%`;
+      }
+
+      scoreDisplay.className = `text-7xl font-bold font-mono transition-colors duration-500 ${colorClass}`;
+      severityBadge.className = `mt-2 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-colors duration-500 ${bgClass}`;
+      severityBadge.innerText = severity;
+      scoreBar.className = `h-3 rounded-full transition-all duration-500 ease-out ${barColor}`;
+      scoreBar.style.width = width;
+
+      // Update Vector String
+      const vector = `CVSS:3.1/AV:${state.AV}/AC:${state.AC}/PR:${state.PR}/UI:${state.UI}/S:${state.S}/C:${state.C}/I:${state.I}/A:${state.A}`;
+      vectorDisplay.innerText = vector;
+    }
+
+    // 7. Event Listeners
+    copyBtn.addEventListener('click', () => {
+      navigator.clipboard.writeText(vectorDisplay.innerText);
+      const originalHTML = copyBtn.innerHTML;
+      copyBtn.innerHTML = `<svg class="w-3 h-3 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Copied!`;
+      setTimeout(() => copyBtn.innerHTML = originalHTML, 2000);
+    });
+
+    resetBtn.addEventListener('click', () => {
+      state = { AV: 'N', AC: 'L', PR: 'N', UI: 'N', S: 'U', C: 'H', I: 'H', A: 'H' }; // Worst case
+      updateUI();
+    });
+
+    // Init
+    renderMetrics();
+    updateUI();
+  </script>
+</Layout>
