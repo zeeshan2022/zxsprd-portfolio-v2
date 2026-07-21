@@ -1,0 +1,281 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import Navbar from '../../../components/Navbar.astro';
+---
+
+<Layout title="Password Entropy Analyzer | ZX Labs" lang="en" dir="ltr">
+  <Navbar currentLang="en" />
+
+  <main class="min-h-screen pt-24 px-6 pb-20">
+    <div class="max-w-6xl mx-auto">
+      
+      <!-- Header -->
+      <div class="text-center mb-12 reveal">
+        <h1 class="text-3xl md:text-4xl font-bold text-text mb-4">
+          Password <span class="text-accent">Entropy Analyzer</span>
+        </h1>
+        <p class="text-muted max-w-2xl mx-auto">
+          Deep-dive cryptographic analysis of password strength using Shannon Entropy. Estimates crack times against modern GPU clusters.
+        </p>
+        <div class="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-green-500/10 border border-green-500/30 rounded-full text-xs text-green-400">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+          100% Client-Side. Your input never leaves your browser.
+        </div>
+      </div>
+
+      <div class="grid lg:grid-cols-5 gap-8">
+        
+        <!-- Left Column: Input & Warnings (2/5 width) -->
+        <div class="lg:col-span-2 space-y-6">
+          <div class="glass-card rounded-2xl p-6 md:p-8 border border-border reveal sticky top-24">
+            <h2 class="text-lg font-bold text-text mb-6 flex items-center gap-2">
+              <span class="text-accent">🔑</span> Analyze Password
+            </h2>
+
+            <!-- Password Input -->
+            <div class="relative mb-6">
+              <input 
+                id="password-input" 
+                type="password" 
+                placeholder="Type or paste a password..." 
+                class="w-full px-4 py-4 pr-12 bg-[#0d1117] border border-border rounded-xl text-text font-mono text-lg focus:outline-none focus:border-accent transition-colors"
+              />
+              <button id="toggle-visibility" class="absolute right-4 top-1/2 -translate-y-1/2 text-muted hover:text-accent transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+              </button>
+            </div>
+
+            <!-- Strength Meter -->
+            <div class="mb-6">
+              <div class="flex justify-between items-center mb-2">
+                <span class="text-xs font-bold text-muted uppercase tracking-wider">Entropy Strength</span>
+                <span id="strength-text" class="text-xs font-bold text-muted uppercase tracking-wider">None</span>
+              </div>
+              <div class="w-full bg-bg rounded-full h-2.5 overflow-hidden">
+                <div id="strength-bar" class="h-2.5 rounded-full transition-all duration-500 ease-out" style="width: 0%"></div>
+              </div>
+            </div>
+
+            <!-- Pattern Warnings -->
+            <div>
+              <h3 class="text-xs font-bold text-muted uppercase tracking-wider mb-3">Security Warnings</h3>
+              <div id="warnings-container" class="space-y-2">
+                <p class="text-xs text-muted italic">Enter a password to check for vulnerabilities.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: Stats & Crack Times (3/5 width) -->
+        <div class="lg:col-span-3 space-y-6">
+          
+          <!-- Cryptographic Stats -->
+          <div class="glass-card rounded-2xl p-6 md:p-8 border border-border reveal">
+            <h2 class="text-lg font-bold text-text mb-6 flex items-center gap-2">
+              <span class="text-accent"></span> Cryptographic Metrics
+            </h2>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div class="bg-bg/50 p-4 rounded-xl border border-border">
+                <p class="text-[10px] text-muted uppercase tracking-wider mb-1">Shannon Entropy</p>
+                <p class="text-2xl font-bold text-accent font-mono" id="stat-entropy">0 <span class="text-sm text-muted">bits</span></p>
+              </div>
+              <div class="bg-bg/50 p-4 rounded-xl border border-border">
+                <p class="text-[10px] text-muted uppercase tracking-wider mb-1">Character Pool</p>
+                <p class="text-2xl font-bold text-text font-mono" id="stat-pool">0</p>
+              </div>
+              <div class="bg-bg/50 p-4 rounded-xl border border-border">
+                <p class="text-[10px] text-muted uppercase tracking-wider mb-1">Length</p>
+                <p class="text-2xl font-bold text-text font-mono" id="stat-length">0</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Crack Time Estimates -->
+          <div class="glass-card rounded-2xl p-6 md:p-8 border border-border reveal">
+            <h2 class="text-lg font-bold text-text mb-6 flex items-center gap-2">
+              <span class="text-accent"></span> Estimated Crack Time
+            </h2>
+            
+            <div class="space-y-4">
+              <!-- Online Attack -->
+              <div class="flex items-center justify-between p-4 bg-bg/50 rounded-xl border border-border">
+                <div>
+                  <p class="text-sm font-bold text-text">Online Throttled</p>
+                  <p class="text-[10px] text-muted">100 attempts/sec (Web Login)</p>
+                </div>
+                <p class="text-lg font-bold text-green-400 font-mono" id="time-online">0s</p>
+              </div>
+
+              <!-- Offline Slow -->
+              <div class="flex items-center justify-between p-4 bg-bg/50 rounded-xl border border-border">
+                <div>
+                  <p class="text-sm font-bold text-text">Offline Slow Hash</p>
+                  <p class="text-[10px] text-muted">10,000 attempts/sec (bcrypt/Argon2)</p>
+                </div>
+                <p class="text-lg font-bold text-yellow-400 font-mono" id="time-slow">0s</p>
+              </div>
+
+              <!-- Offline Fast -->
+              <div class="flex items-center justify-between p-4 bg-bg/50 rounded-xl border border-border">
+                <div>
+                  <p class="text-sm font-bold text-text">Offline Fast Hash (GPU)</p>
+                  <p class="text-[10px] text-muted">100 Billion attempts/sec (MD5/SHA1)</p>
+                </div>
+                <p class="text-lg font-bold text-red-400 font-mono" id="time-fast">0s</p>
+              </div>
+            </div>
+
+            <div class="mt-6 p-4 bg-accent/5 border border-accent/20 rounded-xl">
+              <p class="text-xs text-text leading-relaxed">
+                <span class="font-bold text-accent">Note:</span> Crack times assume an average-case scenario (50% of the search space). Modern botnets and quantum computing advances may reduce these times. Always use passwords with >80 bits of entropy.
+              </p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // 1. DOM Elements
+    const input = document.getElementById('password-input');
+    const toggleBtn = document.getElementById('toggle-visibility');
+    const strengthBar = document.getElementById('strength-bar');
+    const strengthText = document.getElementById('strength-text');
+    const warningsContainer = document.getElementById('warnings-container');
+    
+    const statEntropy = document.getElementById('stat-entropy');
+    const statPool = document.getElementById('stat-pool');
+    const statLength = document.getElementById('stat-length');
+    
+    const timeOnline = document.getElementById('time-online');
+    const timeSlow = document.getElementById('time-slow');
+    const timeFast = document.getElementById('time-fast');
+
+    // 2. Toggle Visibility
+    toggleBtn.addEventListener('click', () => {
+      input.type = input.type === 'password' ? 'text' : 'password';
+    });
+
+    // 3. Core Math: Shannon Entropy
+    function calculateEntropy(password) {
+      let poolSize = 0;
+      if (/[a-z]/.test(password)) poolSize += 26;
+      if (/[A-Z]/.test(password)) poolSize += 26;
+      if (/[0-9]/.test(password)) poolSize += 10;
+      if (/[^a-zA-Z0-9]/.test(password)) poolSize += 32; // Symbols
+
+      if (poolSize === 0) return { entropy: 0, pool: 0 };
+      
+      const entropy = password.length * Math.log2(poolSize);
+      return { entropy, pool: poolSize };
+    }
+
+    // 4. Time Formatter (Handles massive numbers gracefully)
+    function formatTime(seconds) {
+      if (seconds < 1) return "Instant";
+      if (seconds < 60) return `${Math.round(seconds)} seconds`;
+      if (seconds < 3600) return `${Math.round(seconds / 60)} minutes`;
+      if (seconds < 86400) return `${Math.round(seconds / 3600)} hours`;
+      if (seconds < 31536000) return `${Math.round(seconds / 86400)} days`;
+      if (seconds < 3153600000) return `${Math.round(seconds / 31536000)} years`;
+      if (seconds < 315360000000) return `${Math.round(seconds / 31536000)} centuries`;
+      return "Millions of Years+";
+    }
+
+    // 5. Pattern Detection
+    function checkPatterns(password) {
+      const warnings = [];
+      const lower = password.toLowerCase();
+
+      // Common passwords
+      const common = ['password', '123456', 'qwerty', 'admin', 'letmein', 'welcome', 'monkey', 'dragon', 'master', 'login', 'abc123', 'iloveyou', 'trustno1', 'sunshine', 'princess', 'football', 'shadow', 'superman', 'michael', 'password1', '123456789', '12345678'];
+      if (common.includes(lower)) warnings.push({ type: 'critical', msg: 'This is one of the most common passwords globally.' });
+
+      // Keyboard walks
+      if (/qwerty|asdfgh|zxcvbn|123456|654321|qazwsx/.test(lower)) warnings.push({ type: 'critical', msg: 'Keyboard walk detected (e.g., qwerty, asdf).' });
+
+      // Repeated characters
+      if (/(.)\1{2,}/.test(password)) warnings.push({ type: 'warning', msg: 'Repeated characters detected (e.g., aaa, 111).' });
+
+      // Sequential numbers
+      if (/1234|2345|3456|4567|5678|6789|7890/.test(password)) warnings.push({ type: 'warning', msg: 'Sequential numbers detected.' });
+
+      // Leet speak
+      if (/p[a@]ssw[o0]rd|l[o0]g1n|adm1n/i.test(password)) warnings.push({ type: 'warning', msg: 'Common leet speak substitution detected.' });
+
+      // Short length
+      if (password.length > 0 && password.length < 8) warnings.push({ type: 'warning', msg: 'Password is too short (minimum 8 characters recommended).' });
+
+      return warnings;
+    }
+
+    // 6. Main Update Function
+    function updateAnalysis() {
+      const password = input.value;
+      
+      if (password.length === 0) {
+        strengthBar.style.width = '0%';
+        strengthBar.className = 'h-2.5 rounded-full transition-all duration-500 ease-out bg-gray-500';
+        strengthText.innerText = 'None';
+        strengthText.className = 'text-xs font-bold text-muted uppercase tracking-wider';
+        statEntropy.innerHTML = '0 <span class="text-sm text-muted">bits</span>';
+        statPool.innerText = '0';
+        statLength.innerText = '0';
+        timeOnline.innerText = '0s';
+        timeSlow.innerText = '0s';
+        timeFast.innerText = '0s';
+        warningsContainer.innerHTML = '<p class="text-xs text-muted italic">Enter a password to check for vulnerabilities.</p>';
+        return;
+      }
+
+      // Calculate Metrics
+      const { entropy, pool } = calculateEntropy(password);
+      const combinations = Math.pow(2, entropy);
+      
+      // Update Stats
+      statEntropy.innerHTML = `${entropy.toFixed(1)} <span class="text-sm text-muted">bits</span>`;
+      statPool.innerText = pool;
+      statLength.innerText = password.length;
+
+      // Update Strength Meter
+      let strengthPercent = Math.min((entropy / 128) * 100, 100);
+      strengthBar.style.width = `${strengthPercent}%`;
+      
+      let strengthLabel = 'Weak';
+      let strengthColor = 'bg-red-500';
+      if (entropy >= 120) { strengthLabel = 'Unbreakable'; strengthColor = 'bg-green-500'; }
+      else if (entropy >= 80) { strengthLabel = 'Strong'; strengthColor = 'bg-green-400'; }
+      else if (entropy >= 60) { strengthLabel = 'Moderate'; strengthColor = 'bg-yellow-400'; }
+      else if (entropy >= 40) { strengthLabel = 'Weak'; strengthColor = 'bg-orange-400'; }
+      else { strengthLabel = 'Critical'; strengthColor = 'bg-red-500'; }
+
+      strengthBar.className = `h-2.5 rounded-full transition-all duration-500 ease-out ${strengthColor}`;
+      strengthText.innerText = strengthLabel;
+      strengthText.className = `text-xs font-bold uppercase tracking-wider ${strengthColor.replace('bg-', 'text-')}`;
+
+      // Update Crack Times (Average case = combinations / 2)
+      const avgCombinations = combinations / 2;
+      timeOnline.innerText = formatTime(avgCombinations / 100);
+      timeSlow.innerText = formatTime(avgCombinations / 10000);
+      timeFast.innerText = formatTime(avgCombinations / 100000000000);
+
+      // Update Warnings
+      const warnings = checkPatterns(password);
+      if (warnings.length === 0) {
+        warningsContainer.innerHTML = '<p class="text-xs text-green-400 flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> No common vulnerabilities detected.</p>';
+      } else {
+        warningsContainer.innerHTML = warnings.map(w => `
+          <div class="flex items-start gap-2 p-2 rounded-lg ${w.type === 'critical' ? 'bg-red-500/10 border border-red-500/20' : 'bg-yellow-500/10 border border-yellow-500/20'}">
+            <svg class="w-4 h-4 ${w.type === 'critical' ? 'text-red-400' : 'text-yellow-400'} mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+            <span class="text-xs ${w.type === 'critical' ? 'text-red-300' : 'text-yellow-300'}">${w.msg}</span>
+          </div>
+        `).join('');
+      }
+    }
+
+    // 7. Event Listener
+    input.addEventListener('input', updateAnalysis);
+  </script>
+</Layout>

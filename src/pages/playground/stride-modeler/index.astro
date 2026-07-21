@@ -1,0 +1,337 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import Navbar from '../../../components/Navbar.astro';
+---
+
+<Layout title="STRIDE Threat Modeler | ZX Labs" lang="en" dir="ltr">
+  <Navbar currentLang="en" />
+
+  <main class="min-h-screen pt-24 px-6 pb-20">
+    <div class="max-w-7xl mx-auto">
+      
+      <!-- Header -->
+      <div class="text-center mb-12 reveal">
+        <h1 class="text-3xl md:text-4xl font-bold text-text mb-4">
+          STRIDE <span class="text-accent">Threat Modeler</span>
+        </h1>
+        <p class="text-muted max-w-2xl mx-auto">
+          Identify and mitigate application security threats using Microsoft's STRIDE methodology. Build your Threat Matrix and export to CSV.
+        </p>
+      </div>
+
+      <div class="grid lg:grid-cols-5 gap-8">
+        
+        <!-- Left Column: Threat Input (2/5 width) -->
+        <div class="lg:col-span-2 space-y-6">
+          <div class="glass-card rounded-2xl p-6 md:p-8 border border-border reveal sticky top-24">
+            <h2 class="text-xl font-bold text-text mb-6 flex items-center gap-2">
+              <span class="text-accent">🎯</span> Define Threat
+            </h2>
+
+            <!-- Component Name -->
+            <div class="mb-6">
+              <label class="block text-sm font-medium text-muted mb-2">Application Component / Feature</label>
+              <input id="comp-name" type="text" placeholder="e.g., User Login API, Payment Gateway" class="w-full px-4 py-3 bg-bg border border-border rounded-lg text-text focus:outline-none focus:border-accent transition-colors" />
+            </div>
+
+            <!-- STRIDE Category Selection -->
+            <div class="mb-6">
+              <label class="block text-sm font-medium text-muted mb-3">STRIDE Category</label>
+              <div class="grid grid-cols-2 gap-3" id="stride-cards">
+                <!-- Cards injected by JS -->
+              </div>
+              <input type="hidden" id="selected-stride" value="" />
+            </div>
+
+            <!-- Threat Description -->
+            <div class="mb-6">
+              <label class="block text-sm font-medium text-muted mb-2">Threat Description</label>
+              <textarea id="threat-desc" rows="3" placeholder="How could this component be attacked?" class="w-full px-4 py-3 bg-bg border border-border rounded-lg text-text focus:outline-none focus:border-accent transition-colors resize-none"></textarea>
+            </div>
+
+            <!-- Risk Level -->
+            <div class="mb-6">
+              <label class="block text-sm font-medium text-muted mb-2">Risk Level</label>
+              <div class="grid grid-cols-3 gap-3">
+                <button type="button" data-risk="Low" class="risk-btn px-4 py-2 rounded-lg border border-border text-sm font-bold text-muted hover:border-green-500 hover:text-green-400 transition-all">Low</button>
+                <button type="button" data-risk="Medium" class="risk-btn px-4 py-2 rounded-lg border border-border text-sm font-bold text-muted hover:border-yellow-500 hover:text-yellow-400 transition-all">Medium</button>
+                <button type="button" data-risk="High" class="risk-btn px-4 py-2 rounded-lg border border-border text-sm font-bold text-muted hover:border-red-500 hover:text-red-400 transition-all">High</button>
+              </div>
+              <input type="hidden" id="selected-risk" value="" />
+            </div>
+
+            <!-- Mitigation Strategy -->
+            <div class="mb-8">
+              <label class="block text-sm font-medium text-muted mb-2">Mitigation Strategy</label>
+              <textarea id="mitigation" rows="3" placeholder="e.g., Implement rate limiting, use prepared statements..." class="w-full px-4 py-3 bg-bg border border-border rounded-lg text-text focus:outline-none focus:border-accent transition-colors resize-none"></textarea>
+            </div>
+
+            <!-- Add Button -->
+            <button id="add-threat-btn" class="w-full px-6 py-4 bg-gradient-to-r from-accent to-accent2 text-bg font-bold rounded-xl hover:opacity-90 transition-all flex items-center justify-center gap-2 text-lg shadow-lg shadow-accent/20">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+              Add to Threat Matrix
+            </button>
+          </div>
+        </div>
+
+        <!-- Right Column: Threat Matrix (3/5 width) -->
+        <div class="lg:col-span-3 space-y-6">
+          <div class="glass-card rounded-2xl p-6 md:p-8 border border-border reveal">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+              <h2 class="text-xl font-bold text-text flex items-center gap-2">
+                <span class="text-accent"></span> Threat Matrix
+                <span id="threat-count" class="ml-2 px-2 py-0.5 text-xs bg-accent/20 text-accent rounded-full">0</span>
+              </h2>
+              
+              <!-- Export Buttons -->
+              <div class="flex gap-3">
+                <button id="export-csv-btn" class="px-4 py-2 bg-bg border border-border text-text text-sm font-semibold rounded-lg hover:border-accent hover:text-accent transition-all flex items-center gap-2">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                  Export CSV
+                </button>
+                <button id="clear-all-btn" class="px-4 py-2 bg-red-500/10 border border-red-500/30 text-red-400 text-sm font-semibold rounded-lg hover:bg-red-500/20 transition-all">
+                  Clear All
+                </button>
+              </div>
+            </div>
+            
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="border-b border-border text-xs text-muted uppercase tracking-wider">
+                    <th class="py-3 px-4">Component</th>
+                    <th class="py-3 px-4">Category</th>
+                    <th class="py-3 px-4">Description</th>
+                    <th class="py-3 px-4">Risk</th>
+                    <th class="py-3 px-4">Mitigation</th>
+                    <th class="py-3 px-4 text-center">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="matrix-body" class="text-sm">
+                  <tr id="empty-state">
+                    <td colspan="6" class="py-12 text-center text-muted">
+                      No threats identified yet. Use the form to add your first threat.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // 1. STRIDE Definitions & Colors
+    const strideCategories = [
+      { id: 'S', name: 'Spoofing', desc: 'Identity', color: 'red' },
+      { id: 'T', name: 'Tampering', desc: 'Data Integrity', color: 'orange' },
+      { id: 'R', name: 'Repudiation', desc: 'Non-repudiation', color: 'yellow' },
+      { id: 'I', name: 'Info Disclosure', desc: 'Privacy', color: 'blue' },
+      { id: 'D', name: 'Denial of Service', desc: 'Availability', color: 'purple' },
+      { id: 'E', name: 'Elevation of Priv', desc: 'Authorization', color: 'pink' }
+    ];
+
+    // 2. State Management
+    let threats = [];
+    let selectedStride = null;
+    let selectedRisk = null;
+
+    // DOM Elements
+    const strideCardsContainer = document.getElementById('stride-cards');
+    const selectedStrideInput = document.getElementById('selected-stride');
+    const riskBtns = document.querySelectorAll('.risk-btn');
+    const selectedRiskInput = document.getElementById('selected-risk');
+    const addBtn = document.getElementById('add-threat-btn');
+    const matrixBody = document.getElementById('matrix-body');
+    const emptyState = document.getElementById('empty-state');
+    const threatCount = document.getElementById('threat-count');
+    const exportCsvBtn = document.getElementById('export-csv-btn');
+    const clearAllBtn = document.getElementById('clear-all-btn');
+
+    // 3. Render STRIDE Cards
+    function renderStrideCards() {
+      strideCardsContainer.innerHTML = '';
+      strideCategories.forEach(cat => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.dataset.stride = cat.id;
+        btn.className = `stride-card p-3 rounded-lg border border-border text-left transition-all hover:border-${cat.color}-500 group`;
+        btn.innerHTML = `
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-lg font-bold text-${cat.color}-400">${cat.id}</span>
+            <span class="w-2 h-2 rounded-full bg-${cat.color}-400 opacity-0 group-hover:opacity-100 transition-opacity"></span>
+          </div>
+          <div class="text-xs font-bold text-text">${cat.name}</div>
+          <div class="text-[10px] text-muted">${cat.desc}</div>
+        `;
+        btn.addEventListener('click', () => selectStride(cat.id, btn));
+        strideCardsContainer.appendChild(btn);
+      });
+    }
+
+    function selectStride(id, btnElement) {
+      selectedStride = id;
+      selectedStrideInput.value = id;
+      
+      // Reset all cards
+      document.querySelectorAll('.stride-card').forEach(c => {
+        c.classList.remove('bg-bg/80', 'border-accent', 'ring-1', 'ring-accent/50');
+        c.classList.add('border-border');
+      });
+      
+      // Highlight selected
+      btnElement.classList.remove('border-border');
+      btnElement.classList.add('bg-bg/80', 'border-accent', 'ring-1', 'ring-accent/50');
+    }
+
+    // 4. Risk Selection Logic
+    riskBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        selectedRisk = btn.dataset.risk;
+        selectedRiskInput.value = selectedRisk;
+        
+        riskBtns.forEach(b => {
+          b.classList.remove('bg-green-500/20', 'text-green-400', 'border-green-500', 'bg-yellow-500/20', 'text-yellow-400', 'border-yellow-500', 'bg-red-500/20', 'text-red-400', 'border-red-500');
+          b.classList.add('text-muted', 'border-border');
+        });
+
+        if (selectedRisk === 'Low') btn.classList.add('bg-green-500/20', 'text-green-400', 'border-green-500');
+        if (selectedRisk === 'Medium') btn.classList.add('bg-yellow-500/20', 'text-yellow-400', 'border-yellow-500');
+        if (selectedRisk === 'High') btn.classList.add('bg-red-500/20', 'text-red-400', 'border-red-500');
+      });
+    });
+
+    // 5. Add Threat Logic
+    addBtn.addEventListener('click', () => {
+      const comp = document.getElementById('comp-name').value.trim();
+      const desc = document.getElementById('threat-desc').value.trim();
+      const mit = document.getElementById('mitigation').value.trim();
+
+      if (!comp || !selectedStride || !selectedRisk || !desc) {
+        alert('Please fill in Component, STRIDE Category, Risk Level, and Description.');
+        return;
+      }
+
+      const threat = {
+        id: Date.now(),
+        component: comp,
+        category: selectedStride,
+        description: desc,
+        risk: selectedRisk,
+        mitigation: mit || 'None defined'
+      };
+
+      threats.push(threat);
+      renderMatrix();
+      resetForm();
+    });
+
+    // 6. Render Matrix Table
+    function renderMatrix() {
+      if (threats.length === 0) {
+        matrixBody.innerHTML = `<tr id="empty-state"><td colspan="6" class="py-12 text-center text-muted">No threats identified yet. Use the form to add your first threat.</td></tr>`;
+        threatCount.innerText = '0';
+        return;
+      }
+
+      matrixBody.innerHTML = '';
+      threatCount.innerText = threats.length;
+
+      threats.forEach(t => {
+        const catObj = strideCategories.find(c => c.id === t.category);
+        const riskColor = t.risk === 'Low' ? 'green' : t.risk === 'Medium' ? 'yellow' : 'red';
+        
+        const tr = document.createElement('tr');
+        tr.className = 'border-b border-border/50 hover:bg-bg/30 transition-colors';
+        tr.innerHTML = `
+          <td class="py-4 px-4 text-text font-medium">${t.component}</td>
+          <td class="py-4 px-4">
+            <span class="px-2 py-1 text-xs font-bold rounded bg-${catObj.color}-500/20 text-${catObj.color}-400 border border-${catObj.color}-500/30">
+              ${t.category} - ${catObj.name}
+            </span>
+          </td>
+          <td class="py-4 px-4 text-muted text-xs max-w-[200px] truncate" title="${t.description}">${t.description}</td>
+          <td class="py-4 px-4">
+            <span class="text-${riskColor}-400 font-bold text-xs uppercase">${t.risk}</span>
+          </td>
+          <td class="py-4 px-4 text-muted text-xs max-w-[200px] truncate" title="${t.mitigation}">${t.mitigation}</td>
+          <td class="py-4 px-4 text-center">
+            <button onclick="deleteThreat(${t.id})" class="text-red-400 hover:text-red-300 transition-colors">
+              <svg class="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+            </button>
+          </td>
+        `;
+        matrixBody.appendChild(tr);
+      });
+    }
+
+    window.deleteThreat = (id) => {
+      threats = threats.filter(t => t.id !== id);
+      renderMatrix();
+    };
+
+    clearAllBtn.addEventListener('click', () => {
+      if(confirm('Are you sure you want to clear the entire Threat Matrix?')) {
+        threats = [];
+        renderMatrix();
+      }
+    });
+
+    // 7. Export to CSV
+    exportCsvBtn.addEventListener('click', () => {
+      if (threats.length === 0) {
+        alert('No threats to export!');
+        return;
+      }
+
+      const headers = ['Component', 'STRIDE Category', 'Description', 'Risk Level', 'Mitigation Strategy'];
+      const rows = threats.map(t => {
+        const catName = strideCategories.find(c => c.id === t.category).name;
+        return [
+          `"${t.component.replace(/"/g, '""')}"`,
+          `"${t.category} - ${catName}"`,
+          `"${t.description.replace(/"/g, '""')}"`,
+          `"${t.risk}"`,
+          `"${t.mitigation.replace(/"/g, '""')}"`
+        ].join(',');
+      });
+
+      const csvContent = [headers.join(','), ...rows].join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', 'ZX_Labs_STRIDE_Threat_Model.csv');
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    });
+
+    // 8. Reset Form
+    function resetForm() {
+      document.getElementById('comp-name').value = '';
+      document.getElementById('threat-desc').value = '';
+      document.getElementById('mitigation').value = '';
+      selectedStride = null;
+      selectedRisk = null;
+      selectedStrideInput.value = '';
+      selectedRiskInput.value = '';
+      
+      document.querySelectorAll('.stride-card').forEach(c => {
+        c.classList.remove('bg-bg/80', 'border-accent', 'ring-1', 'ring-accent/50');
+        c.classList.add('border-border');
+      });
+      
+      riskBtns.forEach(b => {
+        b.classList.remove('bg-green-500/20', 'text-green-400', 'border-green-500', 'bg-yellow-500/20', 'text-yellow-400', 'border-yellow-500', 'bg-red-500/20', 'text-red-400', 'border-red-500');
+        b.classList.add('text-muted', 'border-border');
+      });
+    }
+
+    // Init
+    renderStrideCards();
+  </script>
+</Layout>

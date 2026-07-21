@@ -1,0 +1,262 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import Navbar from '../../../components/Navbar.astro';
+---
+
+<Layout title="NIST CSF Gap Analyzer | ZX Labs" lang="en" dir="ltr">
+  <Navbar currentLang="en" />
+
+  <!-- Chart.js for the Radar Graph -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <main class="min-h-screen pt-24 px-6 pb-20">
+    <div class="max-w-7xl mx-auto">
+      
+      <!-- Header -->
+      <div class="text-center mb-12 reveal">
+        <h1 class="text-3xl md:text-4xl font-bold text-text mb-4">
+          NIST CSF <span class="text-accent">Gap Analyzer</span>
+        </h1>
+        <p class="text-muted max-w-2xl mx-auto">
+          Rapidly assess your cybersecurity maturity across the 5 core functions of the NIST Cybersecurity Framework. Visualize your gaps in real-time.
+        </p>
+      </div>
+
+      <div class="grid lg:grid-cols-2 gap-8">
+        
+        <!-- Left Column: Maturity Controls -->
+        <div class="glass-card rounded-2xl p-6 md:p-8 border border-border reveal">
+          <div class="flex justify-between items-center mb-8">
+            <h2 class="text-xl font-bold text-text flex items-center gap-2">
+              <span class="text-accent"></span> Maturity Assessment
+            </h2>
+            <div class="text-right">
+              <p class="text-xs text-muted uppercase tracking-wider">Overall Maturity</p>
+              <p class="text-2xl font-bold text-accent font-mono" id="overall-score">0.0 / 5.0</p>
+            </div>
+          </div>
+
+          <div class="space-y-8" id="sliders-container">
+            <!-- Sliders injected by JS -->
+          </div>
+
+          <div class="mt-8 pt-6 border-t border-border">
+            <h3 class="text-sm font-bold text-muted uppercase tracking-widest mb-3">Maturity Scale Reference</h3>
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-2 text-[10px] text-muted">
+              <div class="bg-bg/50 p-2 rounded border border-border text-center">0: Incomplete</div>
+              <div class="bg-bg/50 p-2 rounded border border-border text-center">1: Initial</div>
+              <div class="bg-bg/50 p-2 rounded border border-border text-center">2: Managed</div>
+              <div class="bg-bg/50 p-2 rounded border border-border text-center">3: Defined</div>
+              <div class="bg-bg/50 p-2 rounded border border-border text-center">4: Optimized</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: Radar Chart & Insights -->
+        <div class="space-y-6">
+          
+          <!-- Radar Chart -->
+          <div class="glass-card rounded-2xl p-6 md:p-8 border border-border reveal flex flex-col items-center justify-center min-h-[400px]">
+            <h2 class="text-sm font-bold text-muted uppercase tracking-widest mb-6 w-full text-center">Maturity Radar</h2>
+            <div class="w-full max-w-md relative">
+              <canvas id="radarChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Gap Insights -->
+          <div class="glass-card rounded-2xl p-6 border border-border reveal">
+            <h2 class="text-sm font-bold text-muted uppercase tracking-widest mb-4 flex items-center gap-2">
+              <span class="text-accent"></span> Gap Insights
+            </h2>
+            <div id="insights-container" class="space-y-3 text-sm text-muted">
+              <p>Adjust the sliders on the left to see your gap analysis.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // 1. NIST CSF Core Functions
+    const nistFunctions = [
+      { id: 'ID', name: 'Identify', desc: 'Asset Management, Business Environment, Governance, Risk Assessment', color: '#3b82f6' },
+      { id: 'PR', name: 'Protect', desc: 'Access Control, Awareness Training, Data Security, Maintenance', color: '#8b5cf6' },
+      { id: 'DE', name: 'Detect', desc: 'Anomalies & Events, Security Continuous Monitoring, Detection Processes', color: '#10b981' },
+      { id: 'RS', name: 'Respond', desc: 'Response Planning, Communications, Analysis, Mitigation', color: '#f59e0b' },
+      { id: 'RC', name: 'Recover', desc: 'Recovery Planning, Improvements, Communications', color: '#ef4444' }
+    ];
+
+    // 2. State Management
+    let scores = { ID: 0, PR: 0, DE: 0, RS: 0, RC: 0 };
+    let radarChartInstance = null;
+
+    // DOM Elements
+    const slidersContainer = document.getElementById('sliders-container');
+    const overallScoreEl = document.getElementById('overall-score');
+    const insightsContainer = document.getElementById('insights-container');
+
+    // 3. Render Sliders
+    function renderSliders() {
+      slidersContainer.innerHTML = '';
+      nistFunctions.forEach(func => {
+        const div = document.createElement('div');
+        div.className = 'space-y-2';
+        div.innerHTML = `
+          <div class="flex justify-between items-center">
+            <div>
+              <h3 class="text-sm font-bold text-text">${func.name} <span class="text-accent font-mono text-xs ml-1">(${func.id})</span></h3>
+              <p class="text-[10px] text-muted mt-0.5">${func.desc}</p>
+            </div>
+            <span class="text-lg font-bold font-mono text-${func.color === '#3b82f6' ? 'blue' : func.color === '#8b5cf6' ? 'purple' : func.color === '#10b981' ? 'green' : func.color === '#f59e0b' ? 'yellow' : 'red'}-400" id="score-${func.id}">0</span>
+          </div>
+          <input 
+            type="range" 
+            min="0" max="4" step="1" value="0" 
+            data-id="${func.id}"
+            class="nist-slider w-full h-2 bg-bg rounded-lg appearance-none cursor-pointer accent-[${func.color}]"
+          />
+          <div class="flex justify-between text-[9px] text-muted font-mono">
+            <span>Incomplete</span>
+            <span>Initial</span>
+            <span>Managed</span>
+            <span>Defined</span>
+            <span>Optimized</span>
+          </div>
+        `;
+        slidersContainer.appendChild(div);
+      });
+
+      // Attach listeners
+      document.querySelectorAll('.nist-slider').forEach(slider => {
+        slider.addEventListener('input', (e) => {
+          const id = e.target.dataset.id;
+          scores[id] = parseInt(e.target.value);
+          updateDashboard();
+        });
+      });
+    }
+
+    // 4. Update Dashboard (Chart, Scores, Insights)
+    function updateDashboard() {
+      // Update individual scores
+      nistFunctions.forEach(func => {
+        const scoreEl = document.getElementById(`score-${func.id}`);
+        if (scoreEl) scoreEl.innerText = scores[func.id];
+      });
+
+      // Calculate Overall
+      const total = Object.values(scores).reduce((a, b) => a + b, 0);
+      const avg = (total / 5).toFixed(1);
+      overallScoreEl.innerText = `${avg} / 4.0`;
+
+      // Update Chart
+      if (radarChartInstance) {
+        radarChartInstance.data.datasets[0].data = Object.values(scores);
+        radarChartInstance.update();
+      }
+
+      // Generate Insights
+      generateInsights(avg);
+    }
+
+    // 5. Generate Gap Insights
+    function generateInsights(avg) {
+      insightsContainer.innerHTML = '';
+      
+      if (avg == 0) {
+        insightsContainer.innerHTML = '<p class="text-muted">Adjust the sliders on the left to see your gap analysis.</p>';
+        return;
+      }
+
+      const weakest = nistFunctions.reduce((prev, current) => (scores[prev.id] < scores[current.id]) ? prev : current);
+      const strongest = nistFunctions.reduce((prev, current) => (scores[prev.id] > scores[current.id]) ? prev : current);
+
+      const insights = [];
+      
+      if (avg < 2) {
+        insights.push(`<span class="text-red-400 font-bold">Critical Gap:</span> Overall maturity is below industry baseline. Immediate focus required on foundational controls.`);
+      } else if (avg < 3) {
+        insights.push(`<span class="text-yellow-400 font-bold">Developing:</span> Controls are in place but lack standardization. Focus on documenting processes.`);
+      } else {
+        insights.push(`<span class="text-green-400 font-bold">Mature:</span> Strong baseline established. Focus on continuous monitoring and optimization.`);
+      }
+
+      insights.push(`<span class="text-text font-bold">Weakest Area:</span> ${weakest.name} (Score: ${scores[weakest.id]}). Prioritize gap closure here.`);
+      insights.push(`<span class="text-text font-bold">Strongest Area:</span> ${strongest.name} (Score: ${scores[strongest.id]}). Leverage this for other domains.`);
+
+      insights.forEach(text => {
+        const p = document.createElement('p');
+        p.className = 'flex items-start gap-2';
+        p.innerHTML = `<span class="text-accent mt-1"></span> <span>${text}</span>`;
+        insightsContainer.appendChild(p);
+      });
+    }
+
+    // 6. Initialize Radar Chart
+    function initChart() {
+      const ctx = document.getElementById('radarChart').getContext('2d');
+      
+      radarChartInstance = new Chart(ctx, {
+        type: 'radar',
+        data: {
+          labels: nistFunctions.map(f => f.name),
+          datasets: [
+            {
+              label: 'Current Maturity',
+              data: [0, 0, 0, 0, 0],
+              backgroundColor: 'rgba(59, 130, 246, 0.2)',
+              borderColor: '#3b82f6',
+              borderWidth: 2,
+              pointBackgroundColor: '#3b82f6',
+              pointBorderColor: '#fff',
+              pointHoverBackgroundColor: '#fff',
+              pointHoverBorderColor: '#3b82f6'
+            },
+            {
+              label: 'Target (Optimized)',
+              data: [4, 4, 4, 4, 4],
+              backgroundColor: 'rgba(156, 163, 175, 0.05)',
+              borderColor: 'rgba(156, 163, 175, 0.5)',
+              borderWidth: 2,
+              borderDash: [5, 5],
+              pointBackgroundColor: 'transparent',
+              pointBorderColor: 'transparent'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            legend: {
+              labels: { color: '#9ca3af', font: { size: 10 } }
+            }
+          },
+          scales: {
+            r: {
+              angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
+              grid: { color: 'rgba(255, 255, 255, 0.1)' },
+              pointLabels: { 
+                color: '#d1d5db', 
+                font: { size: 11, weight: 'bold' } 
+              },
+              ticks: { 
+                backdropColor: 'transparent', 
+                color: '#6b7280', 
+                stepSize: 1,
+                max: 4,
+                min: 0
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // Init
+    renderSliders();
+    initChart();
+  </script>
+</Layout>

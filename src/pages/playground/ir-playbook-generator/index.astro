@@ -1,0 +1,282 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import Navbar from '../../../components/Navbar.astro';
+---
+
+<Layout title="IR Playbook Generator | ZX Labs" lang="en" dir="ltr">
+  <Navbar currentLang="en" />
+
+  <main class="min-h-screen pt-24 px-6 pb-20">
+    <div class="max-w-7xl mx-auto">
+      
+      <!-- Header -->
+      <div class="text-center mb-12 reveal">
+        <h1 class="text-3xl md:text-4xl font-bold text-text mb-4">
+          Incident Response <span class="text-accent">Playbook Generator</span>
+        </h1>
+        <p class="text-muted max-w-2xl mx-auto">
+          Generate a comprehensive, NIST-aligned Incident Response Plan. Fill in your organization's details and export a ready-to-use playbook.
+        </p>
+      </div>
+
+      <div class="grid lg:grid-cols-2 gap-8">
+        
+        <!-- Left Column: Input Form -->
+        <div class="space-y-6">
+          <div class="glass-card rounded-2xl p-6 md:p-8 border border-border reveal">
+            <h2 class="text-xl font-bold text-text mb-6 flex items-center gap-2">
+              <span class="text-accent"></span> Configuration
+            </h2>
+
+            <!-- Organization Details -->
+            <div class="mb-8">
+              <h3 class="text-sm font-bold text-accent uppercase tracking-widest mb-4 border-b border-border pb-2">1. Organization & Contacts</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="md:col-span-2">
+                  <label class="block text-xs font-medium text-muted mb-1">Organization Name</label>
+                  <input id="org-name" type="text" value="Acme Corp" class="w-full px-3 py-2 bg-bg border border-border rounded-lg text-text text-sm focus:outline-none focus:border-accent" />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-muted mb-1">Incident Commander</label>
+                  <input id="ic-name" type="text" value="Jane Doe (CISO)" class="w-full px-3 py-2 bg-bg border border-border rounded-lg text-text text-sm focus:outline-none focus:border-accent" />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-muted mb-1">IC Contact (Phone/Email)</label>
+                  <input id="ic-contact" type="text" value="+1-555-0199 | jane.doe@acme.com" class="w-full px-3 py-2 bg-bg border border-border rounded-lg text-text text-sm focus:outline-none focus:border-accent" />
+                </div>
+                <div class="md:col-span-2">
+                  <label class="block text-xs font-medium text-muted mb-1">External Escalation (Law Enforcement / Retainer)</label>
+                  <input id="ext-esc" type="text" value="Mandiant Retainer: 1-800-555-0100 | Local FBI Cyber Task Force" class="w-full px-3 py-2 bg-bg border border-border rounded-lg text-text text-sm focus:outline-none focus:border-accent" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Tools & Environment -->
+            <div class="mb-8">
+              <h3 class="text-sm font-bold text-accent uppercase tracking-widest mb-4 border-b border-border pb-2">2. Tools & Environment</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-medium text-muted mb-1">SIEM / Logging</label>
+                  <input id="tool-siem" type="text" value="Splunk Enterprise Security" class="w-full px-3 py-2 bg-bg border border-border rounded-lg text-text text-sm focus:outline-none focus:border-accent" />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-muted mb-1">EDR / Endpoint</label>
+                  <input id="tool-edr" type="text" value="CrowdStrike Falcon" class="w-full px-3 py-2 bg-bg border border-border rounded-lg text-text text-sm focus:outline-none focus:border-accent" />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-muted mb-1">Email Security</label>
+                  <input id="tool-email" type="text" value="Proofpoint TAP" class="w-full px-3 py-2 bg-bg border border-border rounded-lg text-text text-sm focus:outline-none focus:border-accent" />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-muted mb-1">Ticketing / Case Mgmt</label>
+                  <input id="tool-ticket" type="text" value="Jira Service Management" class="w-full px-3 py-2 bg-bg border border-border rounded-lg text-text text-sm focus:outline-none focus:border-accent" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Severity Definitions -->
+            <div class="mb-8">
+              <h3 class="text-sm font-bold text-accent uppercase tracking-widest mb-4 border-b border-border pb-2">3. Severity Definitions</h3>
+              <div class="space-y-3">
+                <div>
+                  <label class="block text-xs font-medium text-red-400 mb-1">SEV-1 (Critical) Criteria</label>
+                  <textarea id="sev1" rows="2" class="w-full px-3 py-2 bg-bg border border-border rounded-lg text-text text-sm focus:outline-none focus:border-accent resize-none">Active ransomware, confirmed data exfiltration, or core business systems down.</textarea>
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-yellow-400 mb-1">SEV-2 (High) Criteria</label>
+                  <textarea id="sev2" rows="2" class="w-full px-3 py-2 bg-bg border border-border rounded-lg text-text text-sm focus:outline-none focus:border-accent resize-none">Malware detected on critical server, suspicious admin activity, or phishing campaign targeting executives.</textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex gap-3 pt-4 border-t border-border">
+              <button id="copy-md-btn" class="flex-1 px-4 py-3 bg-accent/10 text-accent border border-accent/30 rounded-lg text-sm font-bold hover:bg-accent hover:text-bg transition-all flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                Copy Markdown
+              </button>
+              <button id="download-md-btn" class="flex-1 px-4 py-3 bg-accent text-bg border border-accent rounded-lg text-sm font-bold hover:bg-accent2 transition-all flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                Download .md
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: Live Preview -->
+        <div class="lg:col-span-1">
+          <div class="sticky top-24 space-y-6">
+            <div class="glass-card rounded-2xl p-6 md:p-8 border border-border reveal">
+              <div class="flex justify-between items-center mb-4">
+                <h2 class="text-sm font-bold text-muted uppercase tracking-widest flex items-center gap-2">
+                  <span class="text-accent"></span> Live Playbook Preview
+                </h2>
+                <span class="px-2 py-1 bg-green-500/20 text-green-400 text-[10px] font-bold rounded uppercase">NIST SP 800-61 r2</span>
+              </div>
+              
+              <!-- Document Preview Area -->
+              <div id="playbook-preview" class="bg-white text-slate-900 rounded-xl p-8 font-serif text-sm leading-relaxed max-h-[70vh] overflow-y-auto custom-scrollbar shadow-inner">
+                <!-- Content injected via JS -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <style>
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.2); border-radius: 3px; }
+    
+    /* Preview Document Styling */
+    #playbook-preview h1 { font-size: 1.5rem; font-weight: bold; color: #0f172a; border-bottom: 2px solid #0A0178; padding-bottom: 0.5rem; margin-bottom: 1rem; font-family: sans-serif; }
+    #playbook-preview h2 { font-size: 1.25rem; font-weight: bold; color: #0A0178; margin-top: 1.5rem; margin-bottom: 0.75rem; font-family: sans-serif; }
+    #playbook-preview h3 { font-size: 1.1rem; font-weight: bold; color: #334155; margin-top: 1rem; margin-bottom: 0.5rem; font-family: sans-serif; }
+    #playbook-preview p { margin-bottom: 0.75rem; }
+    #playbook-preview ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 1rem; }
+    #playbook-preview li { margin-bottom: 0.25rem; }
+    #playbook-preview strong { color: #0f172a; }
+    #playbook-preview hr { border: 0; border-top: 1px solid #e2e8f0; margin: 1.5rem 0; }
+    #playbook-preview table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
+    #playbook-preview th, #playbook-preview td { border: 1px solid #cbd5e1; padding: 0.5rem; text-align: left; }
+    #playbook-preview th { background-color: #f8fafc; font-weight: bold; }
+  </style>
+
+  <script>
+    // 1. DOM Elements
+    const inputs = document.querySelectorAll('input, textarea');
+    const previewContainer = document.getElementById('playbook-preview');
+    const copyBtn = document.getElementById('copy-md-btn');
+    const downloadBtn = document.getElementById('download-md-btn');
+
+    // 2. Get Values Helper
+    const val = (id) => document.getElementById(id).value || '[Not Specified]';
+
+    // 3. Generate Markdown String
+    function generateMarkdown() {
+      return `# Incident Response Playbook: ${val('org-name')}
+**Document Control:** Version 1.0 | Last Updated: ${new Date().toLocaleDateString()}
+**Classification:** CONFIDENTIAL - INTERNAL USE ONLY
+
+---
+
+## 1. Organization & Key Contacts
+| Role | Name | Contact Information |
+| :--- | :--- | :--- |
+| **Incident Commander** | ${val('ic-name')} | ${val('ic-contact')} |
+| **External Escalation** | Law Enforcement / Retainer | ${val('ext-esc')} |
+
+---
+
+## 2. Security Tools & Environment
+| Tool Category | Technology / Vendor |
+| :--- | :--- |
+| **SIEM / Logging** | ${val('tool-siem')} |
+| **EDR / Endpoint** | ${val('tool-edr')} |
+| **Email Security** | ${val('tool-email')} |
+| **Ticketing / Case Mgmt** | ${val('tool-ticket')} |
+
+---
+
+## 3. Severity Definitions
+### SEV-1 (Critical)
+${val('sev1')}
+* **SLA:** Immediate mobilization. Notify Incident Commander and Executive Team within 15 minutes.
+
+### SEV-2 (High)
+${val('sev2')}
+* **SLA:** Mobilize SOC/IR team. Notify Incident Commander within 1 hour.
+
+---
+
+## 4. Incident Response Lifecycle (NIST SP 800-61 r2)
+
+### Phase 1: Preparation
+- Ensure all tools (${val('tool-siem')}, ${val('tool-edr')}) are properly configured and logging.
+- Conduct bi-annual IR tabletop exercises.
+- Maintain an up-to-date asset inventory and network diagrams.
+
+### Phase 2: Detection & Analysis
+1. **Triage:** Analyze alerts from ${val('tool-siem')} and ${val('tool-edr')}.
+2. **Scope:** Determine affected systems, users, and data.
+3. **Severity Assignment:** Classify as SEV-1 or SEV-2 based on criteria above.
+4. **Documentation:** Open a master case in ${val('tool-ticket')}.
+
+### Phase 3: Containment
+- **Short-Term:** Isolate affected hosts using ${val('tool-edr')}. Block malicious IPs/Domains at the firewall.
+- **Long-Term:** Apply temporary patches, reset compromised credentials, and enforce MFA.
+
+### Phase 4: Eradication
+- Identify root cause (e.g., phishing, unpatched vulnerability).
+- Remove malware, delete malicious accounts, and re-image severely compromised systems.
+- Validate that the threat actor's access has been completely severed.
+
+### Phase 5: Recovery
+- Restore systems from clean, verified backups.
+- Monitor recovered systems closely via ${val('tool-siem')} for 48-72 hours for signs of re-infection.
+- Obtain sign-off from system owners before returning to production.
+
+### Phase 6: Post-Incident Activity (Lessons Learned)
+- Conduct a "Hot Wash" meeting within 5 business days of closure.
+- Produce a Final Incident Report detailing timeline, impact, and root cause.
+- Update this Playbook and security controls based on findings.
+
+---
+*Generated via ZX Labs Incident Response Playbook Generator.*`;
+    }
+
+    // 4. Convert Markdown to HTML for Preview (Simple Parser)
+    function mdToHtml(md) {
+      return md
+        .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+        .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+        .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+        .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
+        .replace(/^\- (.*$)/gim, '<ul><li>$1</li></ul>')
+        .replace(/^\d\. (.*$)/gim, '<ol><li>$1</li></ol>')
+        .replace(/\n\n/g, '</p><p>')
+        .replace(/\n/g, '<br>')
+        .replace(/^---$/gim, '<hr>');
+    }
+
+    // 5. Update Preview
+    function updatePreview() {
+      const md = generateMarkdown();
+      previewContainer.innerHTML = mdToHtml(md);
+    }
+
+    // 6. Event Listeners
+    inputs.forEach(input => {
+      input.addEventListener('input', updatePreview);
+    });
+
+    // 7. Copy to Clipboard
+    copyBtn.addEventListener('click', () => {
+      const md = generateMarkdown();
+      navigator.clipboard.writeText(md).then(() => {
+        const original = copyBtn.innerHTML;
+        copyBtn.innerHTML = `<svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Copied!`;
+        setTimeout(() => copyBtn.innerHTML = original, 2000);
+      });
+    });
+
+    // 8. Download .md File
+    downloadBtn.addEventListener('click', () => {
+      const md = generateMarkdown();
+      const blob = new Blob([md], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${val('org-name').replace(/\s+/g, '_')}_IR_Playbook.md`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+
+    // Init
+    updatePreview();
+  </script>
+</Layout>
