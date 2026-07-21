@@ -7,15 +7,25 @@ import Experience from '../components/Experience.astro';
 import Education from '../components/Education.astro';
 import Contact from '../components/Contact.astro';
 import data from '../data/en/data.json';
+import SystemStatus from '../components/SystemStatus.astro';
 
 const { hero } = data;
 ---
-
+   
+	  
 <Layout title={`${hero.name} | ${hero.title}`} lang="en" dir="ltr">
   <Navbar currentLang="en" />
   
   <CVSections>
+  
+  	   <!-- System Status Dashboard Widget -->
+      <div class="max-w-5xl mx-auto mb-20 px-6">
+        <SystemStatus />
+		
+		
     <Skills />
+
+      </div>
     <Experience />
     <Education />
     <Contact />

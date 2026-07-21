@@ -1,0 +1,107 @@
+<div class="glass-card rounded-2xl p-6 md:p-8 border border-border/50 reveal">
+  <!-- Header with Live Clock -->
+  <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
+    <h3 class="text-sm font-bold text-muted uppercase tracking-widest flex items-center gap-3">
+      <span class="relative flex h-3 w-3">
+        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+        <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+      </span>
+      System Status: Online
+    </h3>
+    <div class="flex items-center gap-2 bg-bg/50 px-4 py-2 rounded-lg border border-border/50">
+      <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+      <span id="live-clock" class="text-sm font-mono text-text">00:00:00 UTC</span>
+    </div>
+  </div>
+
+  <!-- Stats Grid -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+    
+    <!-- Stat 1: Uptime -->
+    <div class="space-y-2">
+      <p class="text-xs text-muted uppercase tracking-wider">Portfolio Uptime</p>
+      <p class="text-3xl font-bold text-text font-mono">
+        99.9<span class="text-accent text-xl">%</span>
+      </p>
+      <div class="w-full bg-bg rounded-full h-1.5">
+        <div class="bg-green-500 h-1.5 rounded-full" style="width: 99.9%"></div>
+      </div>
+    </div>
+
+    <!-- Stat 2: Threats Blocked (Animated Counter) -->
+    <div class="space-y-2">
+      <p class="text-xs text-muted uppercase tracking-wider">Threats Blocked</p>
+      <p class="text-3xl font-bold text-text font-mono flex items-baseline gap-1">
+        <span class="counter" data-target="14203">0</span>
+      </p>
+      <p class="text-[10px] text-green-400 font-mono">▲ 12 this week</p>
+    </div>
+
+    <!-- Stat 3: Location -->
+    <div class="space-y-2">
+      <p class="text-xs text-muted uppercase tracking-wider">Current Node</p>
+      <p class="text-3xl font-bold text-text font-mono flex items-center gap-2">
+        🇦🇪 <span class="text-xl">DXB, UAE</span>
+      </p>
+      <p class="text-[10px] text-muted font-mono">Lat: 25.2048° N</p>
+    </div>
+
+    <!-- Stat 4: Coffee -->
+    <div class="space-y-2">
+      <p class="text-xs text-muted uppercase tracking-wider">Coffee Level</p>
+      <p class="text-3xl font-bold text-accent font-mono">
+        ∞
+      </p>
+      <p class="text-[10px] text-muted font-mono">Refueling...</p>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // 1. Live Clock
+  function updateClock() {
+    const now = new Date();
+    const timeString = now.toISOString().split('T')[1].split('.')[0] + ' UTC';
+    const clockEl = document.getElementById('live-clock');
+    if (clockEl) clockEl.innerText = timeString;
+  }
+  setInterval(updateClock, 1000);
+  updateClock();
+
+  // 2. Animated Number Counter (Triggers when scrolled into view)
+  const counters = document.querySelectorAll('.counter');
+  const speed = 100; // The lower the slower
+
+  const animateCounters = () => {
+    counters.forEach(counter => {
+      const updateCount = () => {
+        const target = +counter.getAttribute('data-target');
+        const count = +counter.innerText.replace(/,/g, '');
+        const inc = target / speed;
+
+        if (count < target) {
+          counter.innerText = Math.ceil(count + inc).toLocaleString();
+          setTimeout(updateCount, 15);
+        } else {
+          counter.innerText = target.toLocaleString();
+        }
+      };
+      updateCount();
+    });
+  };
+
+  // Use Intersection Observer to only animate when visible
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        animateCounters();
+        observer.disconnect(); // Only animate once
+      }
+    });
+  }, { threshold: 0.5 });
+
+  if (counters.length > 0) {
+    observer.observe(counters[0].closest('.glass-card'));
+  }
+</script>
