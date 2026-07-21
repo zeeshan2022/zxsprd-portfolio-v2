@@ -2,6 +2,35 @@
 @tailwind components;
 @tailwind utilities;
 
+
+/* ========================================== */
+/* DYNAMIC THEME VARIABLES                    */
+/* ========================================== */
+:root {
+  /* Default (Cyber Blue) */
+  --color-accent: #3b82f6; 
+  --color-accent2: #8b5cf6;
+}
+
+[data-theme="matrix"] {
+  /* Matrix Green */
+  --color-accent: #00ff41;
+  --color-accent2: #008f11;
+}
+
+[data-theme="cyberpunk"] {
+  /* Cyberpunk Neon */
+  --color-accent: #ff0055;
+  --color-accent2: #00f0ff;
+}
+
+[data-theme="oled"] {
+  /* OLED Pure White/Silver */
+  --color-accent: #ffffff;
+  --color-accent2: #a3a3a3;
+}
+
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;

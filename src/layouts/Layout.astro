@@ -3,6 +3,9 @@
 import '../styles/global.css';
  import { ViewTransitions } from 'astro:transitions'; 
    import terminalCommands from '../data/terminal-commands.json';
+      import ThemeSwitcher from '../components/ThemeSwitcher.astro';
+   
+   
    const commandsJSON = JSON.stringify(terminalCommands);
 
 interface Props {
@@ -433,5 +436,6 @@ const {
 </script>
 
    <Footer />
+     <ThemeSwitcher />
   </body>
 </html>

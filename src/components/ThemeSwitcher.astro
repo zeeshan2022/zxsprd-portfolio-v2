@@ -1,0 +1,76 @@
+<!-- Floating Theme Switcher Button -->
+<div class="fixed bottom-6 left-6 z-50">
+  
+  <!-- Popover Menu (Hidden by default) -->
+  <div id="theme-popover" class="hidden absolute bottom-14 left-0 glass-card p-3 rounded-xl border border-border shadow-2xl shadow-black/50 flex flex-col gap-2 w-48 reveal">
+    <p class="text-[10px] uppercase tracking-widest text-muted font-bold text-center mb-1">Select Vibe</p>
+    
+    <button data-theme="default" class="theme-btn flex items-center gap-3 p-2 rounded-lg hover:bg-bg/50 transition-colors text-left group">
+      <span class="w-4 h-4 rounded-full bg-[#3b82f6] border border-white/20"></span>
+      <span class="text-xs text-text group-hover:text-accent transition-colors">Cyber Blue</span>
+    </button>
+    
+    <button data-theme="matrix" class="theme-btn flex items-center gap-3 p-2 rounded-lg hover:bg-bg/50 transition-colors text-left group">
+      <span class="w-4 h-4 rounded-full bg-[#00ff41] border border-white/20"></span>
+      <span class="text-xs text-text group-hover:text-[#00ff41] transition-colors">Matrix Green</span>
+    </button>
+    
+    <button data-theme="cyberpunk" class="theme-btn flex items-center gap-3 p-2 rounded-lg hover:bg-bg/50 transition-colors text-left group">
+      <span class="w-4 h-4 rounded-full bg-[#ff0055] border border-white/20"></span>
+      <span class="text-xs text-text group-hover:text-[#ff0055] transition-colors">Cyberpunk Neon</span>
+    </button>
+    
+    <button data-theme="oled" class="theme-btn flex items-center gap-3 p-2 rounded-lg hover:bg-bg/50 transition-colors text-left group">
+      <span class="w-4 h-4 rounded-full bg-[#ffffff] border border-white/20"></span>
+      <span class="text-xs text-text group-hover:text-white transition-colors">OLED Pure</span>
+    </button>
+  </div>
+
+  <!-- Main Toggle Button -->
+  <button id="theme-toggle" class="w-12 h-12 rounded-full glass-card border border-border flex items-center justify-center text-accent hover:scale-110 hover:text-text transition-all duration-300 shadow-lg shadow-black/20 group">
+    <svg class="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path>
+    </svg>
+  </button>
+</div>
+
+<script>
+  const toggleBtn = document.getElementById('theme-toggle');
+  const popover = document.getElementById('theme-popover');
+  const themeBtns = document.querySelectorAll('.theme-btn');
+
+  // 1. Load saved theme on startup
+  const savedTheme = localStorage.getItem('zx-theme') || 'default';
+  applyTheme(savedTheme);
+
+  // 2. Toggle Popover
+  toggleBtn.addEventListener('click', () => {
+    popover.classList.toggle('hidden');
+  });
+
+  // 3. Close popover when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!popover.contains(e.target) && !toggleBtn.contains(e.target)) {
+      popover.classList.add('hidden');
+    }
+  });
+
+  // 4. Apply Theme Logic
+  function applyTheme(theme) {
+    if (theme === 'default') {
+      document.documentElement.removeAttribute('data-theme');
+    } else {
+      document.documentElement.setAttribute('data-theme', theme);
+    }
+    localStorage.setItem('zx-theme', theme);
+  }
+
+  // 5. Handle Theme Selection
+  themeBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const theme = btn.getAttribute('data-theme');
+      applyTheme(theme);
+      popover.classList.add('hidden');
+    });
+  });
+</script>
