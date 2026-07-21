@@ -1,0 +1,569 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import Navbar from '../../../components/Navbar.astro';
+---
+
+<Layout title="Global Latency Mapper | ZX Labs" lang="en" dir="ltr">
+  <Navbar currentLang="en" />
+
+  <!-- External Libraries: Chart.js and core jsPDF (No fragile plugins) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+
+  <main class="min-h-screen pt-24 px-6 pb-20">
+    <div class="max-w-7xl mx-auto">
+      
+      <!-- Header -->
+      <div class="text-center mb-12 reveal">
+        <h1 class="text-3xl md:text-4xl font-bold text-text mb-4">
+          Global <span class="text-accent">Latency Mapper</span>
+        </h1>
+        <p class="text-muted max-w-2xl mx-auto">
+          Advanced network diagnostics. Measure real-world latency, jitter, and packet loss across global regions and your custom targets.
+        </p>
+      </div>
+
+      <div class="grid lg:grid-cols-3 gap-8">
+        
+        <!-- Left Column: Configuration -->
+        <div class="lg:col-span-1 space-y-6">
+          <div class="glass-card rounded-2xl p-6 border border-border reveal">
+            <h2 class="text-lg font-bold text-text mb-6 flex items-center gap-2">
+              <span class="text-accent">⚙️</span> Configuration
+            </h2>
+
+            <!-- Add Custom Server -->
+            <div class="mb-6">
+              <label class="block text-sm font-medium text-muted mb-2">Custom Targets (Optional)</label>
+              <div class="flex gap-2 mb-3">
+                <input id="custom-server-input" type="text" placeholder="IP or DNS (e.g., 94.200.67.114)" class="flex-1 px-4 py-3 bg-bg border border-border rounded-lg text-text text-sm font-mono focus:outline-none focus:border-accent" />
+                <button id="add-server-btn" class="px-4 py-3 bg-accent text-bg font-bold rounded-lg hover:bg-accent2 transition-colors">Add</button>
+              </div>
+              <div id="server-list" class="space-y-2 max-h-32 overflow-y-auto custom-scrollbar">
+                <!-- Servers injected here -->
+              </div>
+            </div>
+
+            <hr class="border-border my-6" />
+
+            <!-- Region Selection -->
+            <div class="mb-6">
+              <div class="flex justify-between items-center mb-3">
+                <label class="text-sm font-medium text-text">Test Regions</label>
+                <div class="flex gap-2">
+                  <button id="select-all-btn" class="text-xs text-accent hover:underline">Select All</button>
+                  <button id="deselect-all-btn" class="text-xs text-muted hover:underline">Deselect All</button>
+                </div>
+              </div>
+              <div class="space-y-2" id="region-toggles">
+                <label class="flex items-center gap-3 p-3 bg-bg border border-border rounded-lg cursor-pointer hover:border-accent transition-colors">
+                  <input type="checkbox" value="na" checked class="region-cb w-4 h-4 text-accent bg-bg border-border rounded focus:ring-accent">
+                  <span class="text-sm text-text">North America</span>
+                </label>
+                <label class="flex items-center gap-3 p-3 bg-bg border border-border rounded-lg cursor-pointer hover:border-accent transition-colors">
+                  <input type="checkbox" value="eu" checked class="region-cb w-4 h-4 text-accent bg-bg border-border rounded focus:ring-accent">
+                  <span class="text-sm text-text">Europe</span>
+                </label>
+                <label class="flex items-center gap-3 p-3 bg-bg border border-border rounded-lg cursor-pointer hover:border-accent transition-colors">
+                  <input type="checkbox" value="asia" checked class="region-cb w-4 h-4 text-accent bg-bg border-border rounded focus:ring-accent">
+                  <span class="text-sm text-text">Asia Pacific</span>
+                </label>
+                <label class="flex items-center gap-3 p-3 bg-bg border border-border rounded-lg cursor-pointer hover:border-accent transition-colors">
+                  <input type="checkbox" value="me" checked class="region-cb w-4 h-4 text-accent bg-bg border-border rounded focus:ring-accent">
+                  <span class="text-sm text-text">Middle East</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Ping Count -->
+            <div class="mb-6">
+              <label class="block text-sm font-medium text-muted mb-2">Pings per Target</label>
+              <select id="ping-count" class="w-full px-4 py-3 bg-bg border border-border rounded-lg text-text focus:outline-none focus:border-accent">
+                <option value="5">5 Pings (Fast)</option>
+                <option value="10" selected>10 Pings (Standard)</option>
+                <option value="20">20 Pings (Deep Analysis)</option>
+              </select>
+            </div>
+
+            <!-- Start Button -->
+            <button id="start-test-btn" class="w-full px-6 py-4 bg-gradient-to-r from-accent to-accent2 text-bg font-bold rounded-xl hover:opacity-90 transition-all flex items-center justify-center gap-2 text-lg shadow-lg shadow-accent/20">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+              Start Diagnostics
+            </button>
+          </div>
+        </div>
+
+        <!-- Right Column: Live Results Dashboard -->
+        <div class="lg:col-span-2 space-y-6">
+          
+          <!-- Progress Bar -->
+          <div id="progress-container" class="hidden glass-card rounded-2xl p-6 border border-border reveal">
+            <div class="flex justify-between items-center mb-2">
+              <span class="text-sm font-bold text-text" id="progress-text">Initializing...</span>
+              <span class="text-sm font-mono text-accent" id="progress-percent">0%</span>
+            </div>
+            <div class="w-full bg-bg rounded-full h-2.5 overflow-hidden">
+              <div id="progress-bar" class="bg-gradient-to-r from-accent to-accent2 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <!-- Summary Cards -->
+          <div id="summary-cards" class="grid grid-cols-3 gap-4 hidden reveal">
+            <div class="glass-card rounded-xl p-5 border border-border text-center">
+              <p class="text-xs text-muted uppercase tracking-wider mb-1">Avg Latency</p>
+              <p class="text-2xl font-bold text-accent font-mono" id="sum-latency">-- ms</p>
+            </div>
+            <div class="glass-card rounded-xl p-5 border border-border text-center">
+              <p class="text-xs text-muted uppercase tracking-wider mb-1">Max Jitter</p>
+              <p class="text-2xl font-bold text-yellow-400 font-mono" id="sum-jitter">-- ms</p>
+            </div>
+            <div class="glass-card rounded-xl p-5 border border-border text-center">
+              <p class="text-xs text-muted uppercase tracking-wider mb-1">Packet Loss</p>
+              <p class="text-2xl font-bold text-red-400 font-mono" id="sum-loss">-- %</p>
+            </div>
+          </div>
+
+          <!-- Charts Section -->
+          <div id="charts-section" class="hidden glass-card rounded-2xl p-6 border border-border reveal">
+            <h2 class="text-lg font-bold text-text mb-6 flex items-center gap-2">
+              <span class="text-accent">📈</span> Performance Analytics
+            </h2>
+            <div class="grid md:grid-cols-2 gap-6">
+              <div class="bg-bg/50 p-4 rounded-xl border border-border">
+                <canvas id="latencyChart"></canvas>
+              </div>
+              <div class="bg-bg/50 p-4 rounded-xl border border-border">
+                <canvas id="jitterChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Detailed Results Table -->
+          <div class="glass-card rounded-2xl p-6 border border-border reveal overflow-hidden">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+              <h2 class="text-lg font-bold text-text flex items-center gap-2">
+                <span class="text-accent">📊</span> Regional Diagnostics
+              </h2>
+              
+              <!-- Action Buttons -->
+              <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                <button id="copy-report-btn" disabled class="flex-1 sm:flex-none px-4 py-2.5 bg-accent/10 text-accent border border-accent/30 rounded-lg text-sm font-semibold hover:bg-accent hover:text-bg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                  Copy to Clipboard
+                </button>
+                <button id="export-pdf-btn" disabled class="flex-1 sm:flex-none px-4 py-2.5 bg-accent text-bg border border-accent rounded-lg text-sm font-semibold hover:bg-accent2 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                  Download PDF
+                </button>
+              </div>
+            </div>
+            
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="border-b border-border text-xs text-muted uppercase tracking-wider">
+                    <th class="py-3 px-4">Target / Node</th>
+                    <th class="py-3 px-4">Min / Avg / Max</th>
+                    <th class="py-3 px-4">Jitter</th>
+                    <th class="py-3 px-4">Loss</th>
+                    <th class="py-3 px-4">Status</th>
+                  </tr>
+                </thead>
+                <tbody id="results-body" class="text-sm font-mono">
+                  <tr>
+                    <td colspan="5" class="py-8 text-center text-muted">Configure targets and click "Start Diagnostics" to begin.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <style>
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(59, 130, 246, 0.3); border-radius: 3px; }
+  </style>
+
+  <script>
+    // 1. State Management
+    const STORAGE_KEY = 'zx_labs_custom_servers';
+    let customServers = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+    let testResults = [];
+    let latencyChartInstance = null;
+    let jitterChartInstance = null;
+
+    const globalEndpoints = [
+      { id: 'cf-na', name: 'Cloudflare (North America)', region: 'na', url: 'speed.cloudflare.com' },
+      { id: 'cf-eu', name: 'Cloudflare (Europe)', region: 'eu', url: 'speed.cloudflare.com' },
+      { id: 'cf-asia', name: 'Cloudflare (Asia Pacific)', region: 'asia', url: 'speed.cloudflare.com' },
+      { id: 'cf-me', name: 'Cloudflare (Middle East)', region: 'me', url: 'speed.cloudflare.com' },
+      { id: 'gcp-na', name: 'Google Cloud (North America)', region: 'na', url: 'www.google.com' },
+      { id: 'gcp-eu', name: 'Google Cloud (Europe)', region: 'eu', url: 'www.google.com' },
+      { id: 'aws-na', name: 'AWS (North America)', region: 'na', url: 'd1.awsstatic.com' },
+      { id: 'azure-eu', name: 'Azure (Europe)', region: 'eu', url: 'azure.microsoft.com' }
+    ];
+
+    const serverInput = document.getElementById('custom-server-input');
+    const addServerBtn = document.getElementById('add-server-btn');
+    const serverList = document.getElementById('server-list');
+    const selectAllBtn = document.getElementById('select-all-btn');
+    const deselectAllBtn = document.getElementById('deselect-all-btn');
+    const startBtn = document.getElementById('start-test-btn');
+    const copyReportBtn = document.getElementById('copy-report-btn');
+    const exportPdfBtn = document.getElementById('export-pdf-btn');
+    const progressContainer = document.getElementById('progress-container');
+    const progressBar = document.getElementById('progress-bar');
+    const progressText = document.getElementById('progress-text');
+    const progressPercent = document.getElementById('progress-percent');
+    const summaryCards = document.getElementById('summary-cards');
+    const chartsSection = document.getElementById('charts-section');
+    const resultsBody = document.getElementById('results-body');
+
+    function renderServers() {
+      serverList.innerHTML = '';
+      if (customServers.length === 0) {
+        serverList.innerHTML = '<p class="text-xs text-muted text-center py-2">No custom targets added.</p>';
+      } else {
+        customServers.forEach((server, index) => {
+          const div = document.createElement('div');
+          div.className = 'flex justify-between items-center p-2 bg-bg border border-border rounded-lg';
+          div.innerHTML = `
+            <span class="text-xs font-mono text-text truncate">${server}</span>
+            <button onclick="removeServer(${index})" class="text-red-400 hover:text-red-300 text-xs font-bold px-2">✕</button>
+          `;
+          serverList.appendChild(div);
+        });
+      }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(customServers));
+    }
+
+    window.removeServer = (index) => {
+      customServers.splice(index, 1);
+      renderServers();
+    };
+
+    addServerBtn.addEventListener('click', () => {
+      const val = serverInput.value.trim();
+      if (val && !customServers.includes(val)) {
+        customServers.push(val);
+        serverInput.value = '';
+        renderServers();
+      }
+    });
+
+    selectAllBtn.addEventListener('click', () => document.querySelectorAll('.region-cb').forEach(cb => cb.checked = true));
+    deselectAllBtn.addEventListener('click', () => document.querySelectorAll('.region-cb').forEach(cb => cb.checked = false));
+
+    async function pingEndpoint(host) {
+      const start = performance.now();
+      try {
+        await fetch(`https://${host}/favicon.ico?t=${Date.now()}`, { mode: 'no-cors', cache: 'no-store' });
+        return performance.now() - start;
+      } catch {
+        try {
+          await fetch(`http://${host}/favicon.ico?t=${Date.now()}`, { mode: 'no-cors', cache: 'no-store' });
+          return performance.now() - start;
+        } catch { return null; }
+      }
+    }
+
+    startBtn.addEventListener('click', async () => {
+      startBtn.disabled = true;
+      startBtn.innerHTML = `<svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Running...`;
+      
+      progressContainer.classList.remove('hidden');
+      summaryCards.classList.add('hidden');
+      chartsSection.classList.add('hidden');
+      resultsBody.innerHTML = '';
+      testResults = [];
+      copyReportBtn.disabled = true;
+      exportPdfBtn.disabled = true;
+
+      const selectedRegions = Array.from(document.querySelectorAll('.region-cb:checked')).map(cb => cb.value);
+      const pingCount = parseInt(document.getElementById('ping-count').value);
+      
+      let targets = [];
+      selectedRegions.forEach(region => {
+        globalEndpoints.filter(ep => ep.region === region).forEach(ep => {
+          targets.push({ id: ep.id, name: ep.name, host: ep.url });
+        });
+      });
+
+      customServers.forEach(server => {
+        targets.push({ id: `custom-${server}`, name: `Custom Target: ${server}`, host: server });
+      });
+
+      if (targets.length === 0) {
+        targets = [{ id: 'cf-na', name: 'Cloudflare (North America) [Default]', host: 'speed.cloudflare.com' }];
+      }
+
+      const totalTests = targets.length * pingCount;
+      let completedTests = 0;
+
+      targets.forEach(target => {
+        const row = document.createElement('tr');
+        row.id = `row-${target.id}`;
+        row.className = 'border-b border-border/50 hover:bg-bg/50 transition-colors';
+        row.innerHTML = `
+          <td class="py-4 px-4 text-text font-sans font-medium">${target.name}</td>
+          <td class="py-4 px-4 text-muted">-- / -- / --</td>
+          <td class="py-4 px-4 text-muted">-- ms</td>
+          <td class="py-4 px-4 text-muted">-- %</td>
+          <td class="py-4 px-4"><span class="px-2 py-1 bg-yellow-500/20 text-yellow-400 text-xs rounded-full">Testing...</span></td>
+        `;
+        resultsBody.appendChild(row);
+      });
+
+      for (const target of targets) {
+        const pings = [];
+        for (let i = 0; i < pingCount; i++) {
+          const latency = await pingEndpoint(target.host);
+          if (latency !== null) pings.push(latency);
+          
+          completedTests++;
+          const percent = Math.round((completedTests / totalTests) * 100);
+          progressBar.style.width = `${percent}%`;
+          progressPercent.innerText = `${percent}%`;
+          progressText.innerText = `Testing ${target.name} (${i + 1}/${pingCount})...`;
+        }
+
+        const loss = pingCount - pings.length;
+        const lossPercent = ((loss / pingCount) * 100).toFixed(1);
+        let min = 0, avg = 0, max = 0, jitter = 0;
+        
+        if (pings.length > 0) {
+          min = Math.min(...pings); max = Math.max(...pings);
+          avg = pings.reduce((a, b) => a + b, 0) / pings.length;
+          let jitterSum = 0;
+          for (let i = 1; i < pings.length; i++) jitterSum += Math.abs(pings[i] - pings[i - 1]);
+          jitter = jitterSum / (pings.length - 1 || 1);
+        }
+
+        let statusColor = 'bg-green-500/20 text-green-400', statusText = 'Excellent';
+        if (avg > 150 || lossPercent > 5) { statusColor = 'bg-orange-500/20 text-orange-400'; statusText = 'Fair'; }
+        if (avg > 300 || lossPercent > 15) { statusColor = 'bg-red-500/20 text-red-400'; statusText = 'Poor'; }
+        if (pings.length === 0) { statusColor = 'bg-red-500/20 text-red-400'; statusText = 'Unreachable'; }
+
+        const row = document.getElementById(`row-${target.id}`);
+        if (row) {
+          row.innerHTML = `
+            <td class="py-4 px-4 text-text font-sans font-medium">${target.name}</td>
+            <td class="py-4 px-4 text-accent">${min.toFixed(0)} / ${avg.toFixed(0)} / ${max.toFixed(0)}</td>
+            <td class="py-4 px-4 text-yellow-400">${jitter.toFixed(1)} ms</td>
+            <td class="py-4 px-4 ${lossPercent > 0 ? 'text-red-400 font-bold' : 'text-green-400'}">${lossPercent}%</td>
+            <td class="py-4 px-4"><span class="px-2 py-1 ${statusColor} text-xs rounded-full font-bold">${statusText}</span></td>
+          `;
+        }
+        testResults.push({ name: target.name, avg, jitter, lossPercent, statusText });
+      }
+
+      if (testResults.length > 0) {
+        const totalAvg = testResults.reduce((a, b) => a + b.avg, 0) / testResults.length;
+        const maxJitter = Math.max(...testResults.map(r => r.jitter));
+        const totalLoss = testResults.reduce((a, b) => a + parseFloat(b.lossPercent), 0) / testResults.length;
+
+        document.getElementById('sum-latency').innerText = `${totalAvg.toFixed(0)} ms`;
+        document.getElementById('sum-jitter').innerText = `${maxJitter.toFixed(1)} ms`;
+        document.getElementById('sum-loss').innerText = `${totalLoss.toFixed(1)} %`;
+        
+        summaryCards.classList.remove('hidden');
+        chartsSection.classList.remove('hidden');
+        copyReportBtn.disabled = false;
+        exportPdfBtn.disabled = false;
+        
+        renderCharts();
+      }
+
+      startBtn.disabled = false;
+      startBtn.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg> Run Again`;
+      progressText.innerText = 'Diagnostics Complete';
+    });
+
+    function renderCharts() {
+      const labels = testResults.map(r => r.name.length > 15 ? r.name.substring(0, 15) + '...' : r.name);
+      const latencyData = testResults.map(r => r.avg);
+      const jitterData = testResults.map(r => r.jitter);
+
+      if (latencyChartInstance) latencyChartInstance.destroy();
+      if (jitterChartInstance) jitterChartInstance.destroy();
+
+      const commonOptions = { 
+        responsive: true, 
+        plugins: { legend: { labels: { color: '#fff' } } }, 
+        scales: { y: { ticks: { color: '#9ca3af' }, grid: { color: '#374151' } }, x: { ticks: { color: '#9ca3af', maxRotation: 45 }, grid: { display: false } } } 
+      };
+
+      latencyChartInstance = new Chart(document.getElementById('latencyChart'), {
+        type: 'bar',
+        data: { labels, datasets: [{ label: 'Avg Latency (ms)', data: latencyData, backgroundColor: '#42B4FA', borderRadius: 4 }] },
+        options: commonOptions
+      });
+
+      jitterChartInstance = new Chart(document.getElementById('jitterChart'), {
+        type: 'line',
+        data: { labels, datasets: [{ label: 'Jitter (ms)', data: jitterData, borderColor: '#FBBF24', backgroundColor: 'rgba(251, 191, 36, 0.2)', fill: true, tension: 0.3 }] },
+        options: commonOptions
+      });
+    }
+
+    copyReportBtn.addEventListener('click', () => {
+      const btn = copyReportBtn;
+      let report = `ZX LABS - NETWORK DIAGNOSTICS REPORT\nGenerated: ${new Date().toLocaleString()}\n----------------------------------------\n\n`;
+      testResults.forEach(r => {
+        report += `[${r.statusText}] ${r.name}\n  Avg Latency: ${r.avg.toFixed(0)}ms | Jitter: ${r.jitter.toFixed(1)}ms | Loss: ${r.lossPercent}%\n\n`;
+      });
+      navigator.clipboard.writeText(report).then(() => {
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = `<svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Copied!`;
+        setTimeout(() => btn.innerHTML = originalHTML, 2000);
+      });
+    });
+
+    // Helper to get high-resolution chart image
+    function getHighResChartImage(chart) {
+      const originalWidth = chart.canvas.width;
+      const originalHeight = chart.canvas.height;
+      chart.canvas.width = originalWidth * 2;
+      chart.canvas.height = originalHeight * 2;
+      chart.resize();
+      const img = chart.toBase64Image('image/png', 1.0);
+      chart.canvas.width = originalWidth;
+      chart.canvas.height = originalHeight;
+      chart.resize();
+      return img;
+    }
+
+    exportPdfBtn.addEventListener('click', async () => {
+      const btn = exportPdfBtn;
+      const originalHTML = btn.innerHTML;
+      
+      try {
+        btn.innerHTML = `<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Generating...`;
+        btn.disabled = true;
+        await new Promise(r => setTimeout(r, 500));
+
+        if (!window.jspdf) throw new Error("jsPDF library failed to load. Please disable ad-blockers.");
+
+        const { jsPDF } = window.jspdf;
+        // A4 Landscape: 297mm x 210mm
+        const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+        const pageWidth = 297;
+        const pageHeight = 210;
+        const timestamp = new Date().toLocaleString();
+
+        // 1. Header
+        doc.setFontSize(22);
+        doc.setTextColor(10, 1, 120);
+        doc.text('ZX Labs - Network Diagnostics Report', pageWidth / 2, 20, { align: 'center' });
+        doc.setFontSize(12);
+        doc.setTextColor(100, 100, 100);
+        doc.text(`Generated: ${timestamp}`, pageWidth / 2, 30, { align: 'center' });
+
+        // 2. Summary Cards
+        const cardWidth = 80;
+        const startX = (pageWidth - (cardWidth * 3 + 20)) / 2;
+        const drawCard = (x, title, value, color) => {
+          doc.setFillColor(243, 244, 246);
+          doc.roundedRect(x, 40, cardWidth, 25, 3, 3, 'F');
+          doc.setFontSize(10);
+          doc.setTextColor(100, 100, 100);
+          doc.text(title, x + cardWidth / 2, 48, { align: 'center' });
+          doc.setFontSize(18);
+          doc.setTextColor(color[0], color[1], color[2]);
+          doc.text(value, x + cardWidth / 2, 58, { align: 'center' });
+        };
+        drawCard(startX, 'AVG LATENCY', document.getElementById('sum-latency').innerText, [10, 1, 120]);
+        drawCard(startX + cardWidth + 10, 'MAX JITTER', document.getElementById('sum-jitter').innerText, [217, 119, 6]);
+        drawCard(startX + (cardWidth + 10) * 2, 'PACKET LOSS', document.getElementById('sum-loss').innerText, [220, 38, 38]);
+
+        // 3. High-Res Charts
+        doc.setFontSize(16);
+        doc.setTextColor(10, 1, 120);
+        doc.text('Performance Graphs', 14, 80);
+        
+        const latImg = latencyChartInstance ? getHighResChartImage(latencyChartInstance) : null;
+        const jitImg = jitterChartInstance ? getHighResChartImage(jitterChartInstance) : null;
+
+        if (latImg) doc.addImage(latImg, 'PNG', 14, 85, 135, 85);
+        if (jitImg) doc.addImage(jitImg, 'PNG', 148, 85, 135, 85);
+
+        // 4. Native Table Drawing (No plugins, 100% reliable, auto page breaks)
+        let yPos = 185;
+        const drawTableHeader = () => {
+          doc.setFontSize(16);
+          doc.setTextColor(10, 1, 120);
+          doc.text('Detailed Results', 14, yPos);
+          yPos += 10;
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(9);
+          doc.setTextColor(50, 50, 50);
+          doc.text('Target / Node', 14, yPos);
+          doc.text('Min/Avg/Max', 85, yPos);
+          doc.text('Jitter', 140, yPos);
+          doc.text('Loss', 190, yPos);
+          doc.text('Status', 230, yPos);
+          yPos += 2;
+          doc.setLineWidth(0.5);
+          doc.setDrawColor(10, 1, 120);
+          doc.line(14, yPos, 283, yPos);
+          yPos += 6;
+        };
+
+        drawTableHeader();
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
+
+        testResults.forEach(r => {
+          if (yPos > pageHeight - 15) {
+            doc.addPage();
+            yPos = 20;
+            drawTableHeader();
+          }
+          
+          doc.setTextColor(50, 50, 50);
+          const safeName = r.name.length > 35 ? r.name.substring(0, 32) + '...' : r.name;
+          doc.text(safeName, 14, yPos);
+          doc.text(`${r.avg.toFixed(0)} ms`, 85, yPos);
+          doc.text(`${r.jitter.toFixed(1)} ms`, 140, yPos);
+          
+          // Color code the loss
+          if (parseFloat(r.lossPercent) > 0) doc.setTextColor(220, 38, 38);
+          else doc.setTextColor(34, 197, 94);
+          doc.text(`${r.lossPercent}%`, 190, yPos);
+          
+          doc.setTextColor(50, 50, 50);
+          doc.text(r.statusText, 230, yPos);
+          
+          yPos += 2;
+          doc.setLineWidth(0.1);
+          doc.setDrawColor(200, 200, 200);
+          doc.line(14, yPos, 283, yPos);
+          yPos += 6;
+        });
+
+        // 5. Footer
+        const finalY = Math.min(yPos + 10, pageHeight - 10);
+        doc.setFontSize(9);
+        doc.setTextColor(100, 100, 100);
+        doc.text('This report is generated via ZX Lab ( http://localhost:4321/playground/latency-mapper/ )', pageWidth / 2, finalY, { align: 'center' });
+
+        // 6. Save
+        doc.save('ZX_Labs_Network_Report.pdf');
+
+      } catch (error) {
+        console.error("PDF Generation Error:", error);
+        alert("PDF Generation Failed: " + error.message);
+      } finally {
+        btn.innerHTML = originalHTML;
+        btn.disabled = false;
+      }
+    });
+
+    renderServers();
+  </script>
+</Layout>
