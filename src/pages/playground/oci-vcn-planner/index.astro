@@ -1,0 +1,652 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import Navbar from '../../../components/Navbar.astro';
+---
+
+<Layout title="OCI VCN Topology & CIDR Planner | ZX Labs" lang="en" dir="ltr">
+  <Navbar currentLang="en" />
+
+  <!-- External Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <main class="min-h-screen pt-20 pb-10 bg-[#0f172a]">
+    
+    <!-- Top Navigation Bar -->
+    <header class="h-16 border-b border-border bg-bg/80 backdrop-blur flex items-center justify-between px-6 sticky top-0 z-50">
+      <div class="flex items-center gap-4">
+        <a href="/playground/" class="p-2 rounded-lg hover:bg-bg/50 text-muted hover:text-accent transition-colors" title="Back to Labs">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+        </a>
+        <div>
+          <h1 class="text-lg font-bold text-text flex items-center gap-2">
+            <span class="text-[#C74634]">OCI</span> VCN Topology & CIDR Planner
+          </h1>
+          <p class="text-[10px] text-muted">Production-Ready Cloud Network IDE</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <span id="validation-status" class="text-xs text-green-400 font-mono flex items-center gap-1">
+          <span class="w-2 h-2 rounded-full bg-green-400"></span> No Overlaps Detected
+        </span>
+      </div>
+    </header>
+
+    <!-- Main IDE Layout -->
+    <div class="flex h-[calc(100vh-64px)]">
+      
+      <!-- LEFT SIDEBAR: Builder & Controls -->
+      <aside class="w-80 border-r border-border bg-bg/50 flex flex-col overflow-y-auto custom-scrollbar">
+        <div class="p-5 space-y-6">
+          
+          <!-- On-Premise DC -->
+          <div class="space-y-3">
+            <h3 class="text-xs font-bold text-accent uppercase tracking-widest flex items-center gap-2"><span class="text-accent"></span> On-Premise Data Center</h3>
+            <input id="op-label" type="text" value="HQ Data Center" class="w-full px-3 py-2 bg-[#0f172a] border border-border rounded-lg text-text text-sm focus:border-accent outline-none" />
+            <input id="op-cidr" type="text" value="10.0.0.0/16" class="w-full px-3 py-2 bg-[#0f172a] border border-border rounded-lg text-text text-sm font-mono focus:border-accent outline-none" />
+            <button id="btn-update-op" class="w-full py-2 bg-[#C74634] text-white font-bold rounded-lg hover:bg-[#a33527] transition-colors text-sm">Update On-Prem</button>
+          </div>
+
+          <hr class="border-border" />
+
+          <!-- OCI VCN Builder -->
+          <div class="space-y-3">
+            <h3 class="text-xs font-bold text-accent uppercase tracking-widest flex items-center gap-2"><span class="text-accent">☁️</span> Add OCI VCN</h3>
+            <input id="vcn-label" type="text" placeholder="VCN Name (e.g., Prod VCN)" class="w-full px-3 py-2 bg-[#0f172a] border border-border rounded-lg text-text text-sm focus:border-accent outline-none" />
+            <input id="vcn-cidr" type="text" placeholder="VCN CIDR (e.g., 172.16.0.0/16)" class="w-full px-3 py-2 bg-[#0f172a] border border-border rounded-lg text-text text-sm font-mono focus:border-accent outline-none" />
+            <button id="btn-add-vcn" class="w-full py-2 bg-accent text-bg font-bold rounded-lg hover:bg-accent2 transition-colors text-sm">Add VCN to Topology</button>
+          </div>
+
+          <hr class="border-border" />
+
+          <!-- Subnet Planner -->
+          <div class="space-y-3">
+            <h3 class="text-xs font-bold text-accent uppercase tracking-widest flex items-center gap-2"><span class="text-accent">🔌</span> Add Subnet</h3>
+            <select id="sub-vcn" class="w-full px-3 py-2 bg-[#0f172a] border border-border rounded-lg text-text text-sm focus:border-accent outline-none"><option value="">Select VCN...</option></select>
+            <input id="sub-label" type="text" placeholder="Subnet Name (e.g., Public Web)" class="w-full px-3 py-2 bg-[#0f172a] border border-border rounded-lg text-text text-sm focus:border-accent outline-none" />
+            <input id="sub-cidr" type="text" placeholder="Subnet CIDR (e.g., 172.16.1.0/24)" class="w-full px-3 py-2 bg-[#0f172a] border border-border rounded-lg text-text text-sm font-mono focus:border-accent outline-none" />
+            <select id="sub-type" class="w-full px-3 py-2 bg-[#0f172a] border border-border rounded-lg text-text text-sm focus:border-accent outline-none">
+              <option value="Public">Public Subnet</option>
+              <option value="Private">Private Subnet</option>
+            </select>
+            <button id="btn-add-sub" class="w-full py-2 bg-bg border border-border text-text font-bold rounded-lg hover:border-accent hover:text-accent transition-colors text-sm">Add Subnet</button>
+          </div>
+
+          <hr class="border-border" />
+
+          <!-- Layouts & Tools -->
+          <div class="space-y-3">
+            <h3 class="text-xs font-bold text-accent uppercase tracking-widest">Layouts & Tools</h3>
+            <div class="grid grid-cols-2 gap-2">
+              <button id="layout-dagre" class="py-2 bg-[#0f172a] border border-border rounded-lg text-xs font-bold hover:border-accent">Hierarchical</button>
+              <button id="layout-circle" class="py-2 bg-[#0f172a] border border-border rounded-lg text-xs font-bold hover:border-accent">Circular</button>
+              <button id="layout-grid" class="py-2 bg-[#0f172a] border border-border rounded-lg text-xs font-bold hover:border-accent">Grid</button>
+              <button id="btn-fit" class="py-2 bg-[#0f172a] border border-border rounded-lg text-xs font-bold hover:border-accent">Fit to Screen</button>
+            </div>
+            <button id="btn-load-demo" class="w-full py-2 bg-purple-500/10 border border-purple-500/30 text-purple-400 rounded-lg text-xs font-bold hover:bg-purple-500/20">Load Migration Demo</button>
+          </div>
+        </div>
+      </aside>
+
+      <!-- CENTER: Graph Canvas -->
+      <section class="flex-1 relative bg-[#0a0f1c]">
+        <div id="cy-container" class="w-full h-full"></div>
+        
+        <!-- Canvas Overlay Instructions -->
+        <div class="absolute bottom-4 left-4 bg-bg/80 backdrop-blur px-3 py-2 rounded-lg border border-border text-[10px] text-muted pointer-events-none">
+          <p>🖱️ Drag to pan | Scroll to zoom | Click node/edge to inspect | <kbd class="bg-bg px-1 rounded border border-border">Del</kbd> to delete</p>
+        </div>
+      </section>
+
+      <!-- RIGHT SIDEBAR: Inspector, Simulator & Export -->
+      <aside class="w-96 border-l border-border bg-bg/50 flex flex-col overflow-y-auto custom-scrollbar">
+        <div class="p-5 space-y-6 flex-1">
+          
+          <!-- Property Inspector -->
+          <div id="inspector-panel" class="space-y-3 hidden">
+            <h3 class="text-xs font-bold text-accent uppercase tracking-widest flex items-center justify-between">
+              <span>🔍 Inspector</span>
+              <button id="btn-deselect" class="text-muted hover:text-text text-[10px]">Clear</button>
+            </h3>
+            <div class="bg-[#0f172a] p-3 rounded-lg border border-border space-y-3">
+              <div>
+                <label class="text-[10px] text-muted uppercase font-bold">Type</label>
+                <input id="insp-type" type="text" disabled class="w-full mt-1 px-2 py-1.5 bg-bg border border-border rounded text-text text-xs" />
+              </div>
+              <div>
+                <label class="text-[10px] text-muted uppercase font-bold">Label / Name</label>
+                <input id="insp-label" type="text" class="w-full mt-1 px-2 py-1.5 bg-bg border border-border rounded text-text text-xs focus:border-accent outline-none" />
+              </div>
+              <div id="insp-cidr-group">
+                <label class="text-[10px] text-muted uppercase font-bold">CIDR Block</label>
+                <input id="insp-cidr" type="text" class="w-full mt-1 px-2 py-1.5 bg-bg border border-border rounded text-text text-xs font-mono focus:border-accent outline-none" />
+              </div>
+              <button id="btn-delete-selected" class="w-full py-2 bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg text-xs font-bold hover:bg-red-500/20">Delete Selected</button>
+            </div>
+          </div>
+
+          <!-- Empty State for Inspector -->
+          <div id="inspector-empty" class="text-center py-4 text-muted text-xs border border-dashed border-border rounded-lg">
+            <p>Click on a node or connection to inspect and edit its properties.</p>
+          </div>
+
+          <hr class="border-border" />
+
+          <!-- Network Simulator -->
+          <div class="space-y-3">
+            <h3 class="text-xs font-bold text-accent uppercase tracking-widest">⚡ Network Path Simulator</h3>
+            <select id="sim-source" class="w-full px-3 py-2 bg-[#0f172a] border border-border rounded-lg text-text text-sm focus:border-accent outline-none"><option value="">Select Source Subnet/On-Prem...</option></select>
+            <select id="sim-target" class="w-full px-3 py-2 bg-[#0f172a] border border-border rounded-lg text-text text-sm focus:border-accent outline-none"><option value="">Select Target Subnet/On-Prem...</option></select>
+            <button id="btn-simulate" class="w-full py-3 bg-gradient-to-r from-accent to-accent2 text-bg font-bold rounded-lg hover:opacity-90 transition-all text-sm shadow-lg shadow-accent/20">Simulate Traffic Flow</button>
+            
+            <div id="sim-log" class="bg-[#0d1117] rounded-lg p-3 font-mono text-[10px] text-green-400 h-24 overflow-y-auto custom-scrollbar border border-green-500/20">
+              <p class="text-muted italic">Ready for simulation...</p>
+            </div>
+          </div>
+
+          <hr class="border-border" />
+
+          <!-- Overlap Validation -->
+          <div class="space-y-3">
+            <h3 class="text-xs font-bold text-accent uppercase tracking-widest">🛡️ CIDR Overlap Validator</h3>
+            <div id="overlap-log" class="bg-[#0d1117] rounded-lg p-3 font-mono text-[10px] text-green-400 h-20 overflow-y-auto custom-scrollbar border border-green-500/20">
+              <p class="text-muted italic">System ready. Awaiting network definitions...</p>
+            </div>
+          </div>
+
+          <hr class="border-border" />
+
+          <!-- Import / Export -->
+          <div class="space-y-3">
+            <h3 class="text-xs font-bold text-accent uppercase tracking-widest">📥 Import / Export</h3>
+            <div class="grid grid-cols-2 gap-2">
+              <button id="btn-export-json" class="py-2 bg-[#0f172a] border border-border rounded-lg text-xs font-bold hover:border-accent">JSON</button>
+              <label class="py-2 bg-[#0f172a] border border-border rounded-lg text-xs font-bold hover:border-accent text-center cursor-pointer">
+                Import JSON
+                <input type="file" id="file-import-json" accept=".json" class="hidden" />
+              </label>
+              <button id="btn-export-tf" class="py-2 bg-[#0f172a] border border-border rounded-lg text-xs font-bold hover:border-accent">Terraform (.tf)</button>
+              <label class="py-2 bg-[#0f172a] border border-border rounded-lg text-xs font-bold hover:border-accent text-center cursor-pointer">
+                Import .tf
+                <input type="file" id="file-import-tf" accept=".tf" class="hidden" />
+              </label>
+              <button id="btn-export-png" class="py-2 bg-[#0f172a] border border-border rounded-lg text-xs font-bold hover:border-accent">High-Res PNG</button>
+              <button id="btn-export-pdf" class="py-2 bg-[#0f172a] border border-border rounded-lg text-xs font-bold hover:border-accent">PDF Report</button>
+            </div>
+            <button id="btn-clear-all" class="w-full py-2 bg-red-500/5 border border-red-500/20 text-red-400/70 rounded-lg text-xs font-bold hover:bg-red-500/10 hover:text-red-400">Clear Entire Graph</button>
+          </div>
+
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <style>
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(59, 130, 246, 0.3); border-radius: 3px; }
+    #cy-container { width: 100%; height: 100%; }
+  </style>
+
+  <script>
+    import cytoscape from 'cytoscape';
+    import dagre from 'cytoscape-dagre';
+    cytoscape.use(dagre);
+
+    // --- 1. STATE MANAGEMENT ---
+    const STORAGE_KEY = 'oci_vcn_data_v1';
+    let cy;
+    let selectedElement = null;
+    let state = {
+      onPrem: { id: 'op1', label: 'HQ Data Center', cidr: '10.0.0.0/16' },
+      vcns: [] // { id, label, cidr, subnets: [{id, label, cidr, type}] }
+    };
+
+    // --- 2. IP MATH ENGINE ---
+    function ip2long(ip) { return ip.split('.').reduce((acc, octet) => (acc << 8) + parseInt(octet, 10), 0) >>> 0; }
+    function getCidrBounds(cidr) {
+      const [ip, prefix] = cidr.split('/');
+      const mask = (-1 << (32 - parseInt(prefix, 10))) >>> 0;
+      const network = ip2long(ip) & mask;
+      const broadcast = network | (~mask >>> 0);
+      return { network, broadcast, prefix: parseInt(prefix, 10) };
+    }
+    function checkOverlap(cidr1, cidr2) {
+      const b1 = getCidrBounds(cidr1);
+      const b2 = getCidrBounds(cidr2);
+      return (b1.network <= b2.broadcast && b2.network <= b1.broadcast);
+    }
+
+    // --- 3. CYTOSCAPE INIT (FIXED LABELS) ---
+    function initGraph() {
+      cy = cytoscape({
+        container: document.getElementById('cy-container'),
+        style: [
+          { 
+            selector: 'node', 
+            style: { 
+              'label': 'data(label)', 
+              'color': '#fff', 
+              'text-valign': 'center', 
+              'text-halign': 'center', 
+              'font-size': '10px', 
+              'font-weight': 'bold', 
+              'text-wrap': 'wrap', // FIX: Wrap text
+              'text-max-width': '90px', // FIX: Max width
+              'border-width': 2, 
+              'border-color': '#fff',
+              'transition-property': 'background-color, border-color, width, height',
+              'transition-duration': '0.3s'
+            } 
+          },
+          { selector: 'node[type="onprem"]', style: { 'background-color': '#64748b', 'shape': 'rectangle', 'width': 100, 'height': 60 } },
+          { selector: 'node[type="drg"]', style: { 'background-color': '#C74634', 'shape': 'diamond', 'width': 70, 'height': 70 } },
+          { selector: 'node[type="vcn"]', style: { 'background-color': '#3b82f6', 'shape': 'roundrectangle', 'width': 110, 'height': 70 } },
+          { selector: 'node[type="subnet-pub"]', style: { 'background-color': '#10b981', 'shape': 'ellipse', 'width': 90, 'height': 90 } },
+          { selector: 'node[type="subnet-priv"]', style: { 'background-color': '#f59e0b', 'shape': 'ellipse', 'width': 90, 'height': 90 } },
+          { 
+            selector: 'edge', 
+            style: { 
+              'width': 2, 
+              'line-color': '#4b5563', 
+              'target-arrow-color': '#4b5563', 
+              'target-arrow-shape': 'triangle', 
+              'curve-style': 'bezier', 
+              'label': 'data(label)', 
+              'font-size': '9px', 
+              'color': '#9ca3af', 
+              'text-rotation': 'autorotate',
+              'text-background-color': '#0a0f1c',
+              'text-background-opacity': 1,
+              'text-background-padding': 2
+            } 
+          },
+          { selector: 'node.selected', style: { 'border-width': 4, 'border-color': '#fff', 'overlay-padding': 10 } },
+          { selector: 'edge.selected', style: { 'width': 4, 'line-color': '#fff', 'target-arrow-color': '#fff' } },
+          { selector: 'edge.overlap', style: { 'line-color': '#ef4444', 'target-arrow-color': '#ef4444', 'width': 3, 'line-style': 'dashed' } },
+          { selector: 'edge.path-allow', style: { 'width': 4, 'line-color': '#10b981', 'target-arrow-color': '#10b981' } },
+          { selector: 'edge.path-deny', style: { 'width': 4, 'line-color': '#ef4444', 'target-arrow-color': '#ef4444', 'line-style': 'dashed' } }
+        ],
+        layout: { name: 'grid' },
+        minZoom: 0.2, maxZoom: 4, wheelSensitivity: 0.3, boxSelectionEnabled: true
+      });
+
+      // Event Listeners
+      cy.on('tap', 'node, edge', (evt) => selectElement(evt.target));
+      cy.on('tap', (evt) => { if (evt.target === cy) deselectElement(); });
+      document.addEventListener('keydown', (e) => {
+        if ((e.key === 'Delete' || e.key === 'Backspace') && selectedElement && document.activeElement.tagName !== 'INPUT') deleteSelected();
+      });
+      window.addEventListener('resize', () => cy.resize());
+
+      loadData();
+    }
+
+    // --- 4. CRUD & INSPECTOR ---
+    function selectElement(el) {
+      selectedElement = el;
+      cy.elements().removeClass('selected');
+      el.addClass('selected');
+
+      document.getElementById('inspector-empty').classList.add('hidden');
+      document.getElementById('inspector-panel').classList.remove('hidden');
+
+      document.getElementById('insp-type').value = el.isNode() ? el.data('type') : 'Connection';
+      document.getElementById('insp-label').value = el.data('label') || '';
+      
+      const cidrGroup = document.getElementById('insp-cidr-group');
+      if (el.isNode() && el.data('cidr')) {
+        cidrGroup.classList.remove('hidden');
+        document.getElementById('insp-cidr').value = el.data('cidr');
+      } else {
+        cidrGroup.classList.add('hidden');
+      }
+    }
+
+    function deselectElement() {
+      selectedElement = null;
+      cy.elements().removeClass('selected');
+      document.getElementById('inspector-empty').classList.remove('hidden');
+      document.getElementById('inspector-panel').classList.add('hidden');
+    }
+
+    function updateSelectedData() {
+      if (!selectedElement) return;
+      const label = document.getElementById('insp-label').value;
+      selectedElement.data('label', label);
+      
+      if (selectedElement.isNode() && selectedElement.data('cidr') !== undefined) {
+        const cidr = document.getElementById('insp-cidr').value;
+        selectedElement.data('cidr', cidr);
+        // Update state if it's OnPrem
+        if (selectedElement.id() === state.onPrem.id) {
+          state.onPrem.cidr = cidr;
+          state.onPrem.label = label;
+        }
+      }
+      rebuildGraph(); // Re-run validation and TF gen
+    }
+
+    function deleteSelected() {
+      if (!selectedElement) return;
+      const id = selectedElement.id();
+      selectedElement.remove();
+      
+      // Clean up state
+      state.vcns = state.vcns.filter(v => v.id !== id);
+      state.vcns.forEach(v => { v.subnets = v.subnets.filter(s => s.id !== id); });
+      
+      deselectElement();
+      rebuildGraph();
+    }
+
+    // --- 5. CORE LOGIC: REBUILD & VALIDATE ---
+    function rebuildGraph() {
+      cy.elements().remove();
+      const overlaps = [];
+
+      // 1. On-Prem
+      cy.add({ group: 'nodes', data: { id: state.onPrem.id, type: 'onprem', label: `${state.onPrem.label}\n${state.onPrem.cidr}`, cidr: state.onPrem.cidr } });
+      
+      // 2. DRG
+      const drgId = 'drg_main';
+      cy.add({ group: 'nodes', data: { id: drgId, type: 'drg', label: 'OCI DRG\n(FastConnect/VPN)' } });
+      cy.add({ group: 'edges', data: { id: 'e_op_drg', source: state.onPrem.id, target: drgId, label: 'Hybrid Link' } });
+
+      // 3. VCNs & Subnets
+      state.vcns.forEach(vcn => {
+        cy.add({ group: 'nodes', data: { id: vcn.id, type: 'vcn', label: `${vcn.label}\n${vcn.cidr}`, cidr: vcn.cidr } });
+        const edgeId = `e_drg_${vcn.id}`;
+        cy.add({ group: 'edges', data: { id: edgeId, source: drgId, target: vcn.id, label: 'Route Table' } });
+
+        // VCN vs On-Prem
+        if (checkOverlap(vcn.cidr, state.onPrem.cidr)) {
+          overlaps.push(`CRITICAL: VCN "${vcn.label}" overlaps with On-Prem!`);
+          cy.getElementById(edgeId).addClass('overlap');
+        }
+
+        // VCN vs VCN
+        state.vcns.forEach(otherVcn => {
+          if (vcn.id !== otherVcn.id && checkOverlap(vcn.cidr, otherVcn.cidr)) {
+            overlaps.push(`WARNING: VCN "${vcn.label}" overlaps with "${otherVcn.label}"!`);
+          }
+        });
+
+        // Subnets
+        vcn.subnets.forEach(sub => {
+          const subType = sub.type === 'Public' ? 'subnet-pub' : 'subnet-priv';
+          cy.add({ group: 'nodes', data: { id: sub.id, type: subType, label: `${sub.label}\n${sub.cidr}`, cidr: sub.cidr } });
+          cy.add({ group: 'edges', data: { id: `e_${vcn.id}_${sub.id}`, source: vcn.id, target: sub.id, label: sub.type } });
+
+          if (checkOverlap(sub.cidr, state.onPrem.cidr)) overlaps.push(`CRITICAL: Subnet "${sub.label}" overlaps with On-Prem!`);
+          if (!checkOverlap(sub.cidr, vcn.cidr)) overlaps.push(`ERROR: Subnet "${sub.label}" is outside VCN "${vcn.label}"!`);
+        });
+      });
+
+      cy.layout({ name: 'dagre', rankDir: 'LR', nodeSep: 80, rankSep: 120, padding: 50, animate: true }).run();
+      updateOverlapLog(overlaps);
+      generateTerraform();
+      updateDropdowns();
+      autoSave();
+    }
+
+    // --- 6. UI UPDATERS ---
+    function updateOverlapLog(overlaps) {
+      const log = document.getElementById('overlap-log');
+      const status = document.getElementById('validation-status');
+      if (overlaps.length === 0) {
+        log.innerHTML = `<p class="text-green-400 font-bold">✅ All CIDR blocks are unique.</p>`;
+        status.innerHTML = `<span class="w-2 h-2 rounded-full bg-green-400"></span> No Overlaps`;
+        status.className = 'text-xs text-green-400 font-mono flex items-center gap-1';
+      } else {
+        log.innerHTML = overlaps.map(o => `<p class="text-red-400 mb-1">⚠️ ${o}</p>`).join('');
+        status.innerHTML = `<span class="w-2 h-2 rounded-full bg-red-400 animate-pulse"></span> ${overlaps.length} Overlap(s)!`;
+        status.className = 'text-xs text-red-400 font-mono flex items-center gap-1';
+      }
+    }
+
+    function generateTerraform() {
+      let tf = `# ==========================================\n# OCI Terraform Configuration\n# Generated by ZX Labs VCN Planner\n# ==========================================\n\nprovider "oci" {\n  region = var.region\n}\n\n`;
+      tf += `# On-Premise Reference: ${state.onPrem.label} (${state.onPrem.cidr})\n\n`;
+
+      state.vcns.forEach(vcn => {
+        tf += `resource "oci_core_vcn" "${vcn.id.replace(/-/g, '_')}" {\n  compartment_id = var.compartment_id\n  cidr_block     = "${vcn.cidr}"\n  display_name   = "${vcn.label}"\n  dns_label      = "${vcn.label.replace(/\s+/g, '').substring(0, 15).toLowerCase()}"\n}\n\n`;
+        vcn.subnets.forEach(sub => {
+          tf += `resource "oci_core_subnet" "${sub.id.replace(/-/g, '_')}" {\n  compartment_id = var.compartment_id\n  vcn_id         = oci_core_vcn.${vcn.id.replace(/-/g, '_')}.id\n  cidr_block     = "${sub.cidr}"\n  display_name   = "${sub.label}"\n  ${sub.type === 'Public' ? 'prohibit_public_ip_on_vnic = false' : 'prohibit_public_ip_on_vnic = true'}\n}\n\n`;
+        });
+      });
+      document.getElementById('tf-output') ? document.getElementById('tf-output').innerText = tf : null; // Kept for legacy if needed, but we export via file now.
+    }
+
+    function updateDropdowns() {
+      const el = document.getElementById('sub-vcn');
+      const val = el.value;
+      el.innerHTML = '<option value="">Select VCN...</option>';
+      state.vcns.forEach(v => el.add(new Option(`${v.label} (${v.cidr})`, v.id)));
+      el.value = val;
+
+      // Simulator Dropdowns
+      const simSource = document.getElementById('sim-source');
+      const simTarget = document.getElementById('sim-target');
+      const simValS = simSource.value;
+      const simValT = simTarget.value;
+      simSource.innerHTML = '<option value="">Select Source...</option>';
+      simTarget.innerHTML = '<option value="">Select Target...</option>';
+      
+      const addOpt = (select, node) => select.add(new Option(`${node.data('label')} (${node.data('type')})`, node.id()));
+      addOpt(simSource, cy.getElementById(state.onPrem.id));
+      addOpt(simTarget, cy.getElementById(state.onPrem.id));
+      
+      state.vcns.forEach(v => {
+        addOpt(simSource, cy.getElementById(v.id));
+        addOpt(simTarget, cy.getElementById(v.id));
+        v.subnets.forEach(s => {
+          addOpt(simSource, cy.getElementById(s.id));
+          addOpt(simTarget, cy.getElementById(s.id));
+        });
+      });
+      simSource.value = simValS;
+      simTarget.value = simValT;
+    }
+
+    // --- 7. SIMULATOR ---
+    function runSimulation() {
+      const srcId = document.getElementById('sim-source').value;
+      const tgtId = document.getElementById('sim-target').value;
+      const log = document.getElementById('sim-log');
+      cy.edges().removeClass('path-allow path-deny');
+
+      if (!srcId || !tgtId || srcId === tgtId) {
+        log.innerHTML = `<p class="text-red-400">Error: Select distinct Source and Target.</p>`;
+        return;
+      }
+
+      const src = cy.getElementById(srcId);
+      const tgt = cy.getElementById(tgtId);
+      const path = src.shortestPath(tgt);
+
+      let html = `<p class="text-blue-400 mb-2">> Simulating: ${src.data('label')} ➔ ${tgt.data('label')}</p>`;
+
+      if (path.empty()) {
+        html += `<p class="text-red-400 font-bold">[DENY] No network path exists.</p>`;
+        log.innerHTML = html;
+        return;
+      }
+
+      path.edges().addClass('path-allow');
+      html += `<p class="text-green-400 font-bold mt-2">[ALLOW] Path found via ${path.edges().length} hop(s).</p>`;
+      html += `<p class="text-muted">Traffic routed successfully.</p>`;
+      log.innerHTML = html;
+    }
+
+    // --- 8. IMPORT / EXPORT ---
+    function autoSave() {
+      const data = { state, cyJson: cy.json() };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    function loadData() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try {
+          const data = JSON.parse(saved);
+          state = data.state;
+          cy.json(data.cyJson);
+        } catch (e) { loadDemo(); }
+      } else { loadDemo(); }
+      updateDropdowns();
+    }
+
+    function exportJSON() {
+      const data = { state, cyJson: cy.json() };
+      downloadFile(JSON.stringify(data, null, 2), 'OCI_VCN_Topology.json', 'application/json');
+    }
+
+    function importJSON(file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = JSON.parse(e.target.result);
+          state = data.state;
+          cy.json(data.cyJson);
+          updateDropdowns();
+          autoSave();
+        } catch (err) { alert('Invalid JSON file.'); }
+      };
+      reader.readAsText(file);
+    }
+
+    function exportTF() {
+      let tf = `# OCI Terraform Configuration\n# Generated by ZX Labs VCN Planner\n\nprovider "oci" { region = var.region }\n\n`;
+      tf += `# On-Premise Reference: ${state.onPrem.label} (${state.onPrem.cidr})\n\n`;
+      state.vcns.forEach(vcn => {
+        tf += `resource "oci_core_vcn" "${vcn.id.replace(/-/g, '_')}" {\n  compartment_id = var.compartment_id\n  cidr_block     = "${vcn.cidr}"\n  display_name   = "${vcn.label}"\n}\n\n`;
+        vcn.subnets.forEach(sub => {
+          tf += `resource "oci_core_subnet" "${sub.id.replace(/-/g, '_')}" {\n  compartment_id = var.compartment_id\n  vcn_id         = oci_core_vcn.${vcn.id.replace(/-/g, '_')}.id\n  cidr_block     = "${sub.cidr}"\n  display_name   = "${sub.label}"\n}\n\n`;
+        });
+      });
+      downloadFile(tf, 'main.tf', 'text/plain');
+    }
+
+    function importTF(file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const text = e.target.result;
+        state.vcns = [];
+        
+        // Parse VCNs
+        const vcnRegex = /resource\s+"oci_core_vcn"\s+"(\w+)"\s*\{[\s\S]*?cidr_block\s*=\s*"([^"]+)"[\s\S]*?display_name\s*=\s*"([^"]+)"/g;
+        let match;
+        while ((match = vcnRegex.exec(text)) !== null) {
+          state.vcns.push({ id: 'vcn_' + match[1], label: match[3], cidr: match[2], subnets: [] });
+        }
+
+        // Parse Subnets
+        const subRegex = /resource\s+"oci_core_subnet"\s+"(\w+)"\s*\{[\s\S]*?cidr_block\s*=\s*"([^"]+)"[\s\S]*?display_name\s*=\s*"([^"]+)"[\s\S]*?vcn_id\s*=\s*oci_core_vcn\.(\w+)\.id/g;
+        while ((match = subRegex.exec(text)) !== null) {
+          const vcn = state.vcns.find(v => v.id === 'vcn_' + match[4]);
+          if (vcn) vcn.subnets.push({ id: 'sub_' + match[1], label: match[3], cidr: match[2], type: 'Private' });
+        }
+
+        rebuildGraph();
+        alert(`Imported ${state.vcns.length} VCNs and associated subnets.`);
+      };
+      reader.readAsText(file);
+    }
+
+    async function exportPNG() {
+      const png = await cy.png({ full: true, bg: '#0a0f1c', scale: 3, output: 'blob-promise' });
+      const url = URL.createObjectURL(png);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'OCI_VCN_Topology_HighRes.png'; a.click();
+    }
+
+    async function exportPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+      doc.setFontSize(20); doc.setTextColor(199, 70, 52);
+      doc.text('OCI VCN Topology Diagram', 14, 20);
+      doc.setFontSize(10); doc.setTextColor(100);
+      doc.text(`Generated by ZX Labs | ${new Date().toLocaleString()}`, 14, 30);
+      const png = await cy.png({ full: true, bg: '#ffffff', scale: 2 });
+      doc.addImage(png, 'PNG', 14, 40, 260, 150);
+      doc.save('OCI_VCN_Report.pdf');
+    }
+
+    function downloadFile(content, fileName, mimeType) {
+      const blob = new Blob([content], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = fileName; a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function loadDemo() {
+      state.onPrem = { id: 'op1', label: 'HQ Data Center', cidr: '10.0.0.0/16' };
+      state.vcns = [
+        { id: 'vcn_prod', label: 'Production VCN', cidr: '172.16.0.0/16', subnets: [
+          { id: 'sub_pub1', label: 'Public Web Tier', cidr: '172.16.1.0/24', type: 'Public' },
+          { id: 'sub_priv1', label: 'Private App Tier', cidr: '172.16.2.0/24', type: 'Private' }
+        ]},
+        { id: 'vcn_dev', label: 'Development VCN', cidr: '172.17.0.0/16', subnets: [
+          { id: 'sub_dev1', label: 'Dev Public', cidr: '172.17.1.0/24', type: 'Public' }
+        ]}
+      ];
+      document.getElementById('op-label').value = state.onPrem.label;
+      document.getElementById('op-cidr').value = state.onPrem.cidr;
+      rebuildGraph();
+    }
+
+    // --- 9. EVENT BINDINGS ---
+    document.getElementById('btn-update-op').addEventListener('click', () => {
+      state.onPrem.label = document.getElementById('op-label').value || 'On-Prem DC';
+      state.onPrem.cidr = document.getElementById('op-cidr').value || '10.0.0.0/16';
+      rebuildGraph();
+    });
+
+    document.getElementById('btn-add-vcn').addEventListener('click', () => {
+      const label = document.getElementById('vcn-label').value.trim();
+      const cidr = document.getElementById('vcn-cidr').value.trim();
+      if (!label || !cidr) return alert('Please enter VCN Name and CIDR.');
+      state.vcns.push({ id: 'vcn_' + Date.now(), label, cidr, subnets: [] });
+      document.getElementById('vcn-label').value = ''; document.getElementById('vcn-cidr').value = '';
+      rebuildGraph();
+    });
+
+    document.getElementById('btn-add-sub').addEventListener('click', () => {
+      const vcnId = document.getElementById('sub-vcn').value;
+      const label = document.getElementById('sub-label').value.trim();
+      const cidr = document.getElementById('sub-cidr').value.trim();
+      const type = document.getElementById('sub-type').value;
+      if (!vcnId || !label || !cidr) return alert('Please fill all subnet fields.');
+      const vcn = state.vcns.find(v => v.id === vcnId);
+      if (vcn) {
+        vcn.subnets.push({ id: 'sub_' + Date.now(), label, cidr, type });
+        document.getElementById('sub-label').value = ''; document.getElementById('sub-cidr').value = '';
+        rebuildGraph();
+      }
+    });
+
+    document.getElementById('insp-label').addEventListener('input', updateSelectedData);
+    document.getElementById('insp-cidr').addEventListener('input', updateSelectedData);
+    document.getElementById('btn-delete-selected').addEventListener('click', deleteSelected);
+    document.getElementById('btn-deselect').addEventListener('click', deselectElement);
+
+    document.getElementById('layout-dagre').addEventListener('click', () => cy.layout({ name: 'dagre', rankDir: 'LR', nodeSep: 80, rankSep: 120, padding: 50, animate: true }).run());
+    document.getElementById('layout-circle').addEventListener('click', () => cy.layout({ name: 'circle', animate: true }).run());
+    document.getElementById('layout-grid').addEventListener('click', () => cy.layout({ name: 'grid', animate: true }).run());
+    document.getElementById('btn-fit').addEventListener('click', () => cy.fit(null, 50));
+    document.getElementById('btn-load-demo').addEventListener('click', loadDemo);
+    document.getElementById('btn-clear-all').addEventListener('click', () => { if(confirm('Clear all?')) { state.vcns = []; rebuildGraph(); } });
+
+    document.getElementById('btn-simulate').addEventListener('click', runSimulation);
+
+    document.getElementById('btn-export-json').addEventListener('click', exportJSON);
+    document.getElementById('file-import-json').addEventListener('change', (e) => { if(e.target.files[0]) importJSON(e.target.files[0]); });
+    document.getElementById('btn-export-tf').addEventListener('click', exportTF);
+    document.getElementById('file-import-tf').addEventListener('change', (e) => { if(e.target.files[0]) importTF(e.target.files[0]); });
+    document.getElementById('btn-export-png').addEventListener('click', exportPNG);
+    document.getElementById('btn-export-pdf').addEventListener('click', exportPDF);
+
+    // Init
+    initGraph();
+  </script>
+</Layout>
