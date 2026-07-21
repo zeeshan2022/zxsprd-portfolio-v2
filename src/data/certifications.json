@@ -1,26 +1,98 @@
 [
   {
-    "filename": "Total-Cloud-Qualys-Diploma.jpg",
+    "filename": "01-Total-Cloud-Qualys-Diploma.jpg",
     "title": "Qualys Total Cloud Diploma",
     "issuer": "Qualys",
-    "date": "2023",
+    "date": "23-06-2026",
     "credentialId": "Total Cloud Certified",
     "category": "Cloud Security"
   },
   {
-    "filename": "TruRisk-Management-(ETM)-Exam Diplom.jpg",
+    "filename": "02-TruRisk-Management-(ETM)-Exam Diplom.jpg",
     "title": "TruRisk Management (ETM) Exam Diploma",
     "issuer": "TruRisk",
-    "date": "2023",
+    "date": "23-06-2026",
     "credentialId": "ETM Certified",
     "category": "Risk Management"
   },
   {
-    "filename": "Qualys-Kubernetes-and-Container-Security-(KCS)-Diploma.jpg",
+    "filename": "03-Qualys-Kubernetes-and-Container-Security-(KCS)-Diploma.jpg",
     "title": "Qualys Kubernetes & Container Security (KCS) Diploma",
     "issuer": "Qualys",
-    "date": "2023",
+    "date": "23-06-2026",
     "credentialId": "KCS Certified",
     "category": "Container Security"
+  },
+    {
+    "filename": "04-administration-module.jpg",
+    "title": "Qualys Administration Module",
+    "issuer": "Qualys",
+    "date": "22-01-2026",
+    "credentialId": "Platform Administration",
+    "category": "Platform Administration"
+  },
+  {
+    "filename": "05-cloud-agent.jpg",
+    "title": "Qualys Cloud Agent",
+    "issuer": "Qualys",
+    "date": "13-11-2025",
+    "credentialId": "Cloud Security Agent",
+    "category": "Cloud Security"
+  },
+  {
+    "filename": "06-cybersecurity-asset-management.jpg",
+    "title": "Cybersecurity Asset Management",
+    "issuer": "Qualys",
+    "date": "13-11-2025",
+    "credentialId": "IT Asset & CMDB",
+    "category": "Asset Management"
+  },
+  {
+    "filename": "07-qualys-enterprise-trurisk-platform.jpg",
+    "title": "Qualys Enterprise TruRisk Platform",
+    "issuer": "Qualys",
+    "date": "13-11-2025",
+    "credentialId": "TruRisk Scoring",
+    "category": "Risk Management"
+  },
+  {
+    "filename": "08-qualys-sensor-foundation.jpg",
+    "title": "Qualys Sensor Foundation",
+    "issuer": "Qualys",
+    "date": "13-11-2025",
+    "credentialId": "Sensor Deployment",
+    "category": "Infrastructure"
+  },
+  {
+    "filename": "09-qualys-trurisk-eliminate.jpg",
+    "title": "Eliminate Risk with TruRisk",
+    "issuer": "Qualys",
+    "date": "22-01-2026",
+    "credentialId": "Risk Elimination",
+    "category": "Risk Management"
+  },
+  {
+    "filename": "10-scanning-strategies-and-best-practices.jpg",
+    "title": "Scanning Strategies & Best Practices",
+    "issuer": "Qualys",
+    "date": "13-11-2025",
+    "credentialId": "Scan Policies",
+    "category": "Vulnerability Mgmt"
+  },
+  {
+    "filename": "11-vulnerability-management-detection-and-response.jpg",
+    "title": "VMDR: Detection and Response",
+    "issuer": "Qualys",
+    "date": "13-11-2025",
+    "credentialId": "VMDR Module",
+    "category": "VMDR"
+  },
+  {
+    "filename": "12-vulnerablilitymanagement.jpg",
+    "title": "Vulnerability Management Core",
+    "issuer": "Qualys",
+    "date": "13-11-2025",
+    "credentialId": "VM Core",
+    "category": "Vulnerability Mgmt"
   }
 ]
