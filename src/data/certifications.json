@@ -1,0 +1,26 @@
+[
+  {
+    "filename": "Total-Cloud-Qualys-Diploma.jpg",
+    "title": "Qualys Total Cloud Diploma",
+    "issuer": "Qualys",
+    "date": "2023",
+    "credentialId": "Total Cloud Certified",
+    "category": "Cloud Security"
+  },
+  {
+    "filename": "TruRisk-Management-(ETM)-Exam Diplom.jpg",
+    "title": "TruRisk Management (ETM) Exam Diploma",
+    "issuer": "TruRisk",
+    "date": "2023",
+    "credentialId": "ETM Certified",
+    "category": "Risk Management"
+  },
+  {
+    "filename": "Qualys-Kubernetes-and-Container-Security-(KCS)-Diploma.jpg",
+    "title": "Qualys Kubernetes & Container Security (KCS) Diploma",
+    "issuer": "Qualys",
+    "date": "2023",
+    "credentialId": "KCS Certified",
+    "category": "Container Security"
+  }
+]
