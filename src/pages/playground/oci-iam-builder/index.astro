@@ -1,0 +1,432 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import Navbar from '../../../components/Navbar.astro';
+---
+
+<Layout title="OCI IAM Policy Builder | ZX Labs" lang="en" dir="ltr">
+  <Navbar currentLang="en" />
+
+  <main class="min-h-screen pt-20 pb-10 bg-[#0f172a]">
+    
+    <!-- Top Navigation Bar -->
+    <header class="h-16 border-b border-border bg-bg/80 backdrop-blur flex items-center justify-between px-6 sticky top-0 z-50">
+      <div class="flex items-center gap-4">
+        <a href="/playground/" class="p-2 rounded-lg hover:bg-bg/50 text-muted hover:text-accent transition-colors" title="Back to Labs">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+        </a>
+        <div>
+          <h1 class="text-lg font-bold text-text flex items-center gap-2">
+            <span class="text-[#C74634]">OCI</span> IAM Policy Builder & Syntax Generator
+          </h1>
+          <p class="text-[10px] text-muted">Production-Ready Identity & Access Management IDE</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <span id="validation-status" class="text-xs text-green-400 font-mono flex items-center gap-1">
+          <span class="w-2 h-2 rounded-full bg-green-400"></span> Syntax Valid
+        </span>
+      </div>
+    </header>
+
+    <!-- Main IDE Layout -->
+    <div class="flex h-[calc(100vh-64px)]">
+      
+      <!-- LEFT SIDEBAR: Policy Builder -->
+      <aside class="w-80 border-r border-border bg-bg/50 flex flex-col overflow-y-auto custom-scrollbar">
+        <div class="p-5 space-y-6">
+          
+          <div class="space-y-3">
+            <h3 class="text-xs font-bold text-accent uppercase tracking-widest flex items-center gap-2"><span class="text-accent">+</span> Define Statement</h3>
+            
+            <div>
+              <label class="text-[10px] text-muted uppercase font-bold">Effect & Subject</label>
+              <div class="flex gap-2 mt-1">
+                <select id="bld-effect" class="flex-1 px-2 py-2 bg-[#0f172a] border border-border rounded-lg text-text text-xs focus:border-accent outline-none">
+                  <option value="Allow">Allow</option>
+                  <option value="Deny">Deny</option>
+                </select>
+                <select id="bld-subject-type" class="flex-1 px-2 py-2 bg-[#0f172a] border border-border rounded-lg text-text text-xs focus:border-accent outline-none">
+                  <option value="group">Group</option>
+                  <option value="dynamic-group">Dynamic Group</option>
+                  <option value="any-user">Any User</option>
+                  <option value="service">Service</option>
+                </select>
+              </div>
+              <input id="bld-subject-name" type="text" placeholder="Name (e.g., NetworkAdmins)" class="w-full mt-2 px-3 py-2 bg-[#0f172a] border border-border rounded-lg text-text text-sm focus:border-accent outline-none" />
+            </div>
+
+            <div>
+              <label class="text-[10px] text-muted uppercase font-bold">Verb (Permission Level)</label>
+              <select id="bld-verb" class="w-full mt-1 px-3 py-2 bg-[#0f172a] border border-border rounded-lg text-text text-sm focus:border-accent outline-none">
+                <option value="inspect">Inspect (List/View metadata)</option>
+                <option value="read">Read (Inspect + View content)</option>
+                <option value="use" selected>Use (Read + Bind/Modify state)</option>
+                <option value="manage">Manage (Full access)</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="text-[10px] text-muted uppercase font-bold">Resource Type</label>
+              <select id="bld-resource" class="w-full mt-1 px-3 py-2 bg-[#0f172a] border border-border rounded-lg text-text text-sm focus:border-accent outline-none">
+                <option value="all-resources">All Resources</option>
+                <option value="instances">Instances (Compute)</option>
+                <option value="vcns">VCNs (Networking)</option>
+                <option value="subnets">Subnets</option>
+                <option value="load-balancers">Load Balancers</option>
+                <option value="volume-backups">Block Volumes</option>
+                <option value="file-systems">File Storage</option>
+                <option value="databases">Databases</option>
+                <option value="buckets">Object Storage Buckets</option>
+                <option value="identity-providers">Identity Providers</option>
+                <option value="compartments">Compartments</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="text-[10px] text-muted uppercase font-bold">Location (Compartment)</label>
+              <select id="bld-loc-type" class="w-full mt-1 px-3 py-2 bg-[#0f172a] border border-border rounded-lg text-text text-sm focus:border-accent outline-none">
+                <option value="tenancy">Tenancy (Root)</option>
+                <option value="compartment" selected>Specific Compartment</option>
+              </select>
+              <input id="bld-loc-name" type="text" placeholder="Compartment Name (e.g., Prod)" class="w-full mt-2 px-3 py-2 bg-[#0f172a] border border-border rounded-lg text-text text-sm focus:border-accent outline-none" />
+            </div>
+          </div>
+
+          <hr class="border-border" />
+
+          <!-- Condition Builder -->
+          <div class="space-y-3">
+            <h3 class="text-xs font-bold text-accent uppercase tracking-widest flex items-center gap-2"><span class="text-accent">⚙️</span> Conditions (Where)</h3>
+            <div id="conditions-list" class="space-y-2 max-h-32 overflow-y-auto custom-scrollbar">
+              <p class="text-[10px] text-muted italic">No conditions added. (Unrestricted access)</p>
+            </div>
+            <div class="grid grid-cols-3 gap-1">
+              <input id="cond-key" type="text" placeholder="Key" class="px-2 py-1.5 bg-[#0f172a] border border-border rounded text-text text-[10px] focus:border-accent outline-none" />
+              <select id="cond-op" class="px-1 py-1.5 bg-[#0f172a] border border-border rounded text-text text-[10px] focus:border-accent outline-none">
+                <option value="=">=</option>
+                <option value="!=">!=</option>
+                <option value="in">in</option>
+              </select>
+              <input id="cond-val" type="text" placeholder="Value" class="px-2 py-1.5 bg-[#0f172a] border border-border rounded text-text text-[10px] focus:border-accent outline-none" />
+            </div>
+            <button id="btn-add-cond" class="w-full py-1.5 bg-bg border border-border text-text font-bold rounded-lg hover:border-accent hover:text-accent transition-colors text-[10px]">Add Condition</button>
+          </div>
+
+          <hr class="border-border" />
+
+          <!-- Actions -->
+          <div class="space-y-3">
+            <button id="btn-add-policy" class="w-full py-3 bg-accent text-bg font-bold rounded-lg hover:bg-accent2 transition-colors text-sm shadow-lg shadow-accent/20">Add Statement to Policy</button>
+            
+            <div class="grid grid-cols-2 gap-2">
+              <button id="btn-clear-all" class="py-2 bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg text-xs font-bold hover:bg-red-500/20">Clear All</button>
+              <button id="btn-load-roles" class="py-2 bg-purple-500/10 border border-purple-500/30 text-purple-400 rounded-lg text-xs font-bold hover:bg-purple-500/20">Load Role Templates</button>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- CENTER: Policy Statements List -->
+      <section class="flex-1 flex flex-col overflow-hidden">
+        <div class="p-5 border-b border-border flex justify-between items-center bg-bg/30">
+          <h2 class="text-sm font-bold text-text uppercase tracking-widest">Policy Statements (<span id="stmt-count">0</span>)</h2>
+          <div class="flex gap-2">
+            <button id="btn-export-tf" class="px-3 py-1.5 bg-[#0f172a] border border-border rounded-lg text-[10px] font-bold hover:border-accent">Export Terraform (.tf)</button>
+            <button id="btn-export-txt" class="px-3 py-1.5 bg-[#0f172a] border border-border rounded-lg text-[10px] font-bold hover:border-accent">Export .txt</button>
+          </div>
+        </div>
+        
+        <div class="flex-1 overflow-y-auto custom-scrollbar p-5 space-y-3" id="statements-container">
+          <div class="text-center py-12 text-muted text-sm">
+            <p>No policy statements yet.</p>
+            <p class="text-xs mt-2">Use the builder on the left or load a Role Template to begin.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT SIDEBAR: Live Syntax Preview -->
+      <aside class="w-96 border-l border-border bg-bg/50 flex flex-col overflow-hidden">
+        <div class="p-5 border-b border-border flex justify-between items-center bg-bg/30">
+          <h2 class="text-sm font-bold text-text uppercase tracking-widest">Live Syntax Preview</h2>
+          <button id="btn-copy-all" class="px-3 py-1.5 bg-accent/10 text-accent border border-accent/30 rounded-lg text-[10px] font-bold hover:bg-accent hover:text-bg transition-all">Copy All</button>
+        </div>
+        
+        <div class="flex-1 overflow-y-auto custom-scrollbar p-5">
+          <pre id="syntax-preview" class="bg-[#0d1117] rounded-lg p-4 font-mono text-[11px] leading-relaxed text-gray-300 border border-border whitespace-pre-wrap min-h-full">
+# Define your policy statements to see the generated OCI IAM syntax here...
+          </pre>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <style>
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(59, 130, 246, 0.3); border-radius: 3px; }
+    
+    /* Syntax Highlighting */
+    .syn-allow { color: #10b981; font-weight: bold; }
+    .syn-deny { color: #ef4444; font-weight: bold; }
+    .syn-verb { color: #f59e0b; font-weight: bold; }
+    .syn-resource { color: #3b82f6; }
+    .syn-loc { color: #8b5cf6; }
+    .syn-cond { color: #9ca3af; font-style: italic; }
+  </style>
+
+  <script>
+    // --- 1. STATE MANAGEMENT ---
+    const STORAGE_KEY = 'oci_iam_data_v1';
+    let statements = [];
+    let conditions = [];
+
+    // --- 2. ROLE TEMPLATES ---
+    const roleTemplates = {
+      'Network Admin': [
+        { effect: 'Allow', subType: 'group', subName: 'NetworkAdmins', verb: 'manage', resource: 'vcns', locType: 'compartment', locName: 'NetworkComp' },
+        { effect: 'Allow', subType: 'group', subName: 'NetworkAdmins', verb: 'manage', resource: 'subnets', locType: 'compartment', locName: 'NetworkComp' },
+        { effect: 'Allow', subType: 'group', subName: 'NetworkAdmins', verb: 'manage', resource: 'load-balancers', locType: 'compartment', locName: 'NetworkComp' }
+      ],
+      'Compute Admin': [
+        { effect: 'Allow', subType: 'group', subName: 'ComputeAdmins', verb: 'manage', resource: 'instances', locType: 'compartment', locName: 'ComputeComp' },
+        { effect: 'Allow', subType: 'group', subName: 'ComputeAdmins', verb: 'manage', resource: 'volume-backups', locType: 'compartment', locName: 'ComputeComp' },
+        { effect: 'Allow', subType: 'group', subName: 'ComputeAdmins', verb: 'use', resource: 'vcns', locType: 'compartment', locName: 'ComputeComp' }
+      ],
+      'Security Auditor': [
+        { effect: 'Allow', subType: 'group', subName: 'Auditors', verb: 'read', resource: 'all-resources', locType: 'tenancy', locName: '' },
+        { effect: 'Allow', subType: 'group', subName: 'Auditors', verb: 'inspect', resource: 'compartments', locType: 'tenancy', locName: '' }
+      ]
+    };
+
+    // --- 3. CORE LOGIC: BUILD STATEMENT STRING ---
+    function buildStatementString(stmt) {
+      let str = `${stmt.effect} `;
+      
+      if (stmt.subType === 'any-user') str += `any-user `;
+      else str += `${stmt.subType} ${stmt.subName} `;
+      
+      str += `to ${stmt.verb} ${stmt.resource} `;
+      
+      if (stmt.locType === 'tenancy') str += `in tenancy`;
+      else str += `in compartment ${stmt.locName}`;
+      
+      if (stmt.conditions && stmt.conditions.length > 0) {
+        const condStr = stmt.conditions.map(c => `${c.key} ${c.op} '${c.val}'`).join(', ');
+        str += `\nwhere any { ${condStr} }`;
+      }
+      
+      return str;
+    }
+
+    // --- 4. UI RENDERING ---
+    function renderStatements() {
+      const container = document.getElementById('statements-container');
+      document.getElementById('stmt-count').innerText = statements.length;
+
+      if (statements.length === 0) {
+        container.innerHTML = `<div class="text-center py-12 text-muted text-sm"><p>No policy statements yet.</p><p class="text-xs mt-2">Use the builder on the left or load a Role Template to begin.</p></div>`;
+        updateSyntaxPreview();
+        return;
+      }
+
+      container.innerHTML = statements.map((stmt, idx) => `
+        <div class="bg-[#0f172a] p-4 rounded-lg border border-border hover:border-accent/50 transition-colors group">
+          <div class="flex justify-between items-start mb-2">
+            <span class="px-2 py-0.5 text-[10px] font-bold rounded ${stmt.effect === 'Allow' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}">${stmt.effect}</span>
+            <button onclick="deleteStatement(${idx})" class="text-red-400/50 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity text-xs">Delete</button>
+          </div>
+          <p class="text-xs text-text font-mono leading-relaxed break-all">
+            ${stmt.subType === 'any-user' ? 'any-user' : `<span class="text-purple-400">${stmt.subType}</span> <span class="text-white">${stmt.subName}</span>`} 
+            to <span class="text-yellow-400">${stmt.verb}</span> 
+            <span class="text-blue-400">${stmt.resource}</span> 
+            in ${stmt.locType === 'tenancy' ? '<span class="text-purple-400">tenancy</span>' : `<span class="text-purple-400">compartment</span> <span class="text-white">${stmt.locName}</span>`}
+            ${stmt.conditions && stmt.conditions.length > 0 ? `<br><span class="text-gray-500 italic">where any { ${stmt.conditions.map(c => `${c.key} ${c.op} '${c.val}'`).join(', ')} }</span>` : ''}
+          </p>
+        </div>
+      `).join('');
+
+      updateSyntaxPreview();
+      autoSave();
+    }
+
+    function updateSyntaxPreview() {
+      const preview = document.getElementById('syntax-preview');
+      const status = document.getElementById('validation-status');
+
+      if (statements.length === 0) {
+        preview.innerHTML = `<span class="text-gray-500"># Define your policy statements to see the generated OCI IAM syntax here...</span>`;
+        status.innerHTML = `<span class="w-2 h-2 rounded-full bg-green-400"></span> Syntax Valid`;
+        status.className = 'text-xs text-green-400 font-mono flex items-center gap-1';
+        return;
+      }
+
+      // Validate
+      let isValid = true;
+      let errors = [];
+      statements.forEach((stmt, i) => {
+        if (!stmt.subName && stmt.subType !== 'any-user') { isValid = false; errors.push(`Stmt ${i+1}: Missing Subject Name`); }
+        if (!stmt.locName && stmt.locType === 'compartment') { isValid = false; errors.push(`Stmt ${i+1}: Missing Compartment Name`); }
+      });
+
+      if (!isValid) {
+        status.innerHTML = `<span class="w-2 h-2 rounded-full bg-red-400 animate-pulse"></span> Syntax Errors!`;
+        status.className = 'text-xs text-red-400 font-mono flex items-center gap-1';
+      } else {
+        status.innerHTML = `<span class="w-2 h-2 rounded-full bg-green-400"></span> Syntax Valid`;
+        status.className = 'text-xs text-green-400 font-mono flex items-center gap-1';
+      }
+
+      // Generate Highlighted Syntax
+      let html = '';
+      statements.forEach(stmt => {
+        const raw = buildStatementString(stmt);
+        const highlighted = raw
+          .replace(/(Allow|Deny)/g, '<span class="syn-$1">$1</span>')
+          .replace(/(group|dynamic-group|service)/g, '<span class="text-purple-400">$1</span>')
+          .replace(/(inspect|read|use|manage)/g, '<span class="syn-verb">$1</span>')
+          .replace(/(in tenancy|in compartment)/g, '<span class="syn-loc">$1</span>')
+          .replace(/(where any \{.*\})/g, '<span class="syn-cond">$1</span>');
+        
+        html += highlighted + '\n\n';
+      });
+
+      preview.innerHTML = html;
+    }
+
+    function renderConditions() {
+      const list = document.getElementById('conditions-list');
+      if (conditions.length === 0) {
+        list.innerHTML = `<p class="text-[10px] text-muted italic">No conditions added. (Unrestricted access)</p>`;
+        return;
+      }
+      list.innerHTML = conditions.map((c, i) => `
+        <div class="flex justify-between items-center bg-bg/50 px-2 py-1 rounded text-[10px] font-mono">
+          <span class="text-text">${c.key} ${c.op} '${c.val}'</span>
+          <button onclick="removeCondition(${i})" class="text-red-400 hover:text-red-300">✕</button>
+        </div>
+      `).join('');
+    }
+
+    // --- 5. ACTIONS ---
+    window.deleteStatement = (idx) => {
+      statements.splice(idx, 1);
+      renderStatements();
+    };
+
+    window.removeCondition = (idx) => {
+      conditions.splice(idx, 1);
+      renderConditions();
+    };
+
+    document.getElementById('btn-add-cond').addEventListener('click', () => {
+      const key = document.getElementById('cond-key').value.trim();
+      const op = document.getElementById('cond-op').value;
+      const val = document.getElementById('cond-val').value.trim();
+      if (key && val) {
+        conditions.push({ key, op, val });
+        document.getElementById('cond-key').value = '';
+        document.getElementById('cond-val').value = '';
+        renderConditions();
+      }
+    });
+
+    document.getElementById('btn-add-policy').addEventListener('click', () => {
+      const stmt = {
+        effect: document.getElementById('bld-effect').value,
+        subType: document.getElementById('bld-subject-type').value,
+        subName: document.getElementById('bld-subject-name').value.trim(),
+        verb: document.getElementById('bld-verb').value,
+        resource: document.getElementById('bld-resource').value,
+        locType: document.getElementById('bld-loc-type').value,
+        locName: document.getElementById('bld-loc-name').value.trim(),
+        conditions: [...conditions]
+      };
+
+      if (stmt.subType !== 'any-user' && !stmt.subName) return alert('Please enter a Subject Name.');
+      if (stmt.locType === 'compartment' && !stmt.locName) return alert('Please enter a Compartment Name.');
+
+      statements.push(stmt);
+      conditions = [];
+      renderConditions();
+      renderStatements();
+      
+      // Reset some fields
+      document.getElementById('bld-subject-name').value = '';
+      document.getElementById('bld-loc-name').value = '';
+    });
+
+    document.getElementById('btn-clear-all').addEventListener('click', () => {
+      if(confirm('Clear all policy statements?')) {
+        statements = [];
+        renderStatements();
+      }
+    });
+
+    document.getElementById('btn-load-roles').addEventListener('click', () => {
+      const choice = prompt('Enter Role Template to load:\n1. Network Admin\n2. Compute Admin\n3. Security Auditor\n\n(Type the number or name)');
+      if (!choice) return;
+      
+      let template = null;
+      if (choice === '1' || choice.toLowerCase().includes('network')) template = roleTemplates['Network Admin'];
+      if (choice === '2' || choice.toLowerCase().includes('compute')) template = roleTemplates['Compute Admin'];
+      if (choice === '3' || choice.toLowerCase().includes('security') || choice.toLowerCase().includes('audit')) template = roleTemplates['Security Auditor'];
+
+      if (template) {
+        statements.push(...template);
+        renderStatements();
+      } else {
+        alert('Invalid template selection.');
+      }
+    });
+
+    // --- 6. EXPORT ---
+    function downloadFile(content, fileName, mimeType) {
+      const blob = new Blob([content], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = fileName; a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    document.getElementById('btn-copy-all').addEventListener('click', () => {
+      const text = statements.map(buildStatementString).join('\n');
+      navigator.clipboard.writeText(text);
+      const btn = document.getElementById('btn-copy-all');
+      btn.innerText = 'Copied!';
+      setTimeout(() => btn.innerText = 'Copy All', 2000);
+    });
+
+    document.getElementById('btn-export-tf').addEventListener('click', () => {
+      if (statements.length === 0) return alert('No statements to export.');
+      let tf = `# OCI IAM Policy Configuration\n# Generated by ZX Labs IAM Builder\n\n`;
+      tf += `resource "oci_identity_policy" "zx_generated_policy" {\n  compartment_id = var.tenancy_ocid\n  name           = "ZX-Labs-Generated-Policy"\n  description    = "Policy generated via ZX Labs IAM Builder"\n  statements     = [\n`;
+      statements.forEach(stmt => {
+        const raw = buildStatementString(stmt).replace(/\n/g, ' ');
+        tf += `    "${raw}",\n`;
+      });
+      tf += `  ]\n}\n`;
+      downloadFile(tf, 'iam_policy.tf', 'text/plain');
+    });
+
+    document.getElementById('btn-export-txt').addEventListener('click', () => {
+      if (statements.length === 0) return alert('No statements to export.');
+      const text = statements.map(buildStatementString).join('\n');
+      downloadFile(text, 'iam_policy.txt', 'text/plain');
+    });
+
+    // --- 7. PERSISTENCE ---
+    function autoSave() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(statements));
+    }
+
+    function loadData() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try { statements = JSON.parse(saved); } catch (e) { statements = []; }
+      }
+      renderStatements();
+    }
+
+    // Init
+    loadData();
+  </script>
+</Layout>
