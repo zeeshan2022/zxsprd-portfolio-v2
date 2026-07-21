@@ -1,0 +1,110 @@
+<!-- Hidden Matrix Rain Canvas -->
+<canvas id="matrix-canvas" class="fixed inset-0 z-[100] pointer-events-none opacity-0 transition-opacity duration-1000"></canvas>
+
+<!-- Secret Notification Toast -->
+<div id="konami-toast" class="fixed top-24 left-1/2 -translate-x-1/2 z-[101] glass-card px-6 py-3 border border-accent/50 rounded-xl shadow-2xl shadow-accent/20 flex items-center gap-3 opacity-0 translate-y-[-20px] transition-all duration-500 pointer-events-none">
+  <svg class="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+  </svg>
+  <span class="text-sm font-bold text-text font-mono">ROOT ACCESS GRANTED</span>
+</div>
+
+<script>
+  // 1. The Konami Code Sequence
+  const konamiCode = [
+    'ArrowUp', 'ArrowUp', 
+    'ArrowDown', 'ArrowDown', 
+    'ArrowLeft', 'ArrowRight', 
+    'ArrowLeft', 'ArrowRight', 
+    'b', 'a'
+  ];
+  let konamiIndex = 0;
+
+  // 2. Listen for Keystrokes
+  document.addEventListener('keydown', (e) => {
+    const key = e.key.toLowerCase() === e.key ? e.key : e.key; // Handle case sensitivity for letters
+    
+    if (key === konamiCode[konamiIndex]) {
+      konamiIndex++;
+      if (konamiIndex === konamiCode.length) {
+        activateEasterEgg();
+        konamiIndex = 0; // Reset
+      }
+    } else {
+      konamiIndex = 0; // Reset if wrong key
+    }
+  });
+
+  // 3. The Matrix Rain Effect
+  function activateEasterEgg() {
+    const canvas = document.getElementById('matrix-canvas');
+    const ctx = canvas.getContext('2d');
+    const toast = document.getElementById('konami-toast');
+
+    // Set canvas to full screen
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    // Get current theme accent color from CSS variables
+    const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--color-accent').trim() || '#3b82f6';
+
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()_+-=[]{}|;:,.<>?/~`';
+    const fontSize = 16;
+    const columns = canvas.width / fontSize;
+    const drops = Array(Math.floor(columns)).fill(1);
+
+    let animationId;
+    let startTime = Date.now();
+
+    function drawMatrix() {
+      // Semi-transparent black to create the trail effect
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = accentColor;
+      ctx.font = `${fontSize}px monospace`;
+
+      for (let i = 0; i < drops.length; i++) {
+        const text = chars[Math.floor(Math.random() * chars.length)];
+        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+          drops[i] = 0;
+        }
+        drops[i]++;
+      }
+
+      // Stop animation after 10 seconds to save CPU
+      if (Date.now() - startTime < 10000) {
+        animationId = requestAnimationFrame(drawMatrix);
+      } else {
+        // Fade out
+        canvas.style.opacity = '0';
+        setTimeout(() => {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }, 1000);
+      }
+    }
+
+    // Show Canvas and Toast
+    canvas.style.opacity = '1';
+    toast.style.opacity = '1';
+    toast.style.transform = 'translate(-50%, 0)';
+
+    // Start Matrix Rain
+    drawMatrix();
+
+    // Hide Toast after 4 seconds
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      toast.style.transform = 'translate(-50%, -20px)';
+    }, 4000);
+  }
+
+  // Handle window resize for canvas
+  window.addEventListener('resize', () => {
+    const canvas = document.getElementById('matrix-canvas');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  });
+</script>

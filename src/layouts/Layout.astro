@@ -4,6 +4,7 @@ import '../styles/global.css';
  import { ViewTransitions } from 'astro:transitions'; 
    import terminalCommands from '../data/terminal-commands.json';
       import ThemeSwitcher from '../components/ThemeSwitcher.astro';
+	  import KonamiEgg from '../components/KonamiEgg.astro';
    
    
    const commandsJSON = JSON.stringify(terminalCommands);
@@ -436,6 +437,7 @@ const {
 </script>
 
    <Footer />
+   <KonamiEgg />
      <ThemeSwitcher />
   </body>
 </html>
