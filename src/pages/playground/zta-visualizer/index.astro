@@ -1,0 +1,550 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import Navbar from '../../../components/Navbar.astro';
+---
+
+<Layout title="Zero Trust Architecture Visualizer | ZX Labs" lang="en" dir="ltr">
+  <Navbar currentLang="en" />
+
+  <!-- External Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <main class="min-h-screen pt-20 pb-10 bg-[#0f172a]">
+    
+    <!-- Top Navigation Bar -->
+    <header class="h-16 border-b border-border bg-bg/80 backdrop-blur flex items-center justify-between px-6 sticky top-0 z-50">
+      <div class="flex items-center gap-4">
+        <a href="/playground/" class="p-2 rounded-lg hover:bg-bg/50 text-muted hover:text-accent transition-colors" title="Back to Labs">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+        </a>
+        <div>
+          <h1 class="text-lg font-bold text-text flex items-center gap-2">
+            <span class="text-accent">ZTA</span> Visualizer & Policy Engine
+          </h1>
+          <p class="text-[10px] text-muted">Production-Ready Architecture Designer</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <span id="save-status" class="text-xs text-green-400 font-mono flex items-center gap-1">
+          <span class="w-2 h-2 rounded-full bg-green-400"></span> Auto-Saved
+        </span>
+      </div>
+    </header>
+
+    <!-- Main IDE Layout -->
+    <div class="flex h-[calc(100vh-64px)]">
+      
+      <!-- LEFT SIDEBAR: Builder & Controls -->
+      <aside class="w-80 border-r border-border bg-bg/50 flex flex-col overflow-y-auto custom-scrollbar">
+        <div class="p-5 space-y-6">
+          
+          <!-- Add Entity -->
+          <div class="space-y-3">
+            <h3 class="text-xs font-bold text-accent uppercase tracking-widest flex items-center gap-2"><span class="text-accent">+</span> Add Entity</h3>
+            <select id="add-type" class="w-full px-3 py-2 bg-[#0f172a] border border-border rounded-lg text-text text-sm focus:border-accent outline-none">
+              <option value="subject">Subject (User/Identity)</option>
+              <option value="device">Device (Endpoint)</option>
+              <option value="policy">Policy Node (PEP/PDP)</option>
+              <option value="resource">Resource (App/Data)</option>
+            </select>
+            <input id="add-label" type="text" placeholder="Label (e.g., 'Remote Employee')" class="w-full px-3 py-2 bg-[#0f172a] border border-border rounded-lg text-text text-sm focus:border-accent outline-none" />
+            <input id="add-attr" type="text" placeholder="Attributes (e.g., 'Role=Admin, MFA=True')" class="w-full px-3 py-2 bg-[#0f172a] border border-border rounded-lg text-text text-sm focus:border-accent outline-none" />
+            <button id="btn-add-node" class="w-full py-2 bg-accent text-bg font-bold rounded-lg hover:bg-accent2 transition-colors text-sm">Add to Graph</button>
+          </div>
+
+          <hr class="border-border" />
+
+          <!-- Connect Entities -->
+          <div class="space-y-3">
+            <h3 class="text-xs font-bold text-accent uppercase tracking-widest flex items-center gap-2"><span class="text-accent"></span> Connect</h3>
+            <select id="conn-source" class="w-full px-3 py-2 bg-[#0f172a] border border-border rounded-lg text-text text-sm focus:border-accent outline-none"><option value="">Select Source...</option></select>
+            <select id="conn-target" class="w-full px-3 py-2 bg-[#0f172a] border border-border rounded-lg text-text text-sm focus:border-accent outline-none"><option value="">Select Target...</option></select>
+            <input id="conn-label" type="text" placeholder="Edge Label (Optional)" class="w-full px-3 py-2 bg-[#0f172a] border border-border rounded-lg text-text text-sm focus:border-accent outline-none" />
+            <button id="btn-add-edge" class="w-full py-2 bg-bg border border-border text-text font-bold rounded-lg hover:border-accent hover:text-accent transition-colors text-sm">Create Connection</button>
+          </div>
+
+          <hr class="border-border" />
+
+          <!-- Layouts & Templates -->
+          <div class="space-y-3">
+            <h3 class="text-xs font-bold text-accent uppercase tracking-widest">Layouts & Tools</h3>
+            <div class="grid grid-cols-2 gap-2">
+              <button id="layout-dagre" class="py-2 bg-[#0f172a] border border-border rounded-lg text-xs font-bold hover:border-accent">Hierarchical</button>
+              <button id="layout-circle" class="py-2 bg-[#0f172a] border border-border rounded-lg text-xs font-bold hover:border-accent">Circular</button>
+              <button id="layout-grid" class="py-2 bg-[#0f172a] border border-border rounded-lg text-xs font-bold hover:border-accent">Grid</button>
+              <button id="btn-fit" class="py-2 bg-[#0f172a] border border-border rounded-lg text-xs font-bold hover:border-accent">Fit to Screen</button>
+            </div>
+            <button id="btn-load-template" class="w-full py-2 bg-purple-500/10 border border-purple-500/30 text-purple-400 rounded-lg text-xs font-bold hover:bg-purple-500/20">Load Demo Architecture</button>
+          </div>
+        </div>
+      </aside>
+
+      <!-- CENTER: Graph Canvas -->
+      <section class="flex-1 relative bg-[#0a0f1c]">
+        <div id="cy-container" class="w-full h-full"></div>
+        
+        <!-- Canvas Overlay Instructions -->
+        <div class="absolute bottom-4 left-4 bg-bg/80 backdrop-blur px-3 py-2 rounded-lg border border-border text-[10px] text-muted pointer-events-none">
+          <p>🖱️ Drag to pan | Scroll to zoom | Click to select | <kbd class="bg-bg px-1 rounded border border-border">Del</kbd> to delete</p>
+        </div>
+      </section>
+
+      <!-- RIGHT SIDEBAR: Inspector & Simulator -->
+      <aside class="w-80 border-l border-border bg-bg/50 flex flex-col overflow-y-auto custom-scrollbar">
+        <div class="p-5 space-y-6 flex-1">
+          
+          <!-- Property Inspector -->
+          <div id="inspector-panel" class="space-y-3 hidden">
+            <h3 class="text-xs font-bold text-accent uppercase tracking-widest flex items-center justify-between">
+              <span>🔍 Inspector</span>
+              <button id="btn-deselect" class="text-muted hover:text-text text-[10px]">Clear</button>
+            </h3>
+            <div class="bg-[#0f172a] p-3 rounded-lg border border-border space-y-3">
+              <div>
+                <label class="text-[10px] text-muted uppercase font-bold">Type</label>
+                <input id="insp-type" type="text" disabled class="w-full mt-1 px-2 py-1.5 bg-bg border border-border rounded text-text text-xs" />
+              </div>
+              <div>
+                <label class="text-[10px] text-muted uppercase font-bold">Label</label>
+                <input id="insp-label" type="text" class="w-full mt-1 px-2 py-1.5 bg-bg border border-border rounded text-text text-xs focus:border-accent outline-none" />
+              </div>
+              <div>
+                <label class="text-[10px] text-muted uppercase font-bold">Attributes / Rules</label>
+                <textarea id="insp-attr" rows="3" class="w-full mt-1 px-2 py-1.5 bg-bg border border-border rounded text-text text-xs focus:border-accent outline-none resize-none"></textarea>
+              </div>
+              <button id="btn-delete-selected" class="w-full py-2 bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg text-xs font-bold hover:bg-red-500/20">Delete Selected</button>
+            </div>
+          </div>
+
+          <!-- Empty State for Inspector -->
+          <div id="inspector-empty" class="text-center py-8 text-muted text-xs">
+            <p>Click on a node or connection to inspect and edit its properties.</p>
+          </div>
+
+          <hr class="border-border" />
+
+          <!-- Policy Simulator -->
+          <div class="space-y-3">
+            <h3 class="text-xs font-bold text-accent uppercase tracking-widest">⚡ Policy Simulator</h3>
+            <select id="sim-subject" class="w-full px-3 py-2 bg-[#0f172a] border border-border rounded-lg text-text text-sm focus:border-accent outline-none"><option value="">Select Subject...</option></select>
+            <select id="sim-device" class="w-full px-3 py-2 bg-[#0f172a] border border-border rounded-lg text-text text-sm focus:border-accent outline-none"><option value="">Select Device...</option></select>
+            <select id="sim-resource" class="w-full px-3 py-2 bg-[#0f172a] border border-border rounded-lg text-text text-sm focus:border-accent outline-none"><option value="">Select Resource...</option></select>
+            <button id="btn-simulate" class="w-full py-3 bg-gradient-to-r from-accent to-accent2 text-bg font-bold rounded-lg hover:opacity-90 transition-all text-sm shadow-lg shadow-accent/20">Evaluate Access</button>
+            
+            <div id="sim-log" class="bg-[#0d1117] rounded-lg p-3 font-mono text-[10px] text-green-400 h-32 overflow-y-auto custom-scrollbar border border-green-500/20">
+              <p class="text-muted italic">Ready for simulation...</p>
+            </div>
+          </div>
+
+          <hr class="border-border" />
+
+          <!-- Import / Export -->
+          <div class="space-y-3">
+            <h3 class="text-xs font-bold text-accent uppercase tracking-widest"> Import / Export</h3>
+            <div class="grid grid-cols-2 gap-2">
+              <button id="btn-export-json" class="py-2 bg-[#0f172a] border border-border rounded-lg text-xs font-bold hover:border-accent">JSON</button>
+              <label class="py-2 bg-[#0f172a] border border-border rounded-lg text-xs font-bold hover:border-accent text-center cursor-pointer">
+                Import JSON
+                <input type="file" id="file-import-json" accept=".json" class="hidden" />
+              </label>
+              <button id="btn-export-png" class="py-2 bg-[#0f172a] border border-border rounded-lg text-xs font-bold hover:border-accent">High-Res PNG</button>
+              <button id="btn-export-pdf" class="py-2 bg-[#0f172a] border border-border rounded-lg text-xs font-bold hover:border-accent">PDF Report</button>
+            </div>
+            <button id="btn-clear-all" class="w-full py-2 bg-red-500/5 border border-red-500/20 text-red-400/70 rounded-lg text-xs font-bold hover:bg-red-500/10 hover:text-red-400">Clear Entire Graph</button>
+          </div>
+
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <style>
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(59, 130, 246, 0.3); border-radius: 3px; }
+    #cy-container { width: 100%; height: 100%; }
+  </style>
+
+  <script>
+    import cytoscape from 'cytoscape';
+    import dagre from 'cytoscape-dagre';
+    cytoscape.use(dagre);
+
+    // --- 1. STATE & CONFIG ---
+    const STORAGE_KEY = 'zta_graph_data_v1';
+    let cy;
+    let selectedElement = null;
+    let saveTimeout;
+
+    // --- 2. CYTOSCAPE INITIALIZATION ---
+    function initGraph() {
+      cy = cytoscape({
+        container: document.getElementById('cy-container'),
+        style: [
+          {
+            selector: 'node',
+            style: {
+              'label': 'data(label)',
+              'color': '#fff',
+              'text-valign': 'bottom',
+              'text-halign': 'center',
+              'text-margin-y': 8,
+              'font-size': '11px',
+              'font-weight': 'bold',
+              'width': 50,
+              'height': 50,
+              'border-width': 2,
+              'border-color': '#fff',
+              'transition-property': 'background-color, border-color, width, height',
+              'transition-duration': '0.3s'
+            }
+          },
+          { selector: 'node[type="subject"]', style: { 'background-color': '#8b5cf6', 'shape': 'ellipse' } },
+          { selector: 'node[type="device"]', style: { 'background-color': '#10b981', 'shape': 'roundrectangle' } },
+          { selector: 'node[type="policy"]', style: { 'background-color': '#f59e0b', 'shape': 'diamond', 'width': 60, 'height': 60 } },
+          { selector: 'node[type="resource"]', style: { 'background-color': '#3b82f6', 'shape': 'hexagon' } },
+          {
+            selector: 'edge',
+            style: {
+              'width': 2,
+              'line-color': '#4b5563',
+              'target-arrow-color': '#4b5563',
+              'target-arrow-shape': 'triangle',
+              'curve-style': 'bezier',
+              'label': 'data(label)',
+              'font-size': '9px',
+              'color': '#9ca3af',
+              'text-rotation': 'autorotate',
+              'text-margin-y': -10
+            }
+          },
+          { selector: 'node.selected', style: { 'border-width': 4, 'border-color': '#fff', 'overlay-padding': 10 } },
+          { selector: 'edge.selected', style: { 'width': 4, 'line-color': '#fff', 'target-arrow-color': '#fff' } },
+          { selector: 'edge.path-allow', style: { 'width': 4, 'line-color': '#10b981', 'target-arrow-color': '#10b981' } },
+          { selector: 'edge.path-deny', style: { 'width': 4, 'line-color': '#ef4444', 'target-arrow-color': '#ef4444', 'line-style': 'dashed' } }
+        ],
+        layout: { name: 'grid' },
+        minZoom: 0.2,
+        maxZoom: 4,
+        wheelSensitivity: 0.3,
+        boxSelectionEnabled: true
+      });
+
+      // Event Listeners for Selection
+      cy.on('tap', 'node, edge', (evt) => {
+        selectElement(evt.target);
+      });
+      cy.on('tap', (evt) => {
+        if (evt.target === cy) deselectElement();
+      });
+
+      // Keyboard Delete
+      document.addEventListener('keydown', (e) => {
+        if ((e.key === 'Delete' || e.key === 'Backspace') && selectedElement && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+          deleteSelected();
+        }
+      });
+
+      // Load Data
+      loadData();
+    }
+
+    // --- 3. CRUD OPERATIONS ---
+    function addNode(type, label, attr) {
+      const id = 'n_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+      cy.add({ group: 'nodes', data: { id, type, label: label || 'Untitled', attr: attr || '' } });
+      updateDropdowns();
+      autoSave();
+      return id;
+    }
+
+    function addEdge(source, target, label) {
+      const id = 'e_' + Date.now();
+      cy.add({ group: 'edges', data: { id, source, target, label: label || '' } });
+      updateDropdowns();
+      autoSave();
+    }
+
+    function deleteSelected() {
+      if (!selectedElement) return;
+      selectedElement.remove();
+      deselectElement();
+      updateDropdowns();
+      autoSave();
+    }
+
+    function updateSelectedData() {
+      if (!selectedElement) return;
+      const label = document.getElementById('insp-label').value;
+      const attr = document.getElementById('insp-attr').value;
+      selectedElement.data('label', label);
+      selectedElement.data('attr', attr);
+      autoSave();
+    }
+
+    // --- 4. INSPECTOR UI ---
+    function selectElement(el) {
+      selectedElement = el;
+      cy.elements().removeClass('selected');
+      el.addClass('selected');
+
+      document.getElementById('inspector-empty').classList.add('hidden');
+      document.getElementById('inspector-panel').classList.remove('hidden');
+
+      document.getElementById('insp-type').value = el.isNode() ? el.data('type') : 'Connection';
+      document.getElementById('insp-label').value = el.data('label') || '';
+      document.getElementById('insp-attr').value = el.data('attr') || '';
+    }
+
+    function deselectElement() {
+      selectedElement = null;
+      cy.elements().removeClass('selected');
+      document.getElementById('inspector-empty').classList.remove('hidden');
+      document.getElementById('inspector-panel').classList.add('hidden');
+    }
+
+    // --- 5. PERSISTENCE (LOCALSTORAGE) ---
+    function autoSave() {
+      const status = document.getElementById('save-status');
+      status.innerHTML = `<span class="w-2 h-2 rounded-full bg-yellow-400 animate-pulse"></span> Saving...`;
+      
+      clearTimeout(saveTimeout);
+      saveTimeout = setTimeout(() => {
+        const data = cy.json();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        status.innerHTML = `<span class="w-2 h-2 rounded-full bg-green-400"></span> Auto-Saved`;
+      }, 500);
+    }
+
+    function loadData() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try {
+          cy.json(JSON.parse(saved));
+        } catch (e) {
+          console.error("Failed to load saved graph", e);
+        }
+      } else {
+        loadDemoTemplate();
+      }
+      updateDropdowns();
+      runLayout('dagre');
+    }
+
+    // --- 6. LAYOUTS ---
+    function runLayout(name) {
+      let layoutConfig = { name: name, animate: true, animationDuration: 500 };
+      if (name === 'dagre') {
+        layoutConfig = { name: 'dagre', rankDir: 'LR', nodeSep: 80, rankSep: 120, padding: 50, animate: true };
+      }
+      cy.layout(layoutConfig).run();
+    }
+
+    // --- 7. POLICY SIMULATION ENGINE ---
+    function runSimulation() {
+      const subId = document.getElementById('sim-subject').value;
+      const devId = document.getElementById('sim-device').value;
+      const resId = document.getElementById('sim-resource').value;
+      const log = document.getElementById('sim-log');
+
+      cy.edges().removeClass('path-allow path-deny');
+
+      if (!subId || !devId || !resId) {
+        log.innerHTML = `<p class="text-red-400">Error: Select Subject, Device, and Resource.</p>`;
+        return;
+      }
+
+      const subject = cy.getElementById(subId);
+      const resource = cy.getElementById(resId);
+      const path = subject.shortestPath(resource);
+
+      let html = `<p class="text-blue-400 mb-2">> Evaluating: ${subject.data('label')} ➔ ${resource.data('label')}</p>`;
+
+      if (path.empty()) {
+        html += `<p class="text-red-400 font-bold">[DENY] No network path exists.</p>`;
+        log.innerHTML = html;
+        return;
+      }
+
+      // Highlight path
+      path.edges().addClass('path-allow');
+
+      // Check for Policy Nodes
+      const policies = path.nodes().filter(n => n.data('type') === 'policy');
+      
+      if (policies.length === 0) {
+        html += `<p class="text-red-400 font-bold mt-2">[DENY] No Policy Enforcement Point (PEP) in path. Default Deny.</p>`;
+        path.edges().removeClass('path-allow').addClass('path-deny');
+      } else {
+        const policy = policies[0];
+        const rule = policy.data('attr').toLowerCase();
+        const subAttr = subject.data('attr').toLowerCase();
+        
+        html += `<p class="text-yellow-400 mt-2">Intercepted by Policy: ${policy.data('label')}</p>`;
+        html += `<p class="text-muted">Rule: "${policy.data('attr')}"</p>`;
+
+        // Simple Attribute Matching Logic
+        // If rule says "Requires=Admin", check if subject has "Role=Admin" or "Admin"
+        let isAllowed = true;
+        if (rule.includes('deny')) isAllowed = false;
+        if (rule.includes('requires=')) {
+          const required = rule.split('requires=')[1].trim();
+          if (!subAttr.includes(required)) isAllowed = false;
+        }
+
+        if (isAllowed) {
+          html += `<p class="text-green-400 font-bold mt-3 text-sm">[ALLOW] Access Granted. Traffic forwarded.</p>`;
+        } else {
+          html += `<p class="text-red-400 font-bold mt-3 text-sm">[DENY] Policy Violation. Connection dropped.</p>`;
+          path.edges().removeClass('path-allow').addClass('path-deny');
+        }
+      }
+      log.innerHTML = html;
+    }
+
+    // --- 8. IMPORT / EXPORT ---
+    function updateDropdowns() {
+      const nodes = cy.nodes();
+      ['conn-source', 'conn-target'].forEach(id => {
+        const el = document.getElementById(id);
+        const val = el.value;
+        el.innerHTML = '<option value="">Select...</option>';
+        nodes.forEach(n => el.add(new Option(`${n.data('label')} (${n.data('type')})`, n.id())));
+        el.value = val;
+      });
+
+      ['sim-subject', 'sim-device', 'sim-resource'].forEach(id => {
+        const el = document.getElementById(id);
+        const val = el.value;
+        const type = id.split('-')[1];
+        el.innerHTML = '<option value="">Select...</option>';
+        nodes.filter(n => n.data('type') === type).forEach(n => el.add(new Option(n.data('label'), n.id())));
+        el.value = val;
+      });
+    }
+
+    function exportJSON() {
+      const data = JSON.stringify(cy.json(), null, 2);
+      downloadFile(data, 'ZTA_Architecture.json', 'application/json');
+    }
+
+    function importJSON(file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = JSON.parse(e.target.result);
+          cy.json(data);
+          updateDropdowns();
+          runLayout('dagre');
+          autoSave();
+          alert('Architecture imported successfully!');
+        } catch (err) {
+          alert('Invalid JSON file.');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    async function exportPNG() {
+      const png = cy.png({ full: true, bg: '#0a0f1c', scale: 3, output: 'blob-promise' });
+      const blob = await png;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'ZTA_Architecture_HighRes.png';
+      a.click();
+    }
+
+    async function exportPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+      
+      doc.setFontSize(20);
+      doc.setTextColor(10, 1, 120);
+      doc.text('Zero Trust Architecture Diagram', 14, 20);
+      doc.setFontSize(10);
+      doc.setTextColor(100);
+      doc.text(`Generated by ZX Labs Visualizer | ${new Date().toLocaleString()}`, 14, 30);
+
+      const png = await cy.png({ full: true, bg: '#ffffff', scale: 2 });
+      doc.addImage(png, 'PNG', 14, 40, 260, 150);
+      
+      doc.save('ZTA_Architecture_Report.pdf');
+    }
+
+    function downloadFile(content, fileName, mimeType) {
+      const blob = new Blob([content], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // --- 9. DEMO TEMPLATE ---
+    function loadDemoTemplate() {
+      cy.elements().remove();
+      const n1 = addNode('subject', 'Remote Admin', 'Role=Admin, MFA=True');
+      const n2 = addNode('device', 'Corporate Laptop', 'OS=Windows, Intune=Compliant');
+      const n3 = addNode('policy', 'ZTA Gateway', 'Requires=Admin');
+      const n4 = addNode('resource', 'HR Database', 'Data=PII, Class=Confidential');
+      
+      addEdge(n1, n2, 'Uses');
+      addEdge(n2, n3, 'Requests Access');
+      addEdge(n3, n4, 'Grants Access');
+    }
+
+    // --- 10. EVENT BINDINGS ---
+    document.getElementById('btn-add-node').addEventListener('click', () => {
+      const type = document.getElementById('add-type').value;
+      const label = document.getElementById('add-label').value.trim();
+      const attr = document.getElementById('add-attr').value.trim();
+      if (label) {
+        addNode(type, label, attr);
+        document.getElementById('add-label').value = '';
+        document.getElementById('add-attr').value = '';
+      }
+    });
+
+    document.getElementById('btn-add-edge').addEventListener('click', () => {
+      const s = document.getElementById('conn-source').value;
+      const t = document.getElementById('conn-target').value;
+      const l = document.getElementById('conn-label').value.trim();
+      if (s && t && s !== t) {
+        addEdge(s, t, l);
+        document.getElementById('conn-label').value = '';
+      }
+    });
+
+    document.getElementById('insp-label').addEventListener('input', updateSelectedData);
+    document.getElementById('insp-attr').addEventListener('input', updateSelectedData);
+    document.getElementById('btn-delete-selected').addEventListener('click', deleteSelected);
+    document.getElementById('btn-deselect').addEventListener('click', deselectElement);
+
+    document.getElementById('layout-dagre').addEventListener('click', () => runLayout('dagre'));
+    document.getElementById('layout-circle').addEventListener('click', () => runLayout('circle'));
+    document.getElementById('layout-grid').addEventListener('click', () => runLayout('grid'));
+    document.getElementById('btn-fit').addEventListener('click', () => cy.fit(null, 50));
+
+    document.getElementById('btn-load-template').addEventListener('click', loadDemoTemplate);
+    document.getElementById('btn-clear-all').addEventListener('click', () => {
+      if(confirm('Delete all nodes and connections?')) {
+        cy.elements().remove();
+        deselectElement();
+        updateDropdowns();
+        autoSave();
+      }
+    });
+
+    document.getElementById('btn-simulate').addEventListener('click', runSimulation);
+
+    document.getElementById('btn-export-json').addEventListener('click', exportJSON);
+    document.getElementById('file-import-json').addEventListener('change', (e) => { if(e.target.files[0]) importJSON(e.target.files[0]); });
+    document.getElementById('btn-export-png').addEventListener('click', exportPNG);
+    document.getElementById('btn-export-pdf').addEventListener('click', exportPDF);
+
+    // Init
+    initGraph();
+  </script>
+</Layout>
