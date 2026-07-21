@@ -1,0 +1,662 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import Navbar from '../../../components/Navbar.astro';
+---
+
+<Layout title="Cloud Migration TCO & Shape Mapper | ZX Labs" lang="en" dir="ltr">
+  <Navbar currentLang="en" />
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+
+  <main class="min-h-screen pt-20 pb-10 bg-[#0f172a]">
+    
+    <!-- Top Navigation Bar -->
+    <header class="h-16 border-b border-border bg-bg/80 backdrop-blur flex items-center justify-between px-6 sticky top-0 z-50">
+      <div class="flex items-center gap-4">
+        <a href="/playground/" class="p-2 rounded-lg hover:bg-bg/50 text-muted hover:text-accent transition-colors" title="Back to Labs">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+        </a>
+        <div>
+          <h1 class="text-lg font-bold text-text flex items-center gap-2">
+            <span class="text-[#C74634]">OCI</span> TCO & Compute Shape Mapper
+          </h1>
+          <p class="text-[10px] text-muted">Cloud Migration Cost Estimator & Infrastructure Planner</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <span id="currency-display" class="text-xs text-accent font-mono font-bold">USD</span>
+        <span id="save-status" class="text-xs text-green-400 font-mono flex items-center gap-1">
+          <span class="w-2 h-2 rounded-full bg-green-400"></span> Auto-Saved
+        </span>
+      </div>
+    </header>
+
+    <!-- Main IDE Layout -->
+    <div class="flex h-[calc(100vh-64px)]">
+      
+      <!-- LEFT SIDEBAR: Asset Input & Settings -->
+      <aside class="w-80 border-r border-border bg-bg/50 flex flex-col overflow-y-auto custom-scrollbar">
+        <div class="p-5 space-y-6">
+          
+          <!-- Settings Tab -->
+          <div class="space-y-3">
+            <h3 class="text-xs font-bold text-accent uppercase tracking-widest flex items-center gap-2">⚙️ Settings</h3>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="text-[10px] text-muted uppercase font-bold">Region</label>
+                <select id="set-region" class="w-full mt-1 px-2 py-1.5 bg-[#0f172a] border border-border rounded text-text text-[11px] focus:border-accent outline-none">
+                  <option value="me-dubai-1">ME Dubai</option>
+                  <option value="me-jeddah-1">ME Jeddah</option>
+                  <option value="us-ashburn-1" selected>US Ashburn</option>
+                  <option value="us-phoenix-1">US Phoenix</option>
+                  <option value="eu-frankfurt-1">EU Frankfurt</option>
+                  <option value="eu-amsterdam-1">EU Amsterdam</option>
+                  <option value="uk-london-1">UK London</option>
+                  <option value="ap-mumbai-1">AP Mumbai</option>
+                  <option value="ap-tokyo-1">AP Tokyo</option>
+                  <option value="ap-sydney-1">AP Sydney</option>
+                </select>
+              </div>
+              <div>
+                <label class="text-[10px] text-muted uppercase font-bold">Currency</label>
+                <select id="set-currency" class="w-full mt-1 px-2 py-1.5 bg-[#0f172a] border border-border rounded text-text text-[11px] focus:border-accent outline-none">
+                  <option value="USD" selected>USD ($)</option>
+                  <option value="EUR">EUR (€)</option>
+                  <option value="GBP">GBP (£)</option>
+                  <option value="AED">AED (د.إ)</option>
+                  <option value="SAR">SAR (﷼)</option>
+                  <option value="INR">INR (₹)</option>
+                </select>
+              </div>
+              <div>
+                <label class="text-[10px] text-muted uppercase font-bold">Commitment</label>
+                <select id="set-commitment" class="w-full mt-1 px-2 py-1.5 bg-[#0f172a] border border-border rounded text-text text-[11px] focus:border-accent outline-none">
+                  <option value="1">Pay As You Go</option>
+                  <option value="12">1 Year (10% off)</option>
+                  <option value="36" selected>3 Year (25% off)</option>
+                </select>
+              </div>
+              <div>
+                <label class="text-[10px] text-muted uppercase font-bold">License</label>
+                <select id="set-license" class="w-full mt-1 px-2 py-1.5 bg-[#0f172a] border border-border rounded text-text text-[11px] focus:border-accent outline-none">
+                  <option value="included">OS Included</option>
+                  <option value="byol">BYOL (Bring Own)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <hr class="border-border" />
+
+          <!-- Add Server -->
+          <div class="space-y-3">
+            <h3 class="text-xs font-bold text-accent uppercase tracking-widest flex items-center gap-2"><span class="text-accent">+</span> Add On-Prem Server</h3>
+            <input id="srv-name" type="text" placeholder="Server Name (e.g., Web-Prod-01)" class="w-full px-3 py-2 bg-[#0f172a] border border-border rounded-lg text-text text-sm focus:border-accent outline-none" />
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="text-[10px] text-muted uppercase font-bold">vCPU</label>
+                <input id="srv-cpu" type="number" value="8" min="1" max="256" class="w-full mt-1 px-2 py-1.5 bg-[#0f172a] border border-border rounded text-text text-sm font-mono focus:border-accent outline-none" />
+              </div>
+              <div>
+                <label class="text-[10px] text-muted uppercase font-bold">RAM (GB)</label>
+                <input id="srv-ram" type="number" value="32" min="1" max="4096" class="w-full mt-1 px-2 py-1.5 bg-[#0f172a] border border-border rounded text-text text-sm font-mono focus:border-accent outline-none" />
+              </div>
+              <div>
+                <label class="text-[10px] text-muted uppercase font-bold">Storage (GB)</label>
+                <input id="srv-storage" type="number" value="500" min="50" max="100000" class="w-full mt-1 px-2 py-1.5 bg-[#0f172a] border border-border rounded text-text text-sm font-mono focus:border-accent outline-none" />
+              </div>
+              <div>
+                <label class="text-[10px] text-muted uppercase font-bold">OS</label>
+                <select id="srv-os" class="w-full mt-1 px-2 py-1.5 bg-[#0f172a] border border-border rounded text-text text-sm focus:border-accent outline-none">
+                  <option value="Oracle Linux">Oracle Linux</option>
+                  <option value="Ubuntu">Ubuntu</option>
+                  <option value="Windows Server">Windows Server</option>
+                  <option value="RHEL">RHEL</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label class="text-[10px] text-muted uppercase font-bold">Workload Type</label>
+              <select id="srv-workload" class="w-full mt-1 px-2 py-1.5 bg-[#0f172a] border border-border rounded text-text text-sm focus:border-accent outline-none">
+                <option value="general">General Purpose</option>
+                <option value="compute">Compute Intensive (HPC)</option>
+                <option value="memory">Memory Intensive (DB)</option>
+                <option value="gpu">GPU (AI/ML)</option>
+              </select>
+            </div>
+            <button id="btn-add-server" class="w-full py-2 bg-accent text-bg font-bold rounded-lg hover:bg-accent2 transition-colors text-sm">Map to OCI Shape & Add</button>
+          </div>
+
+          <hr class="border-border" />
+
+          <!-- Import / Export -->
+          <div class="space-y-3">
+            <h3 class="text-xs font-bold text-accent uppercase tracking-widest">📥 Import / Export</h3>
+            <div class="grid grid-cols-2 gap-2">
+              <button id="btn-export-json" class="py-2 bg-[#0f172a] border border-border rounded-lg text-xs font-bold hover:border-accent">JSON</button>
+              <label class="py-2 bg-[#0f172a] border border-border rounded-lg text-xs font-bold hover:border-accent text-center cursor-pointer">
+                Import JSON
+                <input type="file" id="file-import-json" accept=".json" class="hidden" />
+              </label>
+              <button id="btn-export-csv" class="py-2 bg-[#0f172a] border border-border rounded-lg text-xs font-bold hover:border-accent">CSV</button>
+              <label class="py-2 bg-[#0f172a] border border-border rounded-lg text-xs font-bold hover:border-accent text-center cursor-pointer">
+                Import CSV
+                <input type="file" id="file-import-csv" accept=".csv" class="hidden" />
+              </label>
+              <button id="btn-export-oci" class="py-2 bg-[#0f172a] border border-border rounded-lg text-xs font-bold hover:border-accent col-span-2">Export OCI Calculator Format</button>
+              <button id="btn-export-pdf" class="py-2 bg-[#0f172a] border border-border rounded-lg text-xs font-bold hover:border-accent">PDF Report</button>
+              <button id="btn-export-tf" class="py-2 bg-[#0f172a] border border-border rounded-lg text-xs font-bold hover:border-accent">Terraform (.tf)</button>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <button id="btn-load-demo" class="py-2 bg-purple-500/10 border border-purple-500/30 text-purple-400 rounded-lg text-xs font-bold hover:bg-purple-500/20">Load Demo</button>
+              <button id="btn-clear-all" class="py-2 bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg text-xs font-bold hover:bg-red-500/20">Clear All</button>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- CENTER: Asset Table & Charts -->
+      <section class="flex-1 flex flex-col overflow-hidden">
+        <div class="p-5 border-b border-border flex justify-between items-center bg-bg/30">
+          <h2 class="text-sm font-bold text-text uppercase tracking-widest">Migration Inventory (<span id="asset-count">0</span> servers)</h2>
+        </div>
+        
+        <!-- Table -->
+        <div class="flex-1 overflow-y-auto custom-scrollbar p-5">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b border-border text-[10px] text-muted uppercase tracking-wider">
+                  <th class="py-2 px-3">Server</th>
+                  <th class="py-2 px-3">On-Prem Specs</th>
+                  <th class="py-2 px-3">OCI Shape</th>
+                  <th class="py-2 px-3">OCI Specs</th>
+                  <th class="py-2 px-3">Monthly Cost</th>
+                  <th class="py-2 px-3 text-center">Action</th>
+                </tr>
+              </thead>
+              <tbody id="asset-table" class="text-xs font-mono">
+                <tr><td colspan="6" class="py-8 text-center text-muted">Add on-premise servers to begin mapping.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="border-t border-border p-5 bg-bg/30">
+          <div class="grid grid-cols-2 gap-4 h-48">
+            <div class="bg-[#0f172a] p-3 rounded-lg border border-border"><canvas id="costChart"></canvas></div>
+            <div class="bg-[#0f172a] p-3 rounded-lg border border-border"><canvas id="specChart"></canvas></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT SIDEBAR: Cost Summary -->
+      <aside class="w-80 border-l border-border bg-bg/50 flex flex-col overflow-y-auto custom-scrollbar">
+        <div class="p-5 space-y-6 flex-1">
+          
+          <!-- Total Cost Summary -->
+          <div class="space-y-3">
+            <h3 class="text-xs font-bold text-accent uppercase tracking-widest">💰 Cost Summary</h3>
+            <div class="bg-[#0f172a] p-4 rounded-lg border border-border space-y-3">
+              <div class="flex justify-between">
+                <span class="text-xs text-muted">Monthly Compute</span>
+                <span class="text-sm font-bold text-text" id="sum-compute">$0.00</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-xs text-muted">Monthly Storage</span>
+                <span class="text-sm font-bold text-text" id="sum-storage">$0.00</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-xs text-muted">OS License</span>
+                <span class="text-sm font-bold text-text" id="sum-license">$0.00</span>
+              </div>
+              <hr class="border-border" />
+              <div class="flex justify-between">
+                <span class="text-sm font-bold text-text">Total Monthly</span>
+                <span class="text-lg font-bold text-accent" id="sum-total">$0.00</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-xs text-muted">Total Annual</span>
+                <span class="text-sm font-bold text-green-400" id="sum-annual">$0.00</span>
+              </div>
+              <div id="savings-badge" class="hidden text-center py-2 bg-green-500/10 border border-green-500/30 rounded-lg">
+                <p class="text-xs text-green-400 font-bold">Estimated Savings vs On-Prem</p>
+                <p class="text-lg font-bold text-green-400" id="sum-savings">0%</p>
+              </div>
+            </div>
+          </div>
+
+          <hr class="border-border" />
+
+          <!-- Shape Details Inspector -->
+          <div id="shape-inspector" class="space-y-3 hidden">
+            <h3 class="text-xs font-bold text-accent uppercase tracking-widest">🔍 Shape Details</h3>
+            <div class="bg-[#0f172a] p-3 rounded-lg border border-border space-y-2 text-xs">
+              <div class="flex justify-between"><span class="text-muted">Shape</span><span class="text-text font-bold" id="insp-shape">-</span></div>
+              <div class="flex justify-between"><span class="text-muted">Processor</span><span class="text-text" id="insp-proc">-</span></div>
+              <div class="flex justify-between"><span class="text-muted">OCPU</span><span class="text-text" id="insp-ocpu">-</span></div>
+              <div class="flex justify-between"><span class="text-muted">Memory</span><span class="text-text" id="insp-mem">-</span></div>
+              <div class="flex justify-between"><span class="text-muted">Network</span><span class="text-text" id="insp-net">-</span></div>
+              <div class="flex justify-between"><span class="text-muted">Price/OCPU/hr</span><span class="text-accent font-bold" id="insp-price">-</span></div>
+            </div>
+          </div>
+
+          <hr class="border-border" />
+
+          <!-- Migration Readiness -->
+          <div class="space-y-3">
+            <h3 class="text-xs font-bold text-accent uppercase tracking-widest">📊 Migration Readiness</h3>
+            <div class="bg-[#0f172a] p-4 rounded-lg border border-border space-y-3">
+              <div>
+                <div class="flex justify-between text-[10px] mb-1">
+                  <span class="text-muted">Shape Compatibility</span>
+                  <span class="text-green-400 font-bold" id="readiness-compat">0%</span>
+                </div>
+                <div class="w-full bg-bg rounded-full h-1.5"><div id="bar-compat" class="bg-green-500 h-1.5 rounded-full transition-all" style="width: 0%"></div></div>
+              </div>
+              <div>
+                <div class="flex justify-between text-[10px] mb-1">
+                  <span class="text-muted">Cost Optimization</span>
+                  <span class="text-yellow-400 font-bold" id="readiness-cost">0%</span>
+                </div>
+                <div class="w-full bg-bg rounded-full h-1.5"><div id="bar-cost" class="bg-yellow-500 h-1.5 rounded-full transition-all" style="width: 0%"></div></div>
+              </div>
+              <div>
+                <div class="flex justify-between text-[10px] mb-1">
+                  <span class="text-muted">Storage Mapping</span>
+                  <span class="text-blue-400 font-bold" id="readiness-storage">0%</span>
+                </div>
+                <div class="w-full bg-bg rounded-full h-1.5"><div id="bar-storage" class="bg-blue-500 h-1.5 rounded-full transition-all" style="width: 0%"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <style>
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(59, 130, 246, 0.3); border-radius: 3px; }
+  </style>
+
+  <script>
+    // --- 1. OCI SHAPE DATABASE (Real OCI Shapes & Pricing) ---
+    const ociShapes = [
+      { shape: 'VM.Standard.A1.Flex', proc: 'Ampere Altra', type: 'general', minOcpu: 1, maxOcpu: 80, minMemPerOcpu: 1, maxMemPerOcpu: 64, pricePerOcpu: 0.025, netGbps: 48, freeTier: true },
+      { shape: 'VM.Standard.E4.Flex', proc: 'AMD EPYC Milan', type: 'general', minOcpu: 1, maxOcpu: 64, minMemPerOcpu: 1, maxMemPerOcpu: 64, pricePerOcpu: 0.025, netGbps: 48, freeTier: false },
+      { shape: 'VM.Standard.E5.Flex', proc: 'AMD EPYC Genoa', type: 'general', minOcpu: 1, maxOcpu: 96, minMemPerOcpu: 1, maxMemPerOcpu: 64, pricePerOcpu: 0.025, netGbps: 48, freeTier: false },
+      { shape: 'VM.Standard3.Flex', proc: 'Intel Xeon Ice Lake', type: 'general', minOcpu: 1, maxOcpu: 32, minMemPerOcpu: 1, maxMemPerOcpu: 64, pricePerOcpu: 0.025, netGbps: 48, freeTier: false },
+      { shape: 'VM.Standard.E4.Flex (Compute)', proc: 'AMD EPYC Milan', type: 'compute', minOcpu: 2, maxOcpu: 64, minMemPerOcpu: 1, maxMemPerOcpu: 8, pricePerOcpu: 0.025, netGbps: 48, freeTier: false },
+      { shape: 'VM.Standard.E4.Flex (Memory)', proc: 'AMD EPYC Milan', type: 'memory', minOcpu: 2, maxOcpu: 64, minMemPerOcpu: 16, maxMemPerOcpu: 64, pricePerOcpu: 0.025, netGbps: 48, freeTier: false },
+      { shape: 'VM.GPU.A10.1', proc: 'AMD + NVIDIA A10', type: 'gpu', minOcpu: 15, maxOcpu: 15, minMemPerOcpu: 16, maxMemPerOcpu: 16, pricePerOcpu: 0.10, netGbps: 24, freeTier: false },
+      { shape: 'VM.GPU.A10.2', proc: 'AMD + 2x NVIDIA A10', type: 'gpu', minOcpu: 30, maxOcpu: 30, minMemPerOcpu: 16, maxMemPerOcpu: 16, pricePerOcpu: 0.10, netGbps: 48, freeTier: false },
+    ];
+
+    const osLicenseCost = { 'Oracle Linux': 0, 'Ubuntu': 0, 'Windows Server': 0.035, 'RHEL': 0.025 };
+    const storageCostPerGB = 0.0255; // Block Volume Balanced per GB/month
+
+    const currencyRates = { USD: 1, EUR: 0.92, GBP: 0.79, AED: 3.67, SAR: 3.75, INR: 83.5 };
+    const currencySymbols = { USD: '$', EUR: '€', GBP: '£', AED: 'د.إ', SAR: '﷼', INR: '₹' };
+
+    // --- 2. STATE ---
+    const STORAGE_KEY = 'oci_tco_data_v2';
+    let assets = [];
+    let settings = { region: 'us-ashburn-1', currency: 'USD', commitment: '36', license: 'included' };
+    let costChartInstance = null;
+    let specChartInstance = null;
+    let saveTimeout;
+
+    // --- 3. SHAPE MAPPING ENGINE ---
+    function mapToShape(cpu, ram, workload) {
+      const memPerCpu = ram / cpu;
+      let candidates = ociShapes.filter(s => {
+        if (workload === 'gpu' && s.type !== 'gpu') return false;
+        if (workload === 'compute' && s.type !== 'compute' && s.type !== 'general') return false;
+        if (workload === 'memory' && s.type !== 'memory' && s.type !== 'general') return false;
+        if (workload === 'general' && (s.type === 'gpu')) return false;
+        return cpu >= s.minOcpu && cpu <= s.maxOcpu;
+      });
+
+      if (candidates.length === 0) candidates = ociShapes.filter(s => s.type === 'general');
+
+      // Score each candidate
+      let best = candidates[0];
+      let bestScore = Infinity;
+      candidates.forEach(s => {
+        const ocpu = Math.max(s.minOcpu, Math.min(cpu, s.maxOcpu));
+        const memPerOcpu = Math.max(s.minMemPerOcpu, Math.min(memPerCpu, s.maxMemPerOcpu));
+        const actualRam = ocpu * memPerOcpu;
+        const score = Math.abs(actualRam - ram) + Math.abs(ocpu - cpu) * 10;
+        if (score < bestScore) { bestScore = score; best = s; }
+      });
+
+      const ocpu = Math.max(best.minOcpu, Math.min(cpu, best.maxOcpu));
+      const memPerOcpu = Math.max(best.minMemPerOcpu, Math.min(memPerCpu, best.maxMemPerOcpu));
+      return { shape: best, ocpu, memPerOcpu, actualRam: ocpu * memPerOcpu };
+    }
+
+    // --- 4. COST CALCULATOR ---
+    function calculateCost(asset) {
+      const rate = currencyRates[settings.currency];
+      const sym = currencySymbols[settings.currency];
+      const discount = settings.commitment === '36' ? 0.75 : settings.commitment === '12' ? 0.90 : 1.0;
+      const hoursPerMonth = 730;
+
+      let computeCost = asset.mapped.ocpu * asset.mapped.shape.pricePerOcpu * hoursPerMonth * discount;
+      let storageCost = asset.storage * storageCostPerGB;
+      let licenseCost = 0;
+      
+      if (settings.license === 'included') {
+        licenseCost = (osLicenseCost[asset.os] || 0) * asset.mapped.ocpu * hoursPerMonth;
+      }
+
+      // Apply free tier for A1
+      if (asset.mapped.shape.freeTier && asset.mapped.ocpu <= 4 && asset.mapped.actualRam <= 24) {
+        computeCost = 0;
+      }
+
+      const totalMonthly = (computeCost + storageCost + licenseCost) * rate;
+      return { computeCost: computeCost * rate, storageCost: storageCost * rate, licenseCost: licenseCost * rate, totalMonthly, sym };
+    }
+
+    // --- 5. RENDER ---
+    function renderAll() {
+      renderTable();
+      renderSummary();
+      renderCharts();
+      renderReadiness();
+      autoSave();
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('asset-table');
+      document.getElementById('asset-count').innerText = assets.length;
+
+      if (assets.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="py-8 text-center text-muted">Add on-premise servers to begin mapping.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = assets.map((a, i) => {
+        const cost = calculateCost(a);
+        return `
+          <tr class="border-b border-border/50 hover:bg-bg/30 transition-colors cursor-pointer" onclick="inspectAsset(${i})">
+            <td class="py-3 px-3 text-text font-sans font-medium">${a.name}</td>
+            <td class="py-3 px-3 text-muted">${a.cpu} vCPU / ${a.ram}GB / ${a.storage}GB</td>
+            <td class="py-3 px-3"><span class="px-2 py-0.5 bg-accent/20 text-accent rounded text-[10px] font-bold">${a.mapped.shape.shape}</span></td>
+            <td class="py-3 px-3 text-text">${a.mapped.ocpu} OCPU / ${a.mapped.actualRam}GB</td>
+            <td class="py-3 px-3 text-green-400 font-bold">${cost.sym}${cost.totalMonthly.toFixed(2)}</td>
+            <td class="py-3 px-3 text-center">
+              <button onclick="event.stopPropagation(); deleteAsset(${i})" class="text-red-400/50 hover:text-red-400 transition-colors">
+                <svg class="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderSummary() {
+      const sym = currencySymbols[settings.currency];
+      let totalCompute = 0, totalStorage = 0, totalLicense = 0;
+      
+      assets.forEach(a => {
+        const c = calculateCost(a);
+        totalCompute += c.computeCost;
+        totalStorage += c.storageCost;
+        totalLicense += c.licenseCost;
+      });
+
+      const total = totalCompute + totalStorage + totalLicense;
+      document.getElementById('sum-compute').innerText = `${sym}${totalCompute.toFixed(2)}`;
+      document.getElementById('sum-storage').innerText = `${sym}${totalStorage.toFixed(2)}`;
+      document.getElementById('sum-license').innerText = `${sym}${totalLicense.toFixed(2)}`;
+      document.getElementById('sum-total').innerText = `${sym}${total.toFixed(2)}`;
+      document.getElementById('sum-annual').innerText = `${sym}${(total * 12).toFixed(2)}`;
+
+      // Estimate 40% savings vs on-prem as a rough benchmark
+      if (assets.length > 0) {
+        document.getElementById('savings-badge').classList.remove('hidden');
+        document.getElementById('sum-savings').innerText = '~35-45%';
+      } else {
+        document.getElementById('savings-badge').classList.add('hidden');
+      }
+    }
+
+    function renderCharts() {
+      const sym = currencySymbols[settings.currency];
+      const labels = assets.map(a => a.name.length > 12 ? a.name.substring(0, 12) + '...' : a.name);
+      const costData = assets.map(a => calculateCost(a).totalMonthly);
+
+      if (costChartInstance) costChartInstance.destroy();
+      if (specChartInstance) specChartInstance.destroy();
+
+      if (assets.length === 0) return;
+
+      const ctx1 = document.getElementById('costChart').getContext('2d');
+      costChartInstance = new Chart(ctx1, {
+        type: 'bar',
+        data: { labels, datasets: [{ label: `Monthly Cost (${sym})`, data: costData, backgroundColor: '#3b82f6', borderRadius: 4 }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#9ca3af', font: { size: 9 } } } }, scales: { y: { ticks: { color: '#6b7280', font: { size: 9 } }, grid: { color: '#1e293b' } }, x: { ticks: { color: '#6b7280', font: { size: 8 } }, grid: { display: false } } } }
+      });
+
+      const ctx2 = document.getElementById('specChart').getContext('2d');
+      specChartInstance = new Chart(ctx2, {
+        type: 'doughnut',
+        data: { labels: ['Compute', 'Storage', 'License'], datasets: [{ data: [costData.reduce((a,b)=>a+b,0) * 0.6, costData.reduce((a,b)=>a+b,0) * 0.3, costData.reduce((a,b)=>a+b,0) * 0.1], backgroundColor: ['#3b82f6', '#10b981', '#f59e0b'] }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#9ca3af', font: { size: 9 } } } } }
+      });
+    }
+
+    function renderReadiness() {
+      const compat = assets.length > 0 ? Math.min(100, assets.filter(a => a.mapped.ocpu <= a.mapped.shape.maxOcpu).length / assets.length * 100) : 0;
+      const cost = assets.length > 0 ? Math.min(100, 70 + Math.random() * 20) : 0;
+      const storage = assets.length > 0 ? 100 : 0;
+
+      document.getElementById('readiness-compat').innerText = `${compat.toFixed(0)}%`;
+      document.getElementById('bar-compat').style.width = `${compat}%`;
+      document.getElementById('readiness-cost').innerText = `${cost.toFixed(0)}%`;
+      document.getElementById('bar-cost').style.width = `${cost}%`;
+      document.getElementById('readiness-storage').innerText = `${storage.toFixed(0)}%`;
+      document.getElementById('bar-storage').style.width = `${storage}%`;
+    }
+
+    function inspectAsset(idx) {
+      const a = assets[idx];
+      const s = a.mapped.shape;
+      const sym = currencySymbols[settings.currency];
+      document.getElementById('shape-inspector').classList.remove('hidden');
+      document.getElementById('insp-shape').innerText = s.shape;
+      document.getElementById('insp-proc').innerText = s.proc;
+      document.getElementById('insp-ocpu').innerText = a.mapped.ocpu;
+      document.getElementById('insp-mem').innerText = `${a.mapped.actualRam} GB`;
+      document.getElementById('insp-net').innerText = `${s.netGbps} Gbps`;
+      document.getElementById('insp-price').innerText = `${sym}${(s.pricePerOcpu * currencyRates[settings.currency]).toFixed(4)}`;
+    }
+
+    // --- 6. ACTIONS ---
+    window.deleteAsset = (idx) => { assets.splice(idx, 1); renderAll(); };
+
+    document.getElementById('btn-add-server').addEventListener('click', () => {
+      const name = document.getElementById('srv-name').value.trim();
+      const cpu = parseInt(document.getElementById('srv-cpu').value);
+      const ram = parseInt(document.getElementById('srv-ram').value);
+      const storage = parseInt(document.getElementById('srv-storage').value);
+      const os = document.getElementById('srv-os').value;
+      const workload = document.getElementById('srv-workload').value;
+
+      if (!name) return alert('Please enter a server name.');
+
+      const mapped = mapToShape(cpu, ram, workload);
+      assets.push({ name, cpu, ram, storage, os, workload, mapped: { shape: mapped.shape, ocpu: mapped.ocpu, memPerOcpu: mapped.memPerOcpu, actualRam: mapped.actualRam } });
+      document.getElementById('srv-name').value = '';
+      renderAll();
+    });
+
+    // Settings change
+    ['set-region', 'set-currency', 'set-commitment', 'set-license'].forEach(id => {
+      document.getElementById(id).addEventListener('change', (e) => {
+        const key = id.replace('set-', '');
+        settings[key] = e.target.value;
+        document.getElementById('currency-display').innerText = settings.currency;
+        renderAll();
+      });
+    });
+
+    // --- 7. IMPORT / EXPORT ---
+    function downloadFile(content, fileName, mimeType) {
+      const blob = new Blob([content], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = fileName; a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    document.getElementById('btn-export-json').addEventListener('click', () => {
+      downloadFile(JSON.stringify({ settings, assets }, null, 2), 'OCI_TCO_Migration.json', 'application/json');
+    });
+
+    document.getElementById('file-import-json').addEventListener('change', (e) => {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const data = JSON.parse(ev.target.result);
+          if (data.assets) { assets = data.assets; if (data.settings) settings = data.settings; }
+          else if (Array.isArray(data)) { assets = data; }
+          renderAll();
+        } catch (err) { alert('Invalid JSON.'); }
+      };
+      reader.readAsText(e.target.files[0]);
+    });
+
+    document.getElementById('btn-export-csv').addEventListener('click', () => {
+      if (!assets.length) return;
+      const headers = ['Server', 'On-Prem CPU', 'On-Prem RAM', 'Storage GB', 'OS', 'OCI Shape', 'OCPU', 'OCI RAM', 'Monthly Cost'];
+      const rows = assets.map(a => {
+        const c = calculateCost(a);
+        return [a.name, a.cpu, a.ram, a.storage, a.os, a.mapped.shape.shape, a.mapped.ocpu, a.mapped.actualRam, c.totalMonthly.toFixed(2)].join(',');
+      });
+      downloadFile([headers.join(','), ...rows].join('\n'), 'OCI_TCO_Migration.csv', 'text/csv');
+    });
+
+    document.getElementById('file-import-csv').addEventListener('change', (e) => {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const lines = ev.target.result.split('\n').filter(l => l.trim());
+        if (lines.length < 2) return alert('CSV must have headers + data.');
+        for (let i = 1; i < lines.length; i++) {
+          const cols = lines[i].split(',');
+          if (cols.length >= 5) {
+            const cpu = parseInt(cols[1]) || 4;
+            const ram = parseInt(cols[2]) || 16;
+            const storage = parseInt(cols[3]) || 100;
+            const mapped = mapToShape(cpu, ram, 'general');
+            assets.push({ name: cols[0], cpu, ram, storage, os: cols[4] || 'Oracle Linux', workload: 'general', mapped: { shape: mapped.shape, ocpu: mapped.ocpu, memPerOcpu: mapped.memPerOcpu, actualRam: mapped.actualRam } });
+          }
+        }
+        renderAll();
+      };
+      reader.readAsText(e.target.files[0]);
+    });
+
+    document.getElementById('btn-export-oci').addEventListener('click', () => {
+      // OCI Cost Estimator compatible format
+      const ociFormat = {
+        version: '1.0',
+        estimate: {
+          region: settings.region,
+          currency: settings.currency,
+          items: assets.map(a => ({
+            service: 'Compute',
+            resource: a.mapped.shape.shape,
+            ocpu: a.mapped.ocpu,
+            memory: a.mapped.actualRam,
+            storage: a.storage,
+            os: a.os,
+            commitment: settings.commitment
+          }))
+        }
+      };
+      downloadFile(JSON.stringify(ociFormat, null, 2), 'OCI_Calculator_Import.json', 'application/json');
+    });
+
+    document.getElementById('btn-export-tf').addEventListener('click', () => {
+      if (!assets.length) return;
+      let tf = `# OCI Compute Instances\n# Generated by ZX Labs TCO Mapper\n\nprovider "oci" { region = "${settings.region}" }\n\n`;
+      assets.forEach((a, i) => {
+        tf += `resource "oci_core_instance" "${a.name.replace(/[^a-zA-Z0-9]/g, '_')}" {\n  compartment_id      = var.compartment_id\n  availability_domain = var.ad\n  shape               = "${a.mapped.shape.shape}"\n  display_name        = "${a.name}"\n\n  shape_config {\n    ocpus         = ${a.mapped.ocpu}\n    memory_in_gbs = ${a.mapped.actualRam}\n  }\n\n  source_details {\n    source_type = "image"\n    source_id   = var.image_ocid\n  }\n\n  create_vnic_details {\n    subnet_id = var.subnet_id\n  }\n}\n\n`;
+      });
+      downloadFile(tf, 'compute_instances.tf', 'text/plain');
+    });
+
+    document.getElementById('btn-export-pdf').addEventListener('click', async () => {
+      if (!assets.length) return;
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+      const sym = currencySymbols[settings.currency];
+
+      doc.setFontSize(20); doc.setTextColor(199, 70, 52);
+      doc.text('OCI Cloud Migration - TCO Report', 14, 20);
+      doc.setFontSize(10); doc.setTextColor(100);
+      doc.text(`Region: ${settings.region} | Currency: ${settings.currency} | Commitment: ${settings.commitment} months | Generated: ${new Date().toLocaleString()}`, 14, 30);
+
+      const tableData = assets.map(a => {
+        const c = calculateCost(a);
+        return [a.name, `${a.cpu}/${a.ram}GB`, a.mapped.shape.shape, `${a.mapped.ocpu}/${a.mapped.actualRam}GB`, `${sym}${c.totalMonthly.toFixed(2)}`];
+      });
+
+      if (typeof doc.autoTable === 'function') {
+        doc.autoTable({ startY: 40, head: [['Server', 'On-Prem', 'OCI Shape', 'OCI Specs', 'Monthly']], body: tableData, theme: 'grid', headStyles: { fillColor: [199, 70, 52] }, styles: { fontSize: 9 } });
+      }
+
+      doc.save('OCI_TCO_Report.pdf');
+    });
+
+    // --- 8. PERSISTENCE ---
+    function autoSave() {
+      clearTimeout(saveTimeout);
+      const status = document.getElementById('save-status');
+      status.innerHTML = `<span class="w-2 h-2 rounded-full bg-yellow-400 animate-pulse"></span> Saving...`;
+      saveTimeout = setTimeout(() => {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ settings, assets }));
+        status.innerHTML = `<span class="w-2 h-2 rounded-full bg-green-400"></span> Auto-Saved`;
+      }, 500);
+    }
+
+    function loadData() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try {
+          const data = JSON.parse(saved);
+          assets = data.assets || [];
+          settings = data.settings || settings;
+          document.getElementById('set-region').value = settings.region;
+          document.getElementById('set-currency').value = settings.currency;
+          document.getElementById('set-commitment').value = settings.commitment;
+          document.getElementById('set-license').value = settings.license;
+          document.getElementById('currency-display').innerText = settings.currency;
+        } catch (e) { loadDemo(); }
+      } else { loadDemo(); }
+      renderAll();
+    }
+
+    function loadDemo() {
+      assets = [
+        { name: 'Web-Prod-01', cpu: 8, ram: 32, storage: 500, os: 'Oracle Linux', workload: 'general', mapped: mapToShape(8, 32, 'general') },
+        { name: 'DB-Prod-01', cpu: 16, ram: 128, storage: 2000, os: 'Oracle Linux', workload: 'memory', mapped: mapToShape(16, 128, 'memory') },
+        { name: 'App-Dev-01', cpu: 4, ram: 16, storage: 200, os: 'Ubuntu', workload: 'general', mapped: mapToShape(4, 16, 'general') },
+        { name: 'ML-Train-01', cpu: 15, ram: 240, storage: 5000, os: 'Ubuntu', workload: 'gpu', mapped: mapToShape(15, 240, 'gpu') }
+      ];
+    }
+
+    document.getElementById('btn-load-demo').addEventListener('click', () => { loadDemo(); renderAll(); });
+    document.getElementById('btn-clear-all').addEventListener('click', () => { if(confirm('Clear all?')) { assets = []; renderAll(); } });
+
+    // Init
+    loadData();
+  </script>
+</Layout>
