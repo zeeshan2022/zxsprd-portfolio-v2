@@ -102,5 +102,95 @@
     "date": "14-09-2022",
     "credentialId": "ECC9106437588",
     "category": "Hacking"
+  },
+      {
+    "filename": "14-g-designing-fvo.jpg",
+    "title": "Graphics Designing",
+    "issuer": "Future Vision Organization",
+    "date": "10-09-2008",
+    "credentialId": "FVO-P-SC-11030",
+    "category": "Graphics Designing"
+  },
+      {
+    "filename": "15-SSC.jpg",
+    "title": "Secondary School Certificate",
+    "issuer": "BISEP Peshawar KPK Pakistan",
+    "date": "01-04-2008",
+    "credentialId": "73901",
+    "category": "Secondary Education"
   }
+  ,
+      {
+    "filename": "16-DAE-Certificate.jpg",
+    "title": "Diploma of Associate Engineer",
+    "issuer": "Board of Technical Education Peshawar KPK Pakistan",
+    "date": "01-01-2012",
+    "credentialId": "GCT-CH-ET-II-S-08-5480",
+    "category": "Intermediate Education"
+  }
+  ,
+      {
+    "filename": "17-Competency-certificate.jpg",
+    "title": "Certificate of Competency",
+    "issuer": "Board of Technical Education Peshawar KPK Pakistan",
+    "date": "12-01-2012",
+    "credentialId": "7150-E",
+    "category": "Competency Certificate"
+  }
+    ,
+      {
+    "filename": "18-BS-Degree.jpg",
+    "title": "BS in Telecom & Networks",
+    "issuer": "COMSATS Univercity Islamabad Pakistan",
+    "date": "15-03-2016",
+    "credentialId": "CIIT-SP12-BTN-023-ATD",
+    "category": "Bachelor Degree"
+  }
+        ,
+      {
+    "filename": "19-MS-Student-Result-Card.jpg",
+    "title": "Result Card",
+    "issuer": "COMSATS Univercity Islamabad Pakistan",
+    "date": "08-01-2019",
+    "credentialId": "CIIT-SP17-R17-006-ATD",
+    "category": "Master Degree*"
+  }
+      ,
+      {
+    "filename": "20-CCNA-RS-Scaling-Networks.jpg",
+    "title": "CCNA Routing and Switching: Scaling Networks",
+    "issuer": "CISCO",
+    "date": "13-05-2016",
+    "credentialId": "Zeeshan-Haider",
+    "category": "CCNA Networking"
+  }
+        ,
+      {
+    "filename": "21-CCNA-Routing-Switching.jpg",
+    "title": "CCNA Routing and Switching Essentials",
+    "issuer": "CISCO",
+    "date": "13-05-2016",
+    "credentialId": "Zeeshan-Haider",
+    "category": "CCNA Networking"
+  }
+          ,
+      {
+    "filename": "22-CCNA-RS-Connecting-Networks.jpg",
+    "title": "CCNA Connecting Networks",
+    "issuer": "CISCO",
+    "date": "13-05-2016",
+    "credentialId": "Zeeshan-Haider",
+    "category": "CCNA Networking"
+  }
+        ,
+      {
+    "filename": "00.jpg",
+    "title": "Certificate",
+    "issuer": "Issuer",
+    "date": "Date",
+    "credentialId": "ID",
+    "category": "category"
+  }
+  
+  
 ]
